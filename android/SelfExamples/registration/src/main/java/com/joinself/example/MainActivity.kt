@@ -51,9 +51,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // init the sdk, the Application Address are from the admin app
+        // init the sdk
         SelfSDK.initialize(applicationContext,
-            applicationAddress = "00c336b0bd966943601cb386501ba909001a7597ec69566237ed03a182a2ba2e62",
             pushToken = null,
             log = { Log.d("Self", it) }
         )
@@ -161,6 +160,7 @@ class MainActivity : ComponentActivity() {
                                 } catch (_: InvalidCredentialException) { }
                             }
                         }
+                        // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {
                             navController.popBackStack("livenessRoute", true)
                         }
