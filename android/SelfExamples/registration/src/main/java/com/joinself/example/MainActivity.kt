@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,7 +22,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,12 +51,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // init the sdk, the Application Address are from the admin app
         SelfSDK.initialize(applicationContext,
             applicationAddress = "00c336b0bd966943601cb386501ba909001a7597ec69566237ed03a182a2ba2e62",
-            pushToken = {""},
+            pushToken = null,
             log = { Log.d("Self", it) }
         )
 
+        // the sdk will store data in this directory, make sure it exists.
         val storagePath = File(applicationContext.filesDir.absolutePath + "/account1")
         if (!storagePath.exists()) storagePath.mkdirs()
 
@@ -68,6 +68,8 @@ class MainActivity : ComponentActivity() {
             .setSandbox(true)
             .setStoragePath(storagePath.absolutePath)
             .build()
+
+        // listen to callbacks to receive data from the SDK
         account.setOnInfoRequest { key ->
             println("info request $key")
         }
@@ -137,6 +139,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // add liveness check to main navigation
                 addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
                     account = {
                         account
