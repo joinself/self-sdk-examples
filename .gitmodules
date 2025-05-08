@@ -1,0 +1,3 @@
+[submodule "ios/joinself-self-mobile-ios-ui"]
+	path = ios/joinself-self-mobile-ios-ui
+	url = git@github.com:joinself/joinself-self-mobile-ios-ui.git
