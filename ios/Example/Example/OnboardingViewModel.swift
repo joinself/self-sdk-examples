@@ -22,7 +22,19 @@ final class OnboardingViewModel: ObservableObject {
     func lfcFlow() {
         SelfSDK.showLiveness(account: account, showIntroduction: true, autoDismiss: true, onResult: { selfieImageData, credentials, error in
             print("showLivenessCheck credentials: \(credentials)")
+            self.register(selfieImageData: selfieImageData, credentials: credentials)
         })
+    }
+    
+    private func register(selfieImageData: Data, credentials: [Credential], completion: ((Bool) -> Void)? = nil) {
+        Task(priority: .background) {
+            do {
+                let success = try await account.register(selfieImage: selfieImageData, credentials: credentials)
+                print("Register account: \(success)")
+            } catch let error {
+                print("Register Error: \(error)")
+            }
+        }
     }
 }
 
