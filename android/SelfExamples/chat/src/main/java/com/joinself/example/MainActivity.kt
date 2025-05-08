@@ -8,20 +8,29 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -31,13 +40,8 @@ import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
-import com.joinself.sdk.models.CredentialRequest
-import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.Receipt
-import com.joinself.sdk.models.SigningRequest
-import com.joinself.sdk.models.SigningResponse
-import com.joinself.sdk.models.VerificationRequest
-import com.joinself.sdk.models.VerificationResponse
+import com.joinself.sdk.ui.adQRCodeRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -68,48 +72,50 @@ class MainActivity : ComponentActivity() {
             .setStoragePath(storagePath.absolutePath)
             .build()
 
-        // listen to callbacks to receive data from the SDK
-        account.setOnInfoRequest { key ->
-            println("info request $key")
-        }
-        account.setOnInfoResponse { fromAddress, data ->
-        }
-
-        account.setOnStatusListener { status ->
-            println("onStatus $status")
-        }
-        account.setOnRelayConnectListener {
-            println("onRelay connectted")
-        }
-
-        account.setOnMessageListener { msg ->
-            when (msg) {
-                is ChatMessage -> println("chat messages")
-                is Receipt -> println("receipt message")
-            }
-        }
-
-        account.setOnRequestListener { msg ->
-            when (msg) {
-                is CredentialRequest -> println("credential request")
-                is VerificationRequest -> println("verification request")
-                is SigningRequest -> println("signing request")
-            }
-        }
-        account.setOnResponseListener { msg ->
-            when (msg) {
-                is CredentialResponse -> println("credential response")
-                is VerificationResponse -> println("verification response")
-                is SigningResponse -> println("signing response")
-            }
-        }
-
         setContent {
             val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
+            var conAddress by remember { mutableStateOf("") }
+            val messages = remember { mutableStateListOf<String>() }
+            var inputMessage by remember { mutableStateOf("") }
+
+            fun sendChat() {
+                // build a chat message
+                val chat = ChatMessage.Builder()
+                    .setToIdentifier(conAddress)
+                    .setMessage(inputMessage)
+                    .build()
+
+                // send chat to server
+                coroutineScope.launch(Dispatchers.IO) {
+                    account.send(chat) { messageId, _ ->
+                        messages.add(inputMessage)
+                        inputMessage = ""
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                // need to wait for account connected
+                account.setOnStatusListener { status ->
+                    println("onStatus $status")
+                }
+
+                // listen to messages from server
+                account.setOnMessageListener { msg ->
+                    when (msg) {
+                        is ChatMessage -> {
+                            messages.add(msg.message()) // append to the message list
+                        }
+                        is Receipt -> {
+                            println("receipt message")
+                        }
+                    }
+                }
+            }
 
             NavHost(navController = navController,
                 startDestination = "main",
@@ -127,13 +133,49 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
                         Button(
-                            modifier = Modifier.padding(top = 20.dp),
                             onClick = {
                                 navController.navigate("livenessRoute")
                             },
                             enabled = !isRegistered
                         ) {
                             Text(text = "Create Account")
+                        }
+
+                        Button(
+                            onClick = {
+                                navController.navigate("qrRoute")
+                            },
+                            enabled = isRegistered && conAddress.isEmpty()
+                        ) {
+                            Text(text = "Scan QRCode")
+                        }
+
+                        Text(text = "To: $conAddress")
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextField(value = inputMessage,
+                                onValueChange = {
+                                    inputMessage = it
+                                }
+                            )
+                            Button(
+                                onClick = {
+                                    sendChat()
+                                },
+                                enabled = isRegistered && conAddress.isNotEmpty()
+                            ) {
+                                Text(text = "Send")
+                            }
+                        }
+                        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f).background(Color.LightGray)) {
+                            items(messages) { msg ->
+                                Text(
+                                    text = msg,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -163,6 +205,32 @@ class MainActivity : ComponentActivity() {
                         // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {
                             navController.popBackStack("livenessRoute", true)
+                        }
+                    }
+                )
+
+                // integrate qrcode flow
+                adQRCodeRoute(navController, "qrRoute", selfModifier = selfModifier,
+                    onFinish = { qrCodeBytes, _ ->
+                        coroutineScope.launch(Dispatchers.IO) {
+                            // parse qrcode first and check the correct environment
+                            val discoveryData = Account.qrCode(qrCodeBytes)
+                            if (discoveryData?.sandbox == false) {
+                                return@launch
+                            }
+
+                            // then connect with the connection in the qrcode
+                            account.connectWith(qrCodeBytes)
+                            conAddress = discoveryData?.address ?: "" // keep address to send data
+
+                            coroutineScope.launch(Dispatchers.Main) {
+                                navController.popBackStack("qrRoute", true)
+                            }
+                        }
+                    },
+                    onExit = {
+                        coroutineScope.launch(Dispatchers.Main) {
+                            navController.popBackStack("qrRoute", true)
                         }
                     }
                 )
