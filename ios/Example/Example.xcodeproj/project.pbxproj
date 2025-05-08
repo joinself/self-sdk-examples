@@ -9,7 +9,40 @@
 /* Begin PBXBuildFile section */
 		634BAC352DCC5A840012429D /* self_ios_sdk in Frameworks */ = {isa = PBXBuildFile; productRef = 634BAC342DCC5A840012429D /* self_ios_sdk */; };
 		634BAC382DCC5BD10012429D /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 634BAC372DCC5BD10012429D /* OpenSSL */; };
+		634BAC4B2DCC62380012429D /* SelfUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 634BAC432DCC61B80012429D /* SelfUI.framework */; };
+		634BAC4C2DCC62380012429D /* SelfUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 634BAC432DCC61B80012429D /* SelfUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		634BAC422DCC61B80012429D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 634BAC392DCC61B80012429D /* SelfUI.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63C451642BF30EAE00AD5BC5;
+			remoteInfo = SelfUI;
+		};
+		634BAC4E2DCC62440012429D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 634BAC392DCC61B80012429D /* SelfUI.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 63C451632BF30EAE00AD5BC5;
+			remoteInfo = SelfUI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		634BAC4D2DCC62380012429D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				634BAC4C2DCC62380012429D /* SelfUI.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		634BAC222DCC53E90012429D /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,6 +63,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				634BAC352DCC5A840012429D /* self_ios_sdk in Frameworks */,
+				634BAC4B2DCC62380012429D /* SelfUI.framework in Frameworks */,
 				634BAC382DCC5BD10012429D /* OpenSSL in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -42,6 +76,7 @@
 			children = (
 				634BAC392DCC61B80012429D /* SelfUI.xcodeproj */,
 				634BAC242DCC53E90012429D /* Example */,
+				634BAC4A2DCC62380012429D /* Frameworks */,
 				634BAC232DCC53E90012429D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -57,8 +92,16 @@
 		634BAC3C2DCC61B80012429D /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				634BAC432DCC61B80012429D /* SelfUI.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		634BAC4A2DCC62380012429D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -71,10 +114,12 @@
 				634BAC1E2DCC53E90012429D /* Sources */,
 				634BAC1F2DCC53E90012429D /* Frameworks */,
 				634BAC202DCC53E90012429D /* Resources */,
+				634BAC4D2DCC62380012429D /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				634BAC4F2DCC62440012429D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				634BAC242DCC53E90012429D /* Example */,
@@ -132,6 +177,16 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		634BAC432DCC61B80012429D /* SelfUI.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = SelfUI.framework;
+			remoteRef = 634BAC422DCC61B80012429D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXResourcesBuildPhase section */
 		634BAC202DCC53E90012429D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -151,6 +206,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		634BAC4F2DCC62440012429D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SelfUI;
+			targetProxy = 634BAC4E2DCC62440012429D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		634BAC2E2DCC53EB0012429D /* Debug */ = {
