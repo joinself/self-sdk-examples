@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		634BAC352DCC5A840012429D /* self_ios_sdk in Frameworks */ = {isa = PBXBuildFile; productRef = 634BAC342DCC5A840012429D /* self_ios_sdk */; };
+		634BAC382DCC5BD10012429D /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 634BAC372DCC5BD10012429D /* OpenSSL */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				634BAC352DCC5A840012429D /* self_ios_sdk in Frameworks */,
+				634BAC382DCC5BD10012429D /* OpenSSL in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = Example;
 			packageProductDependencies = (
 				634BAC342DCC5A840012429D /* self_ios_sdk */,
+				634BAC372DCC5BD10012429D /* OpenSSL */,
 			);
 			productName = Example;
 			productReference = 634BAC222DCC53E90012429D /* Example.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				634BAC332DCC5A840012429D /* XCRemoteSwiftPackageReference "self-embedded-ios" */,
+				634BAC362DCC5BD10012429D /* XCRemoteSwiftPackageReference "OpenSSL" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 634BAC232DCC53E90012429D /* Products */;
@@ -345,6 +349,14 @@
 				minimumVersion = 0.107.0;
 			};
 		};
+		634BAC362DCC5BD10012429D /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.1.1900;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -352,6 +364,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 634BAC332DCC5A840012429D /* XCRemoteSwiftPackageReference "self-embedded-ios" */;
 			productName = self_ios_sdk;
+		};
+		634BAC372DCC5BD10012429D /* OpenSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 634BAC362DCC5BD10012429D /* XCRemoteSwiftPackageReference "OpenSSL" */;
+			productName = OpenSSL;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
