@@ -13,16 +13,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -30,14 +36,8 @@ import com.joinself.common.Environment
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
-import com.joinself.sdk.models.ChatMessage
-import com.joinself.sdk.models.CredentialRequest
-import com.joinself.sdk.models.CredentialResponse
-import com.joinself.sdk.models.Receipt
-import com.joinself.sdk.models.SigningRequest
-import com.joinself.sdk.models.SigningResponse
-import com.joinself.sdk.models.VerificationRequest
-import com.joinself.sdk.models.VerificationResponse
+import com.joinself.sdk.models.Claim
+import com.joinself.sdk.ui.addEmailRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +46,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : ComponentActivity() {
-
+    val LOGTAG = "Self"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
         // init the sdk
         SelfSDK.initialize(applicationContext,
             pushToken = null,
-            log = { Log.d("Self", it) }
+            log = { Log.d(LOGTAG, it) }
         )
 
         // the sdk will store data in this directory, make sure it exists.
@@ -68,48 +68,26 @@ class MainActivity : ComponentActivity() {
             .setStoragePath(storagePath.absolutePath)
             .build()
 
-        // listen to callbacks to receive data from the SDK
-        account.setOnInfoRequest { key ->
-            println("info request $key")
-        }
-        account.setOnInfoResponse { fromAddress, data ->
-        }
-
-        account.setOnStatusListener { status ->
-            println("onStatus $status")
-        }
-        account.setOnRelayConnectListener {
-            println("onRelay connectted")
-        }
-
-        account.setOnMessageListener { msg ->
-            when (msg) {
-                is ChatMessage -> println("chat messages")
-                is Receipt -> println("receipt message")
-            }
-        }
-
-        account.setOnRequestListener { msg ->
-            when (msg) {
-                is CredentialRequest -> println("credential request")
-                is VerificationRequest -> println("verification request")
-                is SigningRequest -> println("signing request")
-            }
-        }
-        account.setOnResponseListener { msg ->
-            when (msg) {
-                is CredentialResponse -> println("credential response")
-                is VerificationResponse -> println("verification response")
-                is SigningResponse -> println("signing response")
-            }
-        }
-
         setContent {
             val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
+            val claims = remember { mutableStateListOf<Claim>() }
+
+            fun refreshClaims() {
+                val credentials = account.credentialsByType()
+                claims.clear()
+                claims.addAll(credentials.flatMap { cred -> cred.credentials.flatMap { it.claims() } })
+            }
+
+            LaunchedEffect(Unit) {
+                // need to wait for account is connected
+                account.setOnStatusListener { status ->
+                    refreshClaims()
+                }
+            }
 
             NavHost(navController = navController,
                 startDestination = "main",
@@ -119,15 +97,14 @@ class MainActivity : ComponentActivity() {
             ) {
                 composable("main") {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .padding(start = 8.dp, end = 8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered:${isRegistered}")
+                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
                         Button(
-                            modifier = Modifier.padding(top = 20.dp),
                             onClick = {
                                 navController.navigate("livenessRoute")
                             },
@@ -135,16 +112,45 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Text(text = "Create Account")
                         }
+
+                        Button(
+                            onClick = {
+                                navController.navigate("livenessRoute")
+                            },
+                            enabled = isRegistered
+                        ) {
+                            Text(text = "Liveness Verification")
+                        }
+
+                        Button(
+                            onClick = {
+                                navController.navigate("emailRoute")
+                            },
+                            enabled = isRegistered
+                        ) {
+                            Text(text = "Email Verification")
+                        }
+
+                        // list all verified credentials
+                        Text(
+                            modifier = Modifier.padding(top = 10.dp),
+                            fontWeight = FontWeight.Bold,
+                            text = "Credentials on Self Account: ${claims.size}"
+                        )
+                        LazyColumn {
+                            items(claims) { claim ->
+                                Text(text = "${claim.subject()}: ${claim.value()}")
+                            }
+                        }
                     }
                 }
 
                 // add liveness check to main navigation
                 addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = {
-                        account
-                    },
+                    account = { account },
                     withCredential = true,
                     onFinish = { selfie, credentials ->
+                        // check result selfie image and credentials from server
                         if (!account.registered()) {
                             coroutineScope.launch(Dispatchers.IO) {
                                 try {
@@ -159,10 +165,28 @@ class MainActivity : ComponentActivity() {
                                     }
                                 } catch (_: InvalidCredentialException) { }
                             }
+                        } else if (credentials.isNotEmpty()) {
+                            coroutineScope.launch(Dispatchers.Main) {
+                                Toast.makeText(applicationContext, "Liveness check successfully", Toast.LENGTH_LONG).show()
+                            }
                         }
                         // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {
                             navController.popBackStack("livenessRoute", true)
+                        }
+                    }
+                )
+
+                // integrate email verification route
+                addEmailRoute(navController, route = "emailRoute", selfModifier = selfModifier,
+                    account = { account },
+                    onFinish = { error ->
+                        if (error == null) {
+                            refreshClaims() // refresh email credentials to display
+
+                            coroutineScope.launch(Dispatchers.Main) {
+                                Toast.makeText(applicationContext, "Email verification successfully", Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 )
