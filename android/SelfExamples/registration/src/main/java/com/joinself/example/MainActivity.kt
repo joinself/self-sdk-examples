@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                             .padding(start = 8.dp, end = 8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered:${isRegistered}")
+                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
                             onClick = {
