@@ -62,6 +62,20 @@ fun main() {
         },
         onKeyPackage = { keyPackage: KeyPackage ->
             println("KMP keypackage")
+            account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
+                onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
+                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                }
+            )
+        },
+        onWelcome = { welcome: Welcome ->
+            println("KMP welcome")
+            account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
+                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
+            }
+        },
+        onProposal = { proposal: Proposal ->
+            println("KMP proposal")
         },
         onMessage = { message: Message ->
             val content = message.content()
@@ -92,15 +106,6 @@ fun main() {
                 else -> {
 
                 }
-            }
-        },
-        onProposal = { proposal: Proposal ->
-            println("KMP proposal")
-        },
-        onWelcome = { welcome: Welcome ->
-            println("KMP welcome")
-            account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
-                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
             }
         },
         onIntegrity = { integrity: Integrity ->
