@@ -65,6 +65,25 @@ fun main() {
         },
         onKeyPackage = { keyPackage: KeyPackage ->
             println("KMP keypackage")
+            account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
+                onCompletion = {status: SelfStatus, gAddress: PublicKey ->
+                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${gAddress.encodeHex()}")
+                    responderAddress = keyPackage.fromAddress()
+                    groupAddress = gAddress
+                    signal.release()
+                }
+            )
+        },
+        onWelcome = { welcome: Welcome ->
+            println("KMP welcome")
+            account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, gAddress: PublicKey ->
+                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
+                responderAddress = welcome.fromAddress()
+                groupAddress = gAddress
+            }
+        },
+        onProposal = { proposal: Proposal ->
+            println("KMP proposal")
         },
         onMessage = { message: Message ->
             val content = message.content()
@@ -79,7 +98,6 @@ fun main() {
                     if (responseTo != discoveryRequestId) {
                         println("received response to unknown request requestId:$responseTo")
                     }
-                    responderAddress = message.fromAddress()
 
                     signal.release()
                 }
@@ -121,16 +139,6 @@ fun main() {
                 else -> {
 
                 }
-            }
-        },
-        onProposal = { proposal: Proposal ->
-            println("KMP proposal")
-        },
-        onWelcome = { welcome: Welcome ->
-            println("KMP welcome")
-            account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, gAddress: PublicKey ->
-                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
-                groupAddress = gAddress
             }
         },
         onIntegrity = { integrity: Integrity ->
