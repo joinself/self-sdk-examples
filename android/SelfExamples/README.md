@@ -15,6 +15,14 @@ It also displays all verified credentials in the account.
 
 ### 3. Chat
 
-This app sends and receives chat message from another app.
+This app connect to another app by an inbox address. You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
+And it sends and receives chat messages
 
-Need to scan QRCode from Demo app `https://demo-sandbox.app.preview.joinself.com/`
+Note: update server inbox address in TODO
+
+### 4. Chat - QRCode
+
+This app connects another app by scanning the QRCode
+And it sends and receives chat messages.
+
+Need to scan QRCode from Demo app https://demo-sandbox.app.preview.joinself.com/
