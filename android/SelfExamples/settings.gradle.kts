@@ -22,4 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "SelfExamples"
 include(":registration")
 include(":verification")
+include(":chat-qrcode")
 include(":chat")
