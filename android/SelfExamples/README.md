@@ -16,7 +16,7 @@ It also displays all verified credentials in the account.
 ### 3. Chat
 
 This app connect to another app by an inbox address. You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
-And it sends and receives chat messages
+And it sends and receives chat messages.
 
 Note: update server inbox address in TODO
 
