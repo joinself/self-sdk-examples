@@ -35,12 +35,17 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.joinself.common.Constants
 import com.joinself.common.Environment
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
+import com.joinself.sdk.models.Credential
+import com.joinself.sdk.models.CredentialRequest
+import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.Receipt
+import com.joinself.sdk.models.ResponseStatus
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -82,7 +87,7 @@ class MainActivity : ComponentActivity() {
             var inputMessage by remember { mutableStateOf("") }
 
             // TODO: update server inbox address here
-            val toConnectAddress = "008f8a7d22174ab8b3253cba5d9e5fd33e650bc15b7f7497d1df1c82437a34fbd5"
+            val toConnectAddress = "003bfc37cca400a130cc5ce7600157fc651862488be404ea079361b92a033aac18"
             fun connect() {
                 coroutineScope.launch(Dispatchers.IO) {
                     val groupAdress = account.connectWith(toConnectAddress, info = mapOf())
@@ -108,6 +113,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            var requestMessage: CredentialRequest? = null
+            fun sendCredentialResponse(credentials: List<Credential>) {
+                if (requestMessage == null) return
+
+                val credentialResponse = CredentialResponse.Builder()
+                    .setRequestId(requestMessage!!.id())
+                    .setTypes(requestMessage!!.types())
+                    .setToIdentifier(requestMessage!!.toIdentifier())
+                    .setFromIdentifier(requestMessage!!.fromIdentifier())
+                    .setStatus(ResponseStatus.accepted)
+                    .setCredentials(credentials)
+                    .build()
+
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    account.send(credentialResponse)
+                }
+            }
+
             LaunchedEffect(Unit) {
                 // need to wait for account connected
                 account.setOnStatusListener { status ->
@@ -122,6 +146,21 @@ class MainActivity : ComponentActivity() {
                         }
                         is Receipt -> {
                             println("receipt message")
+                        }
+                    }
+                }
+
+                account.setOnRequestListener { msg ->
+                    when (msg) {
+                        is CredentialRequest -> {
+                            if (msg.details().any { it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
+                                Log.d("Self", "received liveness request")
+                                requestMessage = msg
+                                coroutineScope.launch(Dispatchers.Main) {
+                                    navController.navigate("livenessRoute")
+                                }
+                            }
+
                         }
                     }
                 }
@@ -211,6 +250,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                 } catch (_: InvalidCredentialException) { }
                             }
+                        } else if (requestMessage != null) {
+                            sendCredentialResponse(credentials)
                         }
                         // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {

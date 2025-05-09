@@ -65,6 +65,9 @@ fun main() {
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
                     println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                    responderAddress = keyPackage.fromAddress()
+
+                    signal.release()
                 }
             )
         },
@@ -168,7 +171,7 @@ fun main() {
 
     credentialRequestId = credentialRequest.id().toHexString()
 
-    val sendStatus = account.messageSend(responderAddress!!, credentialRequest)
+    val sendStatus = account.messageSend(responderAddress, credentialRequest)
     println("send CredentialPresentation request status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - requestId:${credentialRequestId}")
     signal.acquire()
 
