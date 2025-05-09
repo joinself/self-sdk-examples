@@ -41,6 +41,7 @@ import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
 import com.joinself.sdk.models.Receipt
+import com.joinself.sdk.ui.adQRCodeRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -80,17 +81,6 @@ class MainActivity : ComponentActivity() {
             var conAddress by remember { mutableStateOf("") }
             val messages = remember { mutableStateListOf<String>() }
             var inputMessage by remember { mutableStateOf("") }
-
-            // TODO: update server inbox address here
-            val toConnectAddress = "008f8a7d22174ab8b3253cba5d9e5fd33e650bc15b7f7497d1df1c82437a34fbd5"
-            fun connect() {
-                coroutineScope.launch(Dispatchers.IO) {
-                    val groupAdress = account.connectWith(toConnectAddress, info = mapOf())
-                    if (groupAdress.isNotEmpty()) {
-                        conAddress =  groupAdress
-                    }
-                }
-            }
 
             fun sendChat() {
                 // build a chat message
@@ -153,11 +143,11 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                connect()
+                                navController.navigate("qrRoute")
                             },
-                            enabled = isRegistered && conAddress.isEmpty() && toConnectAddress.isNotEmpty()
+                            enabled = isRegistered && conAddress.isEmpty()
                         ) {
-                            Text(text = "Connect")
+                            Text(text = "Scan QRCode")
                         }
 
                         Text(text = "To: $conAddress")
@@ -215,6 +205,32 @@ class MainActivity : ComponentActivity() {
                         // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {
                             navController.popBackStack("livenessRoute", true)
+                        }
+                    }
+                )
+
+                // integrate qrcode flow
+                adQRCodeRoute(navController, "qrRoute", selfModifier = selfModifier,
+                    onFinish = { qrCodeBytes, _ ->
+                        coroutineScope.launch(Dispatchers.IO) {
+                            // parse qrcode first and check the correct environment
+                            val discoveryData = Account.qrCode(qrCodeBytes)
+                            if (discoveryData?.sandbox == false) {
+                                return@launch
+                            }
+
+                            // then connect with the connection in the qrcode
+                            account.connectWith(qrCodeBytes)
+                            conAddress = discoveryData?.address ?: "" // keep address to send data
+
+                            coroutineScope.launch(Dispatchers.Main) {
+                                navController.popBackStack("qrRoute", true)
+                            }
+                        }
+                    },
+                    onExit = {
+                        coroutineScope.launch(Dispatchers.Main) {
+                            navController.popBackStack("qrRoute", true)
                         }
                     }
                 )

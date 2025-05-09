@@ -69,6 +69,11 @@ fun main() {
         },
         onKeyPackage = { keyPackage: KeyPackage ->
             println("KMP keypackage")
+            account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
+                onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
+                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                }
+            )
         },
         onMessage = { message: Message ->
             val content = message.content()
@@ -171,7 +176,7 @@ fun main() {
     account.objectStore(agreementTerms)
     val uploadStatus = runBlocking {
          suspendCoroutine { continuation ->
-            account.objectUpload(inboxAddress, agreementTerms, false) { status ->
+            account.objectUpload( agreementTerms, false) { status ->
                 continuation.resumeWith(Result.success(status))
             }
         }
