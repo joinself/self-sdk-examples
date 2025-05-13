@@ -72,6 +72,9 @@ fun main() {
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
                     println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                    responderAddress = keyPackage.fromAddress()
+
+                    signal.release()
                 }
             )
         },
