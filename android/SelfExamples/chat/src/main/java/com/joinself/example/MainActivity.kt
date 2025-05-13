@@ -36,6 +36,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.joinself.common.Constants
+import com.joinself.common.CredentialType
 import com.joinself.common.Environment
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
@@ -46,6 +47,8 @@ import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.Receipt
 import com.joinself.sdk.models.ResponseStatus
+import com.joinself.sdk.models.VerificationRequest
+import com.joinself.sdk.models.VerificationResponse
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +90,7 @@ class MainActivity : ComponentActivity() {
             var inputMessage by remember { mutableStateOf("") }
 
             // TODO: update server inbox address here
-            val toConnectAddress = "003bfc37cca400a130cc5ce7600157fc651862488be404ea079361b92a033aac18"
+            val toConnectAddress = ""
             fun connect() {
                 coroutineScope.launch(Dispatchers.IO) {
                     val groupAdress = account.connectWith(toConnectAddress, info = mapOf())
@@ -161,6 +164,25 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
+                        }
+                        is VerificationRequest -> {
+
+                            // check the request is agreement, this example will respond automatically to the request
+                            // users need to handle msg.proofs() which contains agreement content, to display to user
+                            if (msg.types().contains(CredentialType.Agreement)) {
+
+                                val verificationResponse = VerificationResponse.Builder()
+                                    .setRequestId(msg.id())
+                                    .setTypes(msg.types())
+                                    .setToIdentifier(msg.toIdentifier())
+                                    .setFromIdentifier(msg.fromIdentifier())
+                                    .setStatus(ResponseStatus.accepted)
+                                    .build()
+
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    account.send(verificationResponse)
+                                }
+                            }
                         }
                     }
                 }
