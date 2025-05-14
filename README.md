@@ -13,7 +13,7 @@ Our mobile SDKs allow you to build secure and user-friendly applications for And
 
 Our server-side SDKs are designed for robust backend integrations.
 
-*   **Golang:** Check out examples for our Golang SDK in the [`golang/`](./golang/) directory.
+*   **Golang:** Check out examples for our Golang SDK in the [`golang/examples/`](./golang/examples/) directory.
 *   **Java:** Discover examples for our Java SDK in the [`java/`](./java/) directory.
 
 We encourage you to explore these examples to understand how to best utilize Self SDKs in your projects.
