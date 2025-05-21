@@ -15,7 +15,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+        maven {
+            name = "Central Portal Snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            content {
+                includeGroup("com.joinself")
+            }
+        }
     }
 }
 
