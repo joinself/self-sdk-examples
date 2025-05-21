@@ -10,11 +10,18 @@
 
 ```gradle
 repositories {
-  maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    maven {
+        name = "Central Portal Snapshots"
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")        
+        content {
+            includeGroup("com.joinself")
+        }
+    }
+    mavenCentral()
 }
 
 dependencies {
-  implementation("com.joinself:sdk-jvm:1.0.0-SNAPSHOT")
+  implementation("com.joinself:sdk-jvm:1.0.0")
 }
 ```
 

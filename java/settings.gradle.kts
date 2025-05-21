@@ -26,6 +26,13 @@ dependencyResolutionManagement {
         maven("${rootDir.parentFile.parentFile.parentFile.parentFile.path}/repos/snapshots")
         maven("${rootDir.parentFile.parentFile.parentFile.path}/repos/snapshots")
         maven("${rootDir.path}/repos/snapshots")
+        maven {
+            name = "Central Portal Snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            content {
+                includeGroup("com.joinself")
+            }
+        }
         mavenCentral()
         maven { url = uri("https://maven.google.com") }
         maven { url = uri("https://maven.microblink.com") }
