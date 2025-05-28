@@ -34,8 +34,8 @@ This app demonstrates how to handle incoming credential request, such as: livene
 
 Note: update server inbox address in TODO
 
-Steps:
-    1. Register
-    2. Update server inbox address in MainActivity.kt
-    3. Click Connect to set up connection with server
-    4. Handle incoming credential request
+Steps:   
+  - Register
+  - Update server inbox address in MainActivity.kt
+  - Click Connect to set up connection with server
+  - Handle incoming credential request
