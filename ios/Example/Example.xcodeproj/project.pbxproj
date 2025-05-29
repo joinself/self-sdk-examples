@@ -45,7 +45,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		634BAC222DCC53E90012429D /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		634BAC222DCC53E90012429D /* ExampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		634BAC392DCC61B80012429D /* SelfUI.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SelfUI.xcodeproj; path = "../joinself-self-mobile-ios-ui/SelfUI/SelfUI.xcodeproj"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -84,7 +84,7 @@
 		634BAC232DCC53E90012429D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				634BAC222DCC53E90012429D /* Example.app */,
+				634BAC222DCC53E90012429D /* ExampleApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -107,9 +107,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		634BAC212DCC53E90012429D /* Example */ = {
+		634BAC212DCC53E90012429D /* ExampleApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 634BAC302DCC53EB0012429D /* Build configuration list for PBXNativeTarget "Example" */;
+			buildConfigurationList = 634BAC302DCC53EB0012429D /* Build configuration list for PBXNativeTarget "ExampleApp" */;
 			buildPhases = (
 				634BAC1E2DCC53E90012429D /* Sources */,
 				634BAC1F2DCC53E90012429D /* Frameworks */,
@@ -124,13 +124,13 @@
 			fileSystemSynchronizedGroups = (
 				634BAC242DCC53E90012429D /* Example */,
 			);
-			name = Example;
+			name = ExampleApp;
 			packageProductDependencies = (
 				634BAC342DCC5A840012429D /* self_ios_sdk */,
 				634BAC372DCC5BD10012429D /* OpenSSL */,
 			);
 			productName = Example;
-			productReference = 634BAC222DCC53E90012429D /* Example.app */;
+			productReference = 634BAC222DCC53E90012429D /* ExampleApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -172,7 +172,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				634BAC212DCC53E90012429D /* Example */,
+				634BAC212DCC53E90012429D /* ExampleApp */,
 			);
 		};
 /* End PBXProject section */
@@ -409,7 +409,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		634BAC302DCC53EB0012429D /* Build configuration list for PBXNativeTarget "Example" */ = {
+		634BAC302DCC53EB0012429D /* Build configuration list for PBXNativeTarget "ExampleApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				634BAC312DCC53EB0012429D /* Debug */,
