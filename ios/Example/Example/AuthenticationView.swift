@@ -6,11 +6,13 @@
 //
 import SwiftUI
 import SelfUI
+import self_ios_sdk
 
 // MARK: - SwiftUI Integration Example
 struct AuthenticationView: View {
     @StateObject private var authManager = SelfAuthManager()
     @State private var showQRScanner = false
+    @State private var showVerifyDocument = false
     @State private var isCodeValid = false
     
     var body: some View {
@@ -21,6 +23,11 @@ struct AuthenticationView: View {
             Button("Start Authentication") {
                 // Your authentication trigger logic here
                 showQRScanner = true
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button("Document Verification") {
+                showVerifyDocument = true
             }
             .buttonStyle(.borderedProminent)
         }
@@ -37,6 +44,13 @@ struct AuthenticationView: View {
                     }
                 }
             }
+        })
+        .fullScreenCover(isPresented: $showVerifyDocument, onDismiss: {
+            // document dismissed
+        }, content: {
+            DocumentFlow(account: authManager.getAccount(), autoCaptureImage: false, onResult:  { success in
+                print("Verify document flow: \(success)")
+            })
         })
         .padding()
     }
