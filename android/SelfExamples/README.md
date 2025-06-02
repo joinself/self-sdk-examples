@@ -2,7 +2,7 @@
 
 These are example applications that use SelfSDK, how to integrate across various use cases.
 
-You can read the [full documentation here](https://docs.joinself.com/introduction/overview/){target="_blank"}
+You can read the [full documentation here](https://docs.joinself.com/introduction/overview/)
 
 1. Requirements
    - Java 17 SDK
@@ -36,7 +36,7 @@ adb -d install -r registration/build/outputs/apk/debug/registration-debug.apk
 This app connect to another app by an inbox address. You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
 And it sends and receives chat messages.
 
-Note: update server inbox address in TODO
+Note: update server inbox address in TODO in `MainActivity.kt`
 
 Build & install command   
 ```bash
@@ -73,7 +73,7 @@ adb -d install -r verification/build/outputs/apk/debug/verification-debug.apk
 
 This app demonstrates how to handle incoming credential request, such as: liveness, email,...
 
-Note: update server inbox address in TODO
+Note: update server inbox address in TODO in `MainActivity.kt`
 
 Steps:
   - Update server inbox address in MainActivity.kt
