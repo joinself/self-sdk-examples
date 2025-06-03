@@ -46,7 +46,7 @@ android {
 }
 
 dependencies {
-    implementation("com.joinself:sdk-android:1.1.0")
+    implementation(libs.self.sdk.android)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

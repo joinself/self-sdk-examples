@@ -191,8 +191,8 @@ class MainActivity : ComponentActivity() {
                 // integrate email verification flow
                 addEmailRoute(navController, route = "emailRoute", selfModifier = selfModifier,
                     account = { account },
-                    onFinish = { error ->
-                        if (error == null) {
+                    onFinish = { isSuccess, error ->
+                        if (isSuccess) {
                             refreshClaims() // refresh email credentials to display
 
                             coroutineScope.launch(Dispatchers.Main) {
@@ -205,8 +205,8 @@ class MainActivity : ComponentActivity() {
                 // integrate passport, idcard verification flow
                 addDocumentVerificationRoute(navController, route = "documentRoute", selfModifier = selfModifier,account = { account },
                     isDevMode = { false }, // true for testing only
-                    onFinish = { error ->
-                        if (error == null) {
+                    onFinish = { isSuccess, error ->
+                        if (isSuccess) {
                             refreshClaims() // refresh email credentials to display
 
                             coroutineScope.launch(Dispatchers.Main) {
