@@ -33,10 +33,10 @@ adb -d install -r registration/build/outputs/apk/debug/registration-debug.apk
 
 #### 2. Chat
 
-This app connect to another app by an inbox address. You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
-And it sends and receives chat messages.
+This app connect to another app by an inbox address and sends, receives chat messages.
 
-Note: update server inbox address in TODO in `MainActivity.kt`
+- You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
+- Enter server inbox address, then click `Connect` to establish a connection with server. 
 
 Build & install command   
 ```bash
