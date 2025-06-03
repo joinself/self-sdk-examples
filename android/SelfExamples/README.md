@@ -56,7 +56,7 @@ This app connects another app by scanning the QRCode. And it sends, receives cha
 
 Steps:
   - Register an account
-  - Scan a QR code to establish a connection with server https://demo-sandbox.app.preview.joinself.com/
+  - Scan a QR code to establish a connection with server https://demo-sandbox.app.joinself.com/
   - Enter a message and send it
 
 Build & install command   

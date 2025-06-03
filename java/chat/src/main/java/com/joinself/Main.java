@@ -48,9 +48,9 @@ public class Main {
             SelfStatus status = account.configure(
                     storagePath,
                     storageKey,
-                    Target.PREVIEW_SANDBOX.rpcEndpoint(),
-                    Target.PREVIEW_SANDBOX.objectEndpoint(),
-                    Target.PREVIEW_SANDBOX.messageEndpoint(),
+                    Target.PRODUCTION_SANDBOX.rpcEndpoint(),
+                    Target.PRODUCTION_SANDBOX.objectEndpoint(),
+                    Target.PRODUCTION_SANDBOX.messageEndpoint(),
                     LogLevel.INFO,
                     new ConfigureCallbacks() {
                         @Override

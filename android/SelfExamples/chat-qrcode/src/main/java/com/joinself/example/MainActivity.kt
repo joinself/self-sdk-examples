@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
         val account = Account.Builder()
             .setContext(applicationContext)
-            .setEnvironment(Environment.preview)
+            .setEnvironment(Environment.production)
             .setSandbox(true)
             .setStoragePath(storagePath.absolutePath)
             .build()
