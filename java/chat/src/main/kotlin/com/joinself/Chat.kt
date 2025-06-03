@@ -35,9 +35,9 @@ fun main() {
     var discoveryRequestId: String = ""
 
     val sandbox = true
-    val rpcAddress = if (sandbox) Target.PREVIEW_SANDBOX.rpcEndpoint() else Target.PREVIEW.rpcEndpoint()
-    val objectAddress = if (sandbox) Target.PREVIEW_SANDBOX.objectEndpoint() else Target.PREVIEW.objectEndpoint()
-    val messageAddress = if (sandbox) Target.PREVIEW_SANDBOX.messageEndpoint() else Target.PREVIEW.messageEndpoint()
+    val rpcAddress = if (sandbox) Target.PRODUCTION_SANDBOX.rpcEndpoint() else Target.PRODUCTION.rpcEndpoint()
+    val objectAddress = if (sandbox) Target.PRODUCTION_SANDBOX.objectEndpoint() else Target.PRODUCTION.objectEndpoint()
+    val messageAddress = if (sandbox) Target.PRODUCTION_SANDBOX.messageEndpoint() else Target.PRODUCTION.messageEndpoint()
 
     val account = Account()
     val status = account.configure(
