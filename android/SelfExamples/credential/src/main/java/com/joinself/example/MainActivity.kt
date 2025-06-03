@@ -8,29 +8,25 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -41,12 +37,12 @@ import com.joinself.common.Environment
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
-import com.joinself.sdk.models.ChatMessage
 import com.joinself.sdk.models.Credential
 import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.CredentialResponse
-import com.joinself.sdk.models.Receipt
 import com.joinself.sdk.models.ResponseStatus
+import com.joinself.sdk.models.VerificationRequest
+import com.joinself.sdk.models.VerificationResponse
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -82,15 +78,25 @@ class MainActivity : ComponentActivity() {
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
-            var conAddress by remember { mutableStateOf("") }
+            var groupAddress by remember { mutableStateOf("") }
+            var serverInboxAddress by remember { mutableStateOf("") }
 
-            // TODO: update server inbox address here
-            val toConnectAddress = ""
+            var statusText by remember { mutableStateOf("") }
+
+            // connect with server by an inbox address, a group address is returned.
             fun connect() {
+                statusText = ""
                 coroutineScope.launch(Dispatchers.IO) {
-                    val groupAdress = account.connectWith(toConnectAddress, info = mapOf())
-                    if (groupAdress.isNotEmpty()) {
-                        conAddress =  groupAdress
+                    try {
+                        val gAdress = account.connectWith(serverInboxAddress, info = mapOf())
+                        if (gAdress.isNotEmpty()) {
+                            groupAddress = gAdress
+
+                            statusText = "group address: $gAdress"
+                        }
+                    } catch (ex: Exception) {
+                        Log.e("Self", ex.message, ex)
+                        statusText = "wrong server address"
                     }
                 }
             }
@@ -110,6 +116,10 @@ class MainActivity : ComponentActivity() {
 
                 coroutineScope.launch(Dispatchers.IO) {
                     account.send(credentialResponse)
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(applicationContext, "Credential response sent.", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
 
@@ -117,6 +127,7 @@ class MainActivity : ComponentActivity() {
                 account.setOnRequestListener { msg ->
                     when (msg) {
                         is CredentialRequest -> {
+                            // check if it's a liveness check request, then open Liveness UI flow
                             if (msg.details().any { it.types().contains(CredentialType.Liveness) && it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
                                 Log.d("Self", "received liveness request")
                                 credentialRequest = msg
@@ -126,6 +137,27 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
+                        }
+                        is VerificationRequest -> {
+                            // check the request is agreement, this example will respond automatically to the request
+                            // users need to handle msg.proofs() which contains agreement content, to display to user
+                            if (msg.types().contains(CredentialType.Agreement)) {
+                                val verificationResponse = VerificationResponse.Builder()
+                                    .setRequestId(msg.id())
+                                    .setTypes(msg.types())
+                                    .setToIdentifier(msg.toIdentifier())
+                                    .setFromIdentifier(msg.fromIdentifier())
+                                    .setStatus(ResponseStatus.accepted)
+                                    .build()
+
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    account.send(verificationResponse)
+
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(applicationContext, "Agreement response sent.", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -139,7 +171,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 composable("main") {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .padding(start = 8.dp, end = 8.dp)
@@ -155,16 +187,27 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Create Account")
                         }
 
-                        Button(
-                            onClick = {
-                                connect()
-                            },
-                            enabled = isRegistered && conAddress.isEmpty() && toConnectAddress.isNotEmpty()
+                        // connect to server
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "Connect")
+                            TextField(modifier = Modifier.weight(1f), enabled = groupAddress.isEmpty(),
+                                value = serverInboxAddress,
+                                onValueChange = { serverInboxAddress = it },
+                                placeholder = { Text("enter server inbox address") }
+                            )
+                            Button(
+                                modifier = Modifier.width(80.dp), contentPadding = PaddingValues(0.dp),
+                                onClick = {
+                                    connect()
+                                },
+                                enabled = isRegistered && serverInboxAddress.isNotEmpty() && groupAddress.isEmpty(),
+                            ) {
+                                Text(text = "Connect")
+                            }
                         }
-
-                        Text(text = "To: $conAddress")
+                        Text(text = statusText)
                     }
                 }
 

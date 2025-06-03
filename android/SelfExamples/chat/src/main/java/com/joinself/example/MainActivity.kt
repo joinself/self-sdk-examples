@@ -11,11 +11,13 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -35,20 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.joinself.common.Constants
-import com.joinself.common.CredentialType
 import com.joinself.common.Environment
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
-import com.joinself.sdk.models.Credential
-import com.joinself.sdk.models.CredentialRequest
-import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.Receipt
-import com.joinself.sdk.models.ResponseStatus
-import com.joinself.sdk.models.VerificationRequest
-import com.joinself.sdk.models.VerificationResponse
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -85,17 +79,28 @@ class MainActivity : ComponentActivity() {
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
-            var conAddress by remember { mutableStateOf("") }
-            val messages = remember { mutableStateListOf<String>() }
-            var inputMessage by remember { mutableStateOf("") }
+            var groupAddress by remember { mutableStateOf("") }
+            var serverInboxAddress by remember { mutableStateOf("") }
 
-            // TODO: update server inbox address here
-            val toConnectAddress = ""
+            var inputMessage by remember { mutableStateOf("") }
+            val messages = remember { mutableStateListOf<String>() }
+
+            var statusText by remember { mutableStateOf("") }
+
+            // connect with server by an inbox address, a group address is returned. The group address is used to send chat message.
             fun connect() {
+                statusText = ""
                 coroutineScope.launch(Dispatchers.IO) {
-                    val groupAdress = account.connectWith(toConnectAddress, info = mapOf())
-                    if (groupAdress.isNotEmpty()) {
-                        conAddress =  groupAdress
+                    try {
+                        val gAdress = account.connectWith(serverInboxAddress, info = mapOf())
+                        if (gAdress.isNotEmpty()) {
+                            groupAddress = gAdress
+
+                            statusText = "group address: $gAdress"
+                        }
+                    } catch (ex: Exception) {
+                        Log.e("Self", ex.message, ex)
+                        statusText = "wrong server address"
                     }
                 }
             }
@@ -103,7 +108,7 @@ class MainActivity : ComponentActivity() {
             fun sendChat() {
                 // build a chat message
                 val chat = ChatMessage.Builder()
-                    .setToIdentifier(conAddress)
+                    .setToIdentifier(groupAddress)
                     .setMessage(inputMessage)
                     .build()
 
@@ -116,22 +121,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            var requestMessage: CredentialRequest? = null
-            fun sendCredentialResponse(credentials: List<Credential>) {
-                if (requestMessage == null) return
-
-                val credentialResponse = CredentialResponse.Builder()
-                    .setRequestId(requestMessage!!.id())
-                    .setTypes(requestMessage!!.types())
-                    .setToIdentifier(requestMessage!!.toIdentifier())
-                    .setFromIdentifier(requestMessage!!.fromIdentifier())
-                    .setStatus(ResponseStatus.accepted)
-                    .setCredentials(credentials)
+            // send delivered receipt
+            fun sendReceipt(message: ChatMessage) {
+                val receipt = Receipt.Builder()
+                    .setToIdentifier(groupAddress)
+                    .setDelivered(listOf(message.id()))
                     .build()
-
-
                 coroutineScope.launch(Dispatchers.IO) {
-                    account.send(credentialResponse)
+                    account.send(receipt)
                 }
             }
 
@@ -145,44 +142,12 @@ class MainActivity : ComponentActivity() {
                 account.setOnMessageListener { msg ->
                     when (msg) {
                         is ChatMessage -> {
-                            messages.add(msg.message()) // append to the message list
+                            messages.add(msg.message()) // append text to the message list
+
+                            sendReceipt(msg) // send delivered receipt
                         }
                         is Receipt -> {
                             println("receipt message")
-                        }
-                    }
-                }
-
-                account.setOnRequestListener { msg ->
-                    when (msg) {
-                        is CredentialRequest -> {
-                            if (msg.details().any { it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
-                                Log.d("Self", "received liveness request")
-                                requestMessage = msg
-                                coroutineScope.launch(Dispatchers.Main) {
-                                    navController.navigate("livenessRoute")
-                                }
-                            }
-
-                        }
-                        is VerificationRequest -> {
-
-                            // check the request is agreement, this example will respond automatically to the request
-                            // users need to handle msg.proofs() which contains agreement content, to display to user
-                            if (msg.types().contains(CredentialType.Agreement)) {
-
-                                val verificationResponse = VerificationResponse.Builder()
-                                    .setRequestId(msg.id())
-                                    .setTypes(msg.types())
-                                    .setToIdentifier(msg.toIdentifier())
-                                    .setFromIdentifier(msg.fromIdentifier())
-                                    .setStatus(ResponseStatus.accepted)
-                                    .build()
-
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    account.send(verificationResponse)
-                                }
-                            }
                         }
                     }
                 }
@@ -196,7 +161,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 composable("main") {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .padding(start = 8.dp, end = 8.dp)
@@ -212,35 +177,48 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Create Account")
                         }
 
-                        Button(
-                            onClick = {
-                                connect()
-                            },
-                            enabled = isRegistered && conAddress.isEmpty() && toConnectAddress.isNotEmpty()
-                        ) {
-                            Text(text = "Connect")
-                        }
-
-                        Text(text = "To: $conAddress")
+                        // connect to server
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextField(value = inputMessage,
-                                onValueChange = {
-                                    inputMessage = it
-                                }
+                            TextField(modifier = Modifier.weight(1f), enabled = isRegistered && groupAddress.isEmpty(),
+                                value = serverInboxAddress,
+                                onValueChange = { serverInboxAddress = it },
+                                placeholder = { Text("enter server inbox address") }
                             )
                             Button(
+                                modifier = Modifier.width(80.dp), contentPadding = PaddingValues(0.dp),
                                 onClick = {
-                                    sendChat()
+                                    connect()
                                 },
-                                enabled = isRegistered && conAddress.isNotEmpty()
+                                enabled = isRegistered && groupAddress.isEmpty() && serverInboxAddress.isNotEmpty(),
+                            ) {
+                                Text(text = "Connect")
+                            }
+                        }
+                        Text(text = statusText)
+
+                        // chat input
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextField(modifier = Modifier.weight(1f),
+                                value = inputMessage,
+                                onValueChange = { inputMessage = it },
+                                enabled = groupAddress.isNotEmpty(),
+                                placeholder = { Text("enter chat message") }
+                            )
+                            Button(
+                                modifier = Modifier.width(80.dp), contentPadding = PaddingValues(0.dp),
+                                onClick = { sendChat() },
+                                enabled = isRegistered && groupAddress.isNotEmpty(),
                             ) {
                                 Text(text = "Send")
                             }
                         }
-                        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f).background(Color.LightGray)) {
+                        LazyColumn(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
                             items(messages) { msg ->
                                 Text(
                                     text = msg,
@@ -253,9 +231,7 @@ class MainActivity : ComponentActivity() {
 
                 // add liveness check to main navigation
                 addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = {
-                        account
-                    },
+                    account = { account },
                     withCredential = true,
                     onFinish = { selfie, credentials ->
                         if (!account.registered()) {
@@ -272,9 +248,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                 } catch (_: InvalidCredentialException) { }
                             }
-                        } else if (requestMessage != null) {
-                            sendCredentialResponse(credentials)
                         }
+
                         // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {
                             navController.popBackStack("livenessRoute", true)
