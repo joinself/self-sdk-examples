@@ -100,8 +100,10 @@ final class MainViewModel: ObservableObject {
     // transform credential into credential item to perform identifiable to display inside a List
     @Published var credentialItems: [CredentialItem] = []
     func reloadCredentialItems() {
-        credentialItems = account.credentials().map { credential in
-            CredentialItem(claims: credential.claims())
+        Task { @MainActor in
+            credentialItems = account.credentials().map { credential in
+                CredentialItem(claims: credential.claims())
+            }
         }
     }
     
