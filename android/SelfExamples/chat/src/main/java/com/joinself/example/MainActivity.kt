@@ -37,20 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.joinself.common.Constants
-import com.joinself.common.CredentialType
 import com.joinself.common.Environment
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
-import com.joinself.sdk.models.Credential
-import com.joinself.sdk.models.CredentialRequest
-import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.Receipt
-import com.joinself.sdk.models.ResponseStatus
-import com.joinself.sdk.models.VerificationRequest
-import com.joinself.sdk.models.VerificationResponse
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
@@ -95,6 +87,7 @@ class MainActivity : ComponentActivity() {
 
             var statusText by remember { mutableStateOf("") }
 
+            // connect with server by an inbox address, a group address is returned. The group address is used to send chat message.
             fun connect() {
                 statusText = ""
                 coroutineScope.launch(Dispatchers.IO) {
@@ -128,22 +121,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            var requestMessage: CredentialRequest? = null
-            fun sendCredentialResponse(credentials: List<Credential>) {
-                if (requestMessage == null) return
-
-                val credentialResponse = CredentialResponse.Builder()
-                    .setRequestId(requestMessage!!.id())
-                    .setTypes(requestMessage!!.types())
-                    .setToIdentifier(requestMessage!!.toIdentifier())
-                    .setFromIdentifier(requestMessage!!.fromIdentifier())
-                    .setStatus(ResponseStatus.accepted)
-                    .setCredentials(credentials)
+            // send delivered receipt
+            fun sendReceipt(message: ChatMessage) {
+                val receipt = Receipt.Builder()
+                    .setToIdentifier(groupAddress)
+                    .setDelivered(listOf(message.id()))
                     .build()
-
-
                 coroutineScope.launch(Dispatchers.IO) {
-                    account.send(credentialResponse)
+                    account.send(receipt)
                 }
             }
 
@@ -157,44 +142,12 @@ class MainActivity : ComponentActivity() {
                 account.setOnMessageListener { msg ->
                     when (msg) {
                         is ChatMessage -> {
-                            messages.add(msg.message()) // append to the message list
+                            messages.add(msg.message()) // append text to the message list
+
+                            sendReceipt(msg) // send delivered receipt
                         }
                         is Receipt -> {
                             println("receipt message")
-                        }
-                    }
-                }
-
-                account.setOnRequestListener { msg ->
-                    when (msg) {
-                        is CredentialRequest -> {
-                            if (msg.details().any { it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
-                                Log.d("Self", "received liveness request")
-                                requestMessage = msg
-                                coroutineScope.launch(Dispatchers.Main) {
-                                    navController.navigate("livenessRoute")
-                                }
-                            }
-
-                        }
-                        is VerificationRequest -> {
-
-                            // check the request is agreement, this example will respond automatically to the request
-                            // users need to handle msg.proofs() which contains agreement content, to display to user
-                            if (msg.types().contains(CredentialType.Agreement)) {
-
-                                val verificationResponse = VerificationResponse.Builder()
-                                    .setRequestId(msg.id())
-                                    .setTypes(msg.types())
-                                    .setToIdentifier(msg.toIdentifier())
-                                    .setFromIdentifier(msg.fromIdentifier())
-                                    .setStatus(ResponseStatus.accepted)
-                                    .build()
-
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    account.send(verificationResponse)
-                                }
-                            }
                         }
                     }
                 }
@@ -229,7 +182,7 @@ class MainActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextField(modifier = Modifier.weight(1f), enabled = groupAddress.isEmpty(),
+                            TextField(modifier = Modifier.weight(1f), enabled = isRegistered && groupAddress.isEmpty(),
                                 value = serverInboxAddress,
                                 onValueChange = { serverInboxAddress = it },
                                 placeholder = { Text("enter server inbox address") }
@@ -239,7 +192,7 @@ class MainActivity : ComponentActivity() {
                                 onClick = {
                                     connect()
                                 },
-                                enabled = isRegistered && serverInboxAddress.isNotEmpty() && groupAddress.isEmpty(),
+                                enabled = isRegistered && groupAddress.isEmpty() && serverInboxAddress.isNotEmpty(),
                             ) {
                                 Text(text = "Connect")
                             }
@@ -265,7 +218,7 @@ class MainActivity : ComponentActivity() {
                                 Text(text = "Send")
                             }
                         }
-                        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f).background(Color.LightGray)) {
+                        LazyColumn(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
                             items(messages) { msg ->
                                 Text(
                                     text = msg,
@@ -297,9 +250,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                 } catch (_: InvalidCredentialException) { }
                             }
-                        } else if (requestMessage != null) {
-                            sendCredentialResponse(credentials)
                         }
+
                         // nav back to main
                         coroutineScope.launch(Dispatchers.Main) {
                             navController.popBackStack("livenessRoute", true)

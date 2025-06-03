@@ -36,7 +36,11 @@ adb -d install -r registration/build/outputs/apk/debug/registration-debug.apk
 This app connect to another app by an inbox address and sends, receives chat messages.
 
 - You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
-- Enter server inbox address, then click `Connect` to establish a connection with server. 
+
+Steps:
+  - Register an account
+  - Enter server inbox address, then click `Connect` to establish a connection with server.
+  - Enter a message and send it.
 
 Build & install command   
 ```bash
@@ -49,7 +53,10 @@ adb -d install -r chat/build/outputs/apk/debug/chat-debug.apk
 This app connects another app by scanning the QRCode
 And it sends and receives chat messages.
 
-Need to scan QRCode from Demo app https://demo-sandbox.app.preview.joinself.com/
+Steps:
+  - Register an account
+  - Scan a qr code to establish a connection with server https://demo-sandbox.app.preview.joinself.com/
+  - Enter a message and send it
 
 Build & install command   
 ```bash
