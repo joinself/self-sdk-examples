@@ -170,4 +170,8 @@ class SelfAuthManager: ObservableObject {
             }
         }
     }
+    
+    func getAccount() -> Account {
+        return account
+    }
 }
