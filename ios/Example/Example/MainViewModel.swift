@@ -1,5 +1,5 @@
 //
-//  OnboardingViewModel.swift
+//  MainViewModel.swift
 //  Example
 //
 //  Created by Long Pham on 8/5/25.
@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import self_ios_sdk
 
-final class OnboardingViewModel: ObservableObject {
+final class MainViewModel: ObservableObject {
     @Published var isOnboardingCompleted: Bool = false
     
     let account = Account.Builder()
@@ -19,10 +19,25 @@ final class OnboardingViewModel: ObservableObject {
         .withStoragePath(FileManager.storagePath)
         .build()
     
+    var accountRegistered: Bool {
+        return account.registered()
+    }
+    
+    func registerAccount(completion: ((Bool) -> Void)? = nil) {
+        SelfSDK.showLiveness(account: account, showIntroduction: true, autoDismiss: true, onResult: { selfieImageData, credentials, error in
+            print("showLivenessCheck credentials: \(credentials)")
+            self.register(selfieImageData: selfieImageData, credentials: credentials) { success in
+                Task { @MainActor in
+                    completion?(success)
+                }
+            }
+        })
+    }
+    
     func lfcFlow() {
         SelfSDK.showLiveness(account: account, showIntroduction: true, autoDismiss: true, onResult: { selfieImageData, credentials, error in
             print("showLivenessCheck credentials: \(credentials)")
-            self.register(selfieImageData: selfieImageData, credentials: credentials)
+            //self.register(selfieImageData: selfieImageData, credentials: credentials)
         })
     }
     
@@ -31,8 +46,10 @@ final class OnboardingViewModel: ObservableObject {
             do {
                 let success = try await account.register(selfieImage: selfieImageData, credentials: credentials)
                 print("Register account: \(success)")
+                completion?(success)
             } catch let error {
                 print("Register Error: \(error)")
+                completion?(false)
             }
         }
     }

@@ -14,6 +14,7 @@ struct AuthenticationView: View {
     @State private var showQRScanner = false
     @State private var showVerifyDocument = false
     @State private var isCodeValid = false
+    @StateObject private var viewModel: MainViewModel = MainViewModel()
     
     var body: some View {
         VStack {
@@ -28,6 +29,11 @@ struct AuthenticationView: View {
             
             Button("Document Verification") {
                 showVerifyDocument = true
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button("Document Verification in SDK") {
+                
             }
             .buttonStyle(.borderedProminent)
         }
