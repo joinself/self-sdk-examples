@@ -231,9 +231,7 @@ class MainActivity : ComponentActivity() {
 
                 // add liveness check to main navigation
                 addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = {
-                        account
-                    },
+                    account = { account },
                     withCredential = true,
                     onFinish = { selfie, credentials ->
                         if (!account.registered()) {

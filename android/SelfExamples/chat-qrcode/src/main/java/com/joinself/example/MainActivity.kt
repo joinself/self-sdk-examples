@@ -11,11 +11,13 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -78,14 +80,14 @@ class MainActivity : ComponentActivity() {
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
-            var conAddress by remember { mutableStateOf("") }
+            var groupAddress by remember { mutableStateOf("") }
             val messages = remember { mutableStateListOf<String>() }
             var inputMessage by remember { mutableStateOf("") }
 
             fun sendChat() {
                 // build a chat message
                 val chat = ChatMessage.Builder()
-                    .setToIdentifier(conAddress)
+                    .setToIdentifier(groupAddress)
                     .setMessage(inputMessage)
                     .build()
 
@@ -125,7 +127,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 composable("main") {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .padding(start = 8.dp, end = 8.dp)
@@ -145,31 +147,34 @@ class MainActivity : ComponentActivity() {
                             onClick = {
                                 navController.navigate("qrRoute")
                             },
-                            enabled = isRegistered && conAddress.isEmpty()
+                            enabled = isRegistered && groupAddress.isEmpty()
                         ) {
                             Text(text = "Scan QRCode")
                         }
 
-                        Text(text = "To: $conAddress")
+                        Text(text = "Group address: $groupAddress")
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextField(value = inputMessage,
+                            TextField(modifier = Modifier.weight(1f),
+                                value = inputMessage,
                                 onValueChange = {
                                     inputMessage = it
-                                }
+                                },
+                                enabled = groupAddress.isNotEmpty(),
+                                placeholder = { Text("enter chat message") }
                             )
-                            Button(
+                            Button(modifier = Modifier.width(80.dp), contentPadding = PaddingValues(0.dp),
                                 onClick = {
                                     sendChat()
                                 },
-                                enabled = isRegistered && conAddress.isNotEmpty()
+                                enabled = isRegistered && groupAddress.isNotEmpty()
                             ) {
                                 Text(text = "Send")
                             }
                         }
-                        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f).background(Color.LightGray)) {
+                        LazyColumn(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
                             items(messages) { msg ->
                                 Text(
                                     text = msg,
@@ -182,9 +187,7 @@ class MainActivity : ComponentActivity() {
 
                 // add liveness check to main navigation
                 addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = {
-                        account
-                    },
+                    account = { account },
                     withCredential = true,
                     onFinish = { selfie, credentials ->
                         if (!account.registered()) {
@@ -221,7 +224,7 @@ class MainActivity : ComponentActivity() {
 
                             // then connect with the connection in the qrcode
                             account.connectWith(qrCodeBytes)
-                            conAddress = discoveryData?.address ?: "" // keep address to send data
+                            groupAddress = discoveryData?.address ?: "" // keep address to send data
 
                             coroutineScope.launch(Dispatchers.Main) {
                                 navController.popBackStack("qrRoute", true)
