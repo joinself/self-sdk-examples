@@ -12,6 +12,7 @@ struct MainContentView: View {
     
     @ObservedObject var viewModel: MainViewModel = MainViewModel()
     @State private var showVerifyDocument: Bool = false
+    @State private var showVerifyEmail: Bool = false
     
     var body: some View {
         VStack {
@@ -23,6 +24,7 @@ struct MainContentView: View {
             Button {
                 viewModel.registerAccount { success in
                     print("Register account finished: \(success)")
+                    viewModel.accountRegistered = success
                 }
             } label: {
                 Text("Register Account")
@@ -41,6 +43,25 @@ struct MainContentView: View {
                 showVerifyDocument = true
             } label: {
                 Text("Verify Document Flow")
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+                showVerifyEmail = true
+            } label: {
+                Text("Verify Email Flow")
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+                SelfSDK.verifyEmail(account: viewModel.account, transitionAsModal: true) { success in
+                    print("Verify email finished: \(success)")
+                    if success {
+                        self.viewModel.reloadCredentialItems()
+                    }
+                }
+            } label: {
+                Text("Verify Email Without Prompt Flow")
             }
             .buttonStyle(.borderedProminent)
             List {
@@ -62,7 +83,20 @@ struct MainContentView: View {
                 print("Verify document finished: \(success)")
                 showVerifyDocument = false
                 // reload view to display document's credential
-                
+                if success {
+                    self.viewModel.reloadCredentialItems()
+                }
+            })
+        })
+        .fullScreenCover(isPresented: $showVerifyEmail, onDismiss: {
+            
+        }, content: {
+            EmailFlow(account: viewModel.account, autoDismiss: false, onResult: { success in
+                print("Verify email finished = \(success)")
+                self.showVerifyEmail = false
+                if success {
+                    self.viewModel.reloadCredentialItems()
+                }
             })
         })
         .padding()
