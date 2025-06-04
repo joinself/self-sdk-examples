@@ -16,7 +16,6 @@ struct CredentialItem: Identifiable {
 
 final class MainViewModel: ObservableObject {
     @Published var isOnboardingCompleted: Bool = false
-    @Published var onAccountStatusChange: PassthroughSubject<Bool, Never> = PassthroughSubject<Bool, Never>()
     
     let account: Account
     init() {
@@ -39,7 +38,7 @@ final class MainViewModel: ObservableObject {
         account.setOnStatusListener { status in
             print("init account status:\(status)")
             // reload credentials view
-            self.onAccountStatusChange.send(status == 0)
+            self.accountRegistered = self.account.registered()
             self.reloadCredentialItems()
         }
 
@@ -93,9 +92,7 @@ final class MainViewModel: ObservableObject {
         }
     }
     
-    var accountRegistered: Bool {
-        return account.registered()
-    }
+    @Published var accountRegistered: Bool = false
     
     // transform credential into credential item to perform identifiable to display inside a List
     @Published var credentialItems: [CredentialItem] = []
