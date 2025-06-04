@@ -38,7 +38,9 @@ final class MainViewModel: ObservableObject {
         account.setOnStatusListener { status in
             print("init account status:\(status)")
             // reload credentials view
-            self.accountRegistered = self.account.registered()
+            Task { @MainActor in
+                self.accountRegistered = self.account.registered()
+            }
             self.reloadCredentialItems()
         }
 
@@ -113,6 +115,24 @@ final class MainViewModel: ObservableObject {
                 }
             }
         })
+    }
+    
+    func handleAuthData(data: Data, completion: ((Error?) -> Void)? = nil) {
+        Task(priority: .background) {
+            do {
+                let discoveryData = try await Account.qrCode(data: data)
+                print("Discovery Data: \(discoveryData)")
+                try await account.connectWith(qrCode: data)
+                Task { @MainActor in
+                    completion?(nil)
+                }
+            } catch {
+                print("Handle data error: \(error)")
+                Task { @MainActor in
+                    completion?(error)
+                }
+            }
+        }
     }
     
     func lfcFlow() {

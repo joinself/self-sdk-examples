@@ -7,12 +7,15 @@
 
 import SwiftUI
 import self_ios_sdk
+import SelfUI
 
 struct MainContentView: View {
     
     @ObservedObject var viewModel: MainViewModel = MainViewModel()
     @State private var showVerifyDocument: Bool = false
     @State private var showVerifyEmail: Bool = false
+    @State private var showQRScanner = false
+    @State private var isCodeValid = false
     
     var body: some View {
         VStack {
@@ -64,6 +67,13 @@ struct MainContentView: View {
                 Text("Verify Email Without Prompt Flow")
             }
             .buttonStyle(.borderedProminent)
+            
+            Button {
+                showQRScanner = true
+            } label: {
+                Text("Show QR Scanner View")
+            }
+            .buttonStyle(.borderedProminent)
             List {
                 // display credentials here!
                 ForEach(viewModel.credentialItems) { credentialItem in
@@ -98,6 +108,20 @@ struct MainContentView: View {
                     self.viewModel.reloadCredentialItems()
                 }
             })
+        })
+        .fullScreenCover(isPresented: $showQRScanner, onDismiss: {
+            
+        }, content: {
+            QRReaderView(isCodeValid: $isCodeValid, onCode: { code in
+                print("QRCode: \(code)")
+            }) { codeData in
+                print("QRCode: \(codeData)")
+                viewModel.handleAuthData(data: codeData) { error in
+                    if error == nil {
+                        showQRScanner = false
+                    }
+                }
+            }
         })
         .padding()
     }
