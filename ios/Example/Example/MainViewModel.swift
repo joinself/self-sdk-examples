@@ -38,7 +38,9 @@ final class MainViewModel: ObservableObject {
         account.setOnStatusListener { status in
             print("init account status:\(status)")
             // reload credentials view
-            self.accountRegistered = self.account.registered()
+            Task { @MainActor in
+                self.accountRegistered = self.account.registered()
+            }
             self.reloadCredentialItems()
         }
 
@@ -72,6 +74,8 @@ final class MainViewModel: ObservableObject {
 
             case is SigningRequest:
                 let signingRequest = message as! SigningRequest
+                print("Received signing request: \(signingRequest.id())")
+                self.handleSigningRequest(signingRequest: signingRequest)
 
             default:
                 print("TODO: Handle For Request: \(message)")
@@ -112,6 +116,48 @@ final class MainViewModel: ObservableObject {
                     completion?(success)
                 }
             }
+        })
+    }
+    
+    func handleAuthData(data: Data, completion: ((Error?) -> Void)? = nil) {
+        Task(priority: .background) {
+            do {
+                let discoveryData = try await Account.qrCode(data: data)
+                print("Discovery Data: \(discoveryData)")
+                try await account.connectWith(qrCode: data)
+                Task { @MainActor in
+                    completion?(nil)
+                }
+            } catch {
+                print("Handle data error: \(error)")
+                Task { @MainActor in
+                    completion?(error)
+                }
+            }
+        }
+    }
+    
+    func handleSigningRequest(signingRequest: SigningRequest) {
+        // assume we will accept the request immediately
+        
+        self.respondToSigningRequest(signingRequest: signingRequest, status: .accepted, credentials: [])
+    }
+    
+    func respondToSigningRequest(signingRequest: SigningRequest, status: ResponseStatus, credentials: [Credential]) {
+        print("respondToSigningRequest: \(signingRequest.id()) -> status: \(status)")
+        
+        let signingResponse = SigningResponse.Builder()
+            .withRequestId(signingRequest.id())
+            .toIdentifier(signingRequest.toIdentifier())
+            .fromIdentifier(signingRequest.fromIdentifier())
+            .withStatus(status)
+            .withCredentials(credentials)
+            .build()
+
+        Task(priority: .background, operation: {
+            try await self.account.send(message: signingResponse, onAcknowledgement: {msgId, error in
+                print("sent signing response with id: \(msgId) error: \(error)")
+            })
         })
     }
     
