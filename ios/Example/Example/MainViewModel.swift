@@ -74,6 +74,8 @@ final class MainViewModel: ObservableObject {
 
             case is SigningRequest:
                 let signingRequest = message as! SigningRequest
+                print("Received signing request: \(signingRequest.id())")
+                self.handleSigningRequest(signingRequest: signingRequest)
 
             default:
                 print("TODO: Handle For Request: \(message)")
@@ -133,6 +135,30 @@ final class MainViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    func handleSigningRequest(signingRequest: SigningRequest) {
+        // assume we will accept the request immediately
+        
+        self.respondToSigningRequest(signingRequest: signingRequest, status: .accepted, credentials: [])
+    }
+    
+    func respondToSigningRequest(signingRequest: SigningRequest, status: ResponseStatus, credentials: [Credential]) {
+        print("respondToSigningRequest: \(signingRequest.id()) -> status: \(status)")
+        
+        let signingResponse = SigningResponse.Builder()
+            .withRequestId(signingRequest.id())
+            .toIdentifier(signingRequest.toIdentifier())
+            .fromIdentifier(signingRequest.fromIdentifier())
+            .withStatus(status)
+            .withCredentials(credentials)
+            .build()
+
+        Task(priority: .background, operation: {
+            try await self.account.send(message: signingResponse, onAcknowledgement: {msgId, error in
+                print("sent signing response with id: \(msgId) error: \(error)")
+            })
+        })
     }
     
     func lfcFlow() {
