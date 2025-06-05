@@ -71,6 +71,7 @@ final class MainViewModel: ObservableObject {
 
             case is VerificationRequest:
                 let verificationRequest = message as! VerificationRequest
+                self.handleVerificationRequest(verificationRequest: verificationRequest)
 
             case is SigningRequest:
                 let signingRequest = message as! SigningRequest
@@ -157,6 +158,31 @@ final class MainViewModel: ObservableObject {
         Task(priority: .background, operation: {
             try await self.account.send(message: signingResponse, onAcknowledgement: {msgId, error in
                 print("sent signing response with id: \(msgId) error: \(error)")
+            })
+        })
+    }
+    
+    func handleVerificationRequest(verificationRequest: VerificationRequest) {
+        // assume we will accept the request immediately
+        
+        self.respondToVerificationRequest(verificationRequest: verificationRequest, status: .accepted, credentials: [])
+    }
+    
+    func respondToVerificationRequest(verificationRequest: VerificationRequest, status: ResponseStatus, credentials: [Credential]) {
+        print("respondToVerificationRequest: \(verificationRequest.id()) -> status: \(status)")
+        
+        let verificationResponse = VerificationResponse.Builder()
+            .withRequestId(verificationRequest.id())
+            .toIdentifier(verificationRequest.toIdentifier())
+            .fromIdentifier(verificationRequest.fromIdentifier())
+            .withTypes(verificationRequest.types())
+            .withStatus(status)
+            .withCredentials(credentials)
+            .build()
+
+        Task(priority: .background, operation: {
+            try await self.account.send(message: verificationResponse, onAcknowledgement: {msgId, error in
+                print("sent verification response with id: \(msgId) error: \(error)")
             })
         })
     }
