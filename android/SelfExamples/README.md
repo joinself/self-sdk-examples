@@ -84,7 +84,7 @@ adb -d install -r verification/build/outputs/apk/debug/verification-debug.apk
 
 #### 5. Credential
 
-This app demonstrates how to handle incoming credential request, such as: liveness, email,...
+This app demonstrates how to handle incoming credential request, such as: liveness, email, agreement requests ...
 
 - You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
 
