@@ -34,6 +34,7 @@ import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.ui.addLivenessCheckRoute
+import com.joinself.ui.component.LoadingDialog
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,7 +50,7 @@ class MainActivity : ComponentActivity() {
         // init the sdk
         SelfSDK.initialize(applicationContext,
             pushToken = null,
-            log = { Log.d("Self", it) }
+            log = { Log.d("SelfSDK", it) }
         )
 
         // the sdk will store data in this directory, make sure it exists.
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
+            var isDisplayProgressDialog by remember { mutableStateOf(false) }
 
             // save to file system
             var backupByteArray by remember { mutableStateOf(byteArrayOf()) }
@@ -89,22 +91,25 @@ class MainActivity : ComponentActivity() {
                 contract = ActivityResultContracts.GetContent()
             ) { uri: Uri? ->
                 uri?.let {
-                    val bytes = applicationContext.contentResolver.openInputStream(it)?.use { input ->
+                    val backupBytes = applicationContext.contentResolver.openInputStream(it)?.use { input ->
                         input.readBytes()
                     }
-                    if (bytes != null && bytes.isNotEmpty()) {
+                    if (backupBytes != null && backupBytes.isNotEmpty() && selfieByteArray.isNotEmpty()) {
                         coroutineScope.launch(Dispatchers.IO) {
                             try {
-                                val credentials = account.restore(bytes, selfieByteArray)
+                                isDisplayProgressDialog = true
+                                val credentials = account.restore(backupBytes, selfieByteArray)
+                                isRegistered = credentials.isNotEmpty()
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(applicationContext, "Restore result: ${credentials.isNotEmpty()}", Toast.LENGTH_LONG).show()
                                 }
                             } catch (ex: Exception) {
-                                Log.e("Self", "restore error", ex)
+                                Log.e("SelfSDK", "restore error", ex)
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(applicationContext, "Restore failed: ${ex.message}", Toast.LENGTH_LONG).show()
                                 }
                             }
+                            isDisplayProgressDialog = false
                         }
                     }
                 }
@@ -160,6 +165,10 @@ class MainActivity : ComponentActivity() {
                             enabled = !isRegistered
                         ) {
                             Text(text = "Restore")
+                        }
+
+                        if (isDisplayProgressDialog) {
+                            LoadingDialog(selfModifier)
                         }
                     }
                 }
