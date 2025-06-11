@@ -12,21 +12,27 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,12 +44,14 @@ import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.Credential
+import com.joinself.sdk.models.CredentialMessage
 import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.ResponseStatus
 import com.joinself.sdk.models.VerificationRequest
 import com.joinself.sdk.models.VerificationResponse
 import com.joinself.sdk.ui.addLivenessCheckRoute
+import com.joinself.ui.component.HorizontalDialog
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,6 +90,7 @@ class MainActivity : ComponentActivity() {
             var serverInboxAddress by remember { mutableStateOf("") }
 
             var statusText by remember { mutableStateOf("") }
+            val receivedCredentials = remember { mutableStateListOf<Credential>() }
 
             // connect with server by an inbox address, a group address is returned.
             fun connect() {
@@ -123,7 +132,28 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val storedCredentials = remember { mutableStateListOf<Credential>() }
+            // get all credentials stored in sdk
+            fun refreshClaims() {
+                storedCredentials.clear()
+                storedCredentials.addAll(account.credentials())
+            }
+
             LaunchedEffect(Unit) {
+                account.setOnStatusListener {
+                    refreshClaims()
+                }
+
+                account.setOnMessageListener { msg ->
+                    when (msg) {
+                        // receive custom credentials messages
+                        is CredentialMessage -> {
+                            Log.d("Self", "received credential message")
+                            receivedCredentials.addAll(msg.credentials())
+                        }
+                    }
+                }
+
                 account.setOnRequestListener { msg ->
                     when (msg) {
                         is CredentialRequest -> {
@@ -172,13 +202,13 @@ class MainActivity : ComponentActivity() {
                 composable("main") {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        horizontalAlignment = Alignment.Start,
                         modifier = Modifier
                             .padding(start = 8.dp, end = 8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
-                        Button(
+                        Text(modifier = Modifier.padding(top = 40.dp).align(Alignment.CenterHorizontally), text = "Registered: ${isRegistered}")
+                        Button(modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
                                 navController.navigate("livenessRoute")
                             },
@@ -208,6 +238,40 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         Text(text = statusText)
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            fontWeight = FontWeight.Bold,
+                            text = "Credentials on Self Account: ${storedCredentials.size}"
+                        )
+                        LazyColumn {
+                            items(storedCredentials) { cred ->
+                                Text(text = "${cred.types()}\n   ${cred.claims().joinToString { "${it.subject()}:${it.value()}\n" }}")
+                            }
+                        }
+                    }
+
+                    // display a confirm dialog to store credential to sdk
+                    if (receivedCredentials.isNotEmpty()) {
+                        val credentialString = receivedCredentials.flatMap { it.claims() }.joinToString { "${it.subject()}:${it.value()}\n" }
+
+                        HorizontalDialog(
+                            selfModifier = selfModifier,
+                            title = "Would you like to store these credentials?",
+                            message = credentialString,
+                            leftButtonText = "No",
+                            rightButtonText = "Yes",
+                            onLeft = {
+                                receivedCredentials.clear()
+                            },
+                            onRight = {
+                                // store credentials to sdk
+                                account.storeCredentials(receivedCredentials)
+                                receivedCredentials.clear()
+
+                                refreshClaims()
+                            }
+                        )
                     }
                 }
 

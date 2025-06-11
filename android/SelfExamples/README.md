@@ -69,7 +69,7 @@ adb -d install -r chat-qrcode/build/outputs/apk/debug/chat-qrcode-debug.apk
 #### 4. Verification
 
 This simple app demonstrates how to integrate email and document verification processes.
-It also displays all verified credentials in the account.
+It also displays all verified credentials in the sdk.
 
 Steps:
   - Register an account
@@ -84,7 +84,10 @@ adb -d install -r verification/build/outputs/apk/debug/verification-debug.apk
 
 #### 5. Credential
 
-This app demonstrates how to handle incoming credential request, such as: liveness, email, agreement requests ...
+This app demonstrates: 
+- handle incoming credential request, such as: liveness, email, ...
+- agreement/document request
+- receive custom credential message, store credentials in sdk, look up and display them on UI.
 
 - You need to use server SDK (go-sdk, jvm-sdk) to configure an account, handle `onKeyPackage` callback and open the inbox.
 
@@ -98,4 +101,22 @@ Build & install command
 ./gradlew :credential:assembleDebug
 
 adb -d install -r credential/build/outputs/apk/debug/credential-debug.apk
+```
+
+#### 6. Backup & Restore
+
+This simple app demonstrates how to back up sdk database and restore it.
+
+Steps:
+- Register an account
+- Choose back up and save the backup file in file system
+
+- Uninstall & Reinstall it again
+- Restore from backup file in file system
+
+Build & install command
+```bash
+./gradlew :backup-restore:assembleDebug
+
+adb -d install -r backup-restore/build/outputs/apk/debug/backup-restore-debug.apk
 ```
