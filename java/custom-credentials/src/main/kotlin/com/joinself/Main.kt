@@ -162,7 +162,7 @@ fun main() {
         .credentialSubject(subjectAddress)
         .credentialSubjectClaims(mapOf(
             "customer" to mapOf(
-                "customerOf" to issuerAddress)))
+                "name" to "Test Name")))
         .issuer(issuerAddress)
         .validFrom(Timestamp.now())
         .signWith(inboxAddress, Timestamp.now())
