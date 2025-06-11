@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
             var serverInboxAddress by remember { mutableStateOf("") }
 
             var statusText by remember { mutableStateOf("") }
-            var receivedCredentials = remember { mutableStateListOf<Credential>() }
+            val receivedCredentials = remember { mutableStateListOf<Credential>() }
 
             // connect with server by an inbox address, a group address is returned.
             fun connect() {
@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
             }
 
             val storedCredentials = remember { mutableStateListOf<Credential>() }
+            // get all credentials stored in sdk
             fun refreshClaims() {
                 storedCredentials.clear()
                 storedCredentials.addAll(account.credentials())
@@ -250,6 +251,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    // display a confirm dialog to store credential to sdk
                     if (receivedCredentials.isNotEmpty()) {
                         val credentialString = receivedCredentials.flatMap { it.claims() }.joinToString { "${it.subject()}:${it.value()}\n" }
 
