@@ -17,7 +17,9 @@ struct MainContentView: View {
     @State private var showQRScanner = false
     @State private var isCodeValid = false
     @State private var isBackingUp = false
-    
+    @State private var isRestoring = false
+    @State private var showCaptureLivenessImage = false
+    @AppStorage("backupFile") private var backupFile: URL?
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -78,13 +80,36 @@ struct MainContentView: View {
             
             Button {
                 isBackingUp = true
-                viewModel.backup { success in
+                viewModel.backup { url in
                     isBackingUp = false
+                    backupFile = url
                 }
             } label: {
                 Text("Backup")
             }
             .disabled(isBackingUp)
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+                guard let backupFile = backupFile else {
+                    print("Please do backup first!")
+                    return
+                }
+                
+                // 1. Do liveness to get liveness's selfie image
+                SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
+                    print("showLivenessCheck credentials: \(credentials)")
+                    isRestoring = true
+                    viewModel.restore(selfieData: selfieImageData, backupFile: backupFile) { success in
+                        print("Restore account finished: \(success)")
+                        isRestoring = false
+                    }
+                })
+                
+            } label: {
+                Text("Restore")
+            }
+            .disabled(isRestoring)
             .buttonStyle(.borderedProminent)
             List {
                 // display credentials here!
@@ -137,8 +162,4 @@ struct MainContentView: View {
         })
         .padding()
     }
-}
-
-#Preview {
-    MainContentView()
 }
