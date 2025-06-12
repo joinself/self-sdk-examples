@@ -206,6 +206,24 @@ final class MainViewModel: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Backup & Restore
+    func backup(completion: ((Bool) -> Void)? = nil) {
+        Task (priority: .background) {
+            guard let backupFile = await account.backup() else {
+                completion?(false)
+                return
+            }
+            print("Backup file: \(backupFile)")
+            Task { @MainActor in
+                completion?(true)
+            }
+        }
+    }
+    
+    func restore() {
+        
+    }
 }
 
 extension FileManager {

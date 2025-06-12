@@ -16,6 +16,7 @@ struct MainContentView: View {
     @State private var showVerifyEmail: Bool = false
     @State private var showQRScanner = false
     @State private var isCodeValid = false
+    @State private var isBackingUp = false
     
     var body: some View {
         VStack {
@@ -73,6 +74,17 @@ struct MainContentView: View {
             } label: {
                 Text("Show QR Scanner View")
             }
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+                isBackingUp = true
+                viewModel.backup { success in
+                    isBackingUp = false
+                }
+            } label: {
+                Text("Backup")
+            }
+            .disabled(isBackingUp)
             .buttonStyle(.borderedProminent)
             List {
                 // display credentials here!
