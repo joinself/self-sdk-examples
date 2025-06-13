@@ -16,7 +16,17 @@ struct MainContentView: View {
     @State private var showVerifyEmail: Bool = false
     @State private var showQRScanner = false
     @State private var isCodeValid = false
+    @State private var isBackingUp = false
+    @State private var isRestoring = false
     
+    @State private var showDocumentPicker = false
+    @State private var selectedFileName: String?
+    @State private var selectedFileURLs: [URL] = []
+    @State private var fileToShareURLs: [URL] = []
+    @State private var showShareSheet = false
+    
+    @State private var showCaptureLivenessImage = false
+    @AppStorage("backupFile") private var backupFile: URL?
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -74,6 +84,34 @@ struct MainContentView: View {
                 Text("Show QR Scanner View")
             }
             .buttonStyle(.borderedProminent)
+            
+            Button {
+                isBackingUp = true
+                viewModel.backup { url in
+                    isBackingUp = false
+                    backupFile = url
+                    if let url = url {
+                        fileToShareURLs = [url]
+                        // share backup file
+                        showShareSheet = true
+                    }
+                    
+                    
+                }
+            } label: {
+                Text("Backup Account")
+            }
+            .disabled(isBackingUp)
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+                showDocumentPicker = true
+                
+            } label: {
+                Text("Restore Account")
+            }
+            .disabled(isRestoring)
+            .buttonStyle(.borderedProminent)
             List {
                 // display credentials here!
                 ForEach(viewModel.credentialItems) { credentialItem in
@@ -123,10 +161,38 @@ struct MainContentView: View {
                 }
             }
         })
+        .onChange(of: self.selectedFileURLs, perform: { newValue in
+            print("Files change: \(newValue)")
+            if let url = newValue.first, url.pathExtension == "self_backup" {
+                // handle restore account
+                backupFile = url
+                guard let backupFile = backupFile else {
+                    return
+                }
+                
+                if url.startAccessingSecurityScopedResource() {
+                    print("startAccessingSecurityScopedResource")
+                }
+                
+                // 1. Do liveness to get liveness's selfie image
+                SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
+                    print("showLivenessCheck credentials: \(credentials)")
+                    isRestoring = true
+                    viewModel.restore(selfieData: selfieImageData, backupFile: backupFile) { success in
+                        print("Restore account finished: \(success)")
+                        isRestoring = false
+                    }
+                })
+            }
+        })
+        .sheet(isPresented: $showDocumentPicker) {
+            DocumentPicker(selectedFileName: $selectedFileName, selectedFileURLs: $selectedFileURLs)
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: fileToShareURLs) {
+                self.showShareSheet = false
+            }
+        }
         .padding()
     }
-}
-
-#Preview {
-    MainContentView()
 }

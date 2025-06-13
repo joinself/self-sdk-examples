@@ -206,6 +206,40 @@ final class MainViewModel: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Backup & Restore
+    func backup(completion: ((URL?) -> Void)? = nil) {
+        Task (priority: .background) {
+            guard let backupFile = await account.backup() else {
+                completion?(nil)
+                return
+            }
+            print("Backup file: \(backupFile)")
+            Task { @MainActor in
+                completion?(backupFile)
+            }
+        }
+    }
+    
+    
+    func restore(selfieData: Data, backupFile: URL, completion: ((Bool) -> Void)? = nil) {
+        Task (priority: .background) {
+            do {
+                let credentials = try await account.restore(backupFile: backupFile, selfieImage: selfieData)
+                print("Restore complete with error: \(credentials.count)")
+                if credentials.count > 0  {
+                    // register sandbox
+                } else {
+                    Task { @MainActor in
+                        completion?(false)
+                    }
+                }
+            } catch {
+                
+            }
+            
+        }
+    }
 }
 
 extension FileManager {
