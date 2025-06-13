@@ -7,9 +7,12 @@
 
 import SwiftUI
 import self_ios_sdk
+import ui_components
 
 @main
 struct ExampleApp: App {
+    
+    @ObservedObject var viewModel: MainViewModel = MainViewModel()
     
     init () {
         SelfSDK.initialize {
@@ -21,7 +24,20 @@ struct ExampleApp: App {
     
     var body: some Scene {
         WindowGroup {
-            MainContentView()
+            if viewModel.accountRegistered {
+                MainContentView()
+                    .environmentObject(viewModel)
+            } else {
+                RegistrationIntroScreen(
+                    onRegistrationComplete: {
+                        print("Preview: Registration complete")
+                    }) {
+                        // start registration
+                        viewModel.registerAccount { success in
+                            viewModel.accountRegistered = success
+                        }
+                    }
+            }
         }
     }
 }

@@ -99,6 +99,7 @@ final class MainViewModel: ObservableObject {
     
     @Published var accountRegistered: Bool = false
     
+    
     // transform credential into credential item to perform identifiable to display inside a List
     @Published var credentialItems: [CredentialItem] = []
     func reloadCredentialItems() {
@@ -239,6 +240,10 @@ final class MainViewModel: ObservableObject {
             }
             
         }
+    }
+    
+    func accountIsRegistered() -> Bool {
+        return account.registered()
     }
 }
 
