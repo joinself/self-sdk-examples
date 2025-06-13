@@ -18,6 +18,13 @@ struct MainContentView: View {
     @State private var isCodeValid = false
     @State private var isBackingUp = false
     @State private var isRestoring = false
+    
+    @State private var showDocumentPicker = false
+    @State private var selectedFileName: String?
+    @State private var selectedFileURLs: [URL] = []
+    @State private var fileToShareURLs: [URL] = []
+    @State private var showShareSheet = false
+    
     @State private var showCaptureLivenessImage = false
     @AppStorage("backupFile") private var backupFile: URL?
     var body: some View {
@@ -83,11 +90,25 @@ struct MainContentView: View {
                 viewModel.backup { url in
                     isBackingUp = false
                     backupFile = url
+                    if let url = url {
+                        fileToShareURLs = [url]
+                        // share backup file
+                        showShareSheet = true
+                    }
+                    
+                    
                 }
             } label: {
                 Text("Backup")
             }
             .disabled(isBackingUp)
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+                showDocumentPicker = true
+            } label: {
+                Text("Show Document Picker")
+            }
             .buttonStyle(.borderedProminent)
             
             Button {
@@ -160,6 +181,14 @@ struct MainContentView: View {
                 }
             }
         })
+        .sheet(isPresented: $showDocumentPicker) {
+            DocumentPicker(selectedFileName: $selectedFileName, selectedFileURLs: $selectedFileURLs)
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: fileToShareURLs) {
+                self.showShareSheet = false
+            }
+        }
         .padding()
     }
 }
