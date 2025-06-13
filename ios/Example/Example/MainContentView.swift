@@ -99,36 +99,16 @@ struct MainContentView: View {
                     
                 }
             } label: {
-                Text("Backup")
+                Text("Backup Account")
             }
             .disabled(isBackingUp)
             .buttonStyle(.borderedProminent)
             
             Button {
                 showDocumentPicker = true
-            } label: {
-                Text("Show Document Picker")
-            }
-            .buttonStyle(.borderedProminent)
-            
-            Button {
-                guard let backupFile = backupFile else {
-                    print("Please do backup first!")
-                    return
-                }
-                
-                // 1. Do liveness to get liveness's selfie image
-                SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
-                    print("showLivenessCheck credentials: \(credentials)")
-                    isRestoring = true
-                    viewModel.restore(selfieData: selfieImageData, backupFile: backupFile) { success in
-                        print("Restore account finished: \(success)")
-                        isRestoring = false
-                    }
-                })
                 
             } label: {
-                Text("Restore")
+                Text("Restore Account")
             }
             .disabled(isRestoring)
             .buttonStyle(.borderedProminent)
@@ -179,6 +159,30 @@ struct MainContentView: View {
                         showQRScanner = false
                     }
                 }
+            }
+        })
+        .onChange(of: self.selectedFileURLs, perform: { newValue in
+            print("Files change: \(newValue)")
+            if let url = newValue.first, url.pathExtension == "self_backup" {
+                // handle restore account
+                backupFile = url
+                guard let backupFile = backupFile else {
+                    return
+                }
+                
+                if url.startAccessingSecurityScopedResource() {
+                    print("startAccessingSecurityScopedResource")
+                }
+                
+                // 1. Do liveness to get liveness's selfie image
+                SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
+                    print("showLivenessCheck credentials: \(credentials)")
+                    isRestoring = true
+                    viewModel.restore(selfieData: selfieImageData, backupFile: backupFile) { success in
+                        print("Restore account finished: \(success)")
+                        isRestoring = false
+                    }
+                })
             }
         })
         .sheet(isPresented: $showDocumentPicker) {
