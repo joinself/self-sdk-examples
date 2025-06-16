@@ -21,6 +21,10 @@ final class MainViewModel: ObservableObject {
     @Published var accountRegistered: Bool = false
     @Published var isInitialized: Bool = false
     
+    @Published var isConnecting = true
+    @Published var connectionError: String? = nil
+    @Published var hasTimedOut = false
+    
     init() {
         // Initialize SDK
         SelfSDK.initialize()
@@ -214,6 +218,50 @@ final class MainViewModel: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Server connection
+    func connectToSelfServer(serverAddress: String, completion: @escaping((Bool) -> Void)) async {
+        print("🌐 ServerConnectionProcessing: Connecting to Self server with address: \(serverAddress)")
+        
+        // Check if we already timed out
+        if !isConnecting {
+            print("🌐 ServerConnectionProcessing: Connection attempt cancelled due to timeout")
+            return
+        }
+        
+        do {
+            let connectionResult = try await account.connectWith(address: serverAddress, info: [:])
+
+            DispatchQueue.main.async {
+                // Only proceed if we haven't timed out
+                if self.isConnecting {
+                    print("🌐 ServerConnectionProcessing: ✅ Successfully connected to server")
+                    print("🌐 ServerConnectionProcessing: Connection result: \(connectionResult)")
+
+                    //currentStep = 4 // Completed
+                    self.isConnecting = false
+
+                    // Wait a moment to show completion, then navigate
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                      //  onConnectionComplete()
+                        completion(true)
+                    }
+                }
+            }
+
+        } catch {
+            print("🌐 ServerConnectionProcessing: ❌ Failed to connect to server: \(error)")
+
+            DispatchQueue.main.async {
+                // Only set error if we haven't already timed out
+                if self.isConnecting {
+                    self.connectionError = "Failed to connect: \(error.localizedDescription)"
+                    self.isConnecting = false
+                }
+            }
+        }
+    }
+    
     
     // MARK: - Backup & Restore
     func backup(completion: ((URL?) -> Void)? = nil) {

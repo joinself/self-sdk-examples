@@ -94,7 +94,19 @@ struct ContentView: View {
                     )
                 case .serverConnectionProcessing(let serverAddress):
                     ServerConnectionProcessingScreen(
+                        isConnecting: $viewModel.isConnecting,
+                        connectionError: $viewModel.connectionError,
+                        hasTimedOut: $viewModel.hasTimedOut,
                         serverAddress: serverAddress,
+                        onConnectionStart: { serverAddress in
+                            print("onConnectionStart: \(serverAddress)")
+                            Task {
+                                await viewModel.connectToSelfServer(serverAddress: serverAddress) { success in
+                                    
+                                }
+                            }
+                            
+                        },
                         onConnectionComplete: {
                             // Update server connection state and navigate to action selection
                             isServerConnected = true

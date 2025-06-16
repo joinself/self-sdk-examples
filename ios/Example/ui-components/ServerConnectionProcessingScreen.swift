@@ -7,21 +7,25 @@ import SwiftUI
 
 public struct ServerConnectionProcessingScreen: View {
     @State private var currentStep = 1
-    @State private var isConnecting = true
-    @State private var connectionError: String? = nil
-    @State private var hasTimedOut = false
+    @Binding var isConnecting: Bool
+    @Binding var connectionError: String?
+    @Binding var hasTimedOut:Bool
     
     let serverAddress: String
     let onConnectionComplete: () -> Void
+    let onConnectionStart: (String) -> Void
     let onGoBack: () -> Void
     
-    public init(currentStep: Int = 1, isConnecting: Bool = true, connectionError: String? = nil, hasTimedOut: Bool = false, serverAddress: String, onConnectionComplete: @escaping () -> Void, onGoBack: @escaping () -> Void) {
+    public init(currentStep: Int = 1, isConnecting: Binding<Bool> = .constant(true), connectionError: Binding<String?> = .constant(nil), hasTimedOut: Binding<Bool> = .constant(false), serverAddress: String,
+                onConnectionStart: @escaping (String) -> Void,
+                onConnectionComplete: @escaping () -> Void,  onGoBack: @escaping () -> Void) {
         self.currentStep = currentStep
-        self.isConnecting = isConnecting
-        self.connectionError = connectionError
-        self.hasTimedOut = hasTimedOut
+        self._isConnecting = isConnecting
+        self._connectionError = connectionError
+        self._hasTimedOut = hasTimedOut
         self.serverAddress = serverAddress
         self.onConnectionComplete = onConnectionComplete
+        self.onConnectionStart = onConnectionStart
         self.onGoBack = onGoBack
     }
     
@@ -273,10 +277,11 @@ public struct ServerConnectionProcessingScreen: View {
                 // Step 3: Account Registration
                 currentStep = 3
                 
+                onConnectionStart(serverAddress)
                 // Actually connect to server using Self SDK
-                Task {
+//                Task {
 //                    await connectToSelfServer(account: account, serverAddress: serverAddress)
-                }
+//                }
             }
         }
     }
@@ -410,10 +415,11 @@ struct TroubleshootingStepView: View {
 #Preview {
     ServerConnectionProcessingScreen(
         serverAddress: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
-        onConnectionComplete: {
+        onConnectionStart: { serverAddress in
+            
+        }, onConnectionComplete: {
             print("Preview: Connection complete")
-        },
-        onGoBack: {
+        }, onGoBack: {
             print("Preview: Go back")
         }
     )
