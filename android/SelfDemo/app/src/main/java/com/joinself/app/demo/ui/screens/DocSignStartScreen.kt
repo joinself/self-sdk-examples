@@ -27,21 +27,6 @@ fun DocSignStartScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // DEBUG: Screen Name Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
-                .padding(8.dp)
-        ) {
-            androidx.compose.material3.Text(
-                text = "DEBUG: DOC_SIGN_START",
-                style = AppFonts.caption,
-                color = AppColors.primary,
-                modifier = Modifier.padding(4.dp)
-            )
-        }
-        
         LazyColumn(
             modifier = Modifier
                 .weight(1f)

@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CredentialProvisionApprovalScreen(
+fun ShareCredentialApprovalScreen(
     credentialType: String, // "email" or "document"
     onApprove: () -> Unit,
     onDeny: () -> Unit,
@@ -44,21 +44,6 @@ fun CredentialProvisionApprovalScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // DEBUG: Screen Name Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
-                .padding(8.dp)
-        ) {
-            androidx.compose.material3.Text(
-                text = "DEBUG: CREDENTIAL_PROVISION_APPROVAL",
-                style = AppFonts.caption,
-                color = AppColors.primary,
-                modifier = Modifier.padding(4.dp)
-            )
-        }
-        
         LazyColumn(
             modifier = Modifier
                 .weight(1f)

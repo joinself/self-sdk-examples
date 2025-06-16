@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ProvideCredentialSelectionScreen(
+fun ShareCredentialSelectionScreen(
     onProvideEmail: () -> Unit,
     onProvideDocument: () -> Unit,
     onBack: () -> Unit,
@@ -32,7 +32,6 @@ fun ProvideCredentialSelectionScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -46,12 +45,6 @@ fun ProvideCredentialSelectionScreen(
                         tint = AppColors.primary
                     )
                 }
-                androidx.compose.material3.Text(
-                    text = "DEBUG: PROVIDE_CREDENTIAL_SELECTION",
-                    style = AppFonts.caption,
-                    color = AppColors.primary,
-                    modifier = Modifier.padding(4.dp)
-                )
             }
         }
         

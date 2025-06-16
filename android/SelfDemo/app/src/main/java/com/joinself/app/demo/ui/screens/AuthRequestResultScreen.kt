@@ -11,12 +11,11 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ui.theme.*
 
 
 @Composable
-fun AuthResultScreen(
+fun AuthRequestResultScreen(
     isSuccess: Boolean,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier

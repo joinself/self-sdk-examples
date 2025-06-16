@@ -1,32 +1,39 @@
 package com.joinself.app.demo.ui
 
-import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.joinself.app.demo.ui.screens.AuthResultScreen
-import com.joinself.app.demo.ui.screens.AuthStartScreen
+import com.joinself.app.demo.ui.screens.AuthRequestResultScreen
+import com.joinself.app.demo.ui.screens.AuthRequestStartScreen
+import com.joinself.app.demo.ui.screens.DocSignResultScreen
+import com.joinself.app.demo.ui.screens.DocSignStartScreen
 import com.joinself.app.demo.ui.screens.InitializeSDKScreen
 import com.joinself.app.demo.ui.screens.RegistrationIntroScreen
 import com.joinself.app.demo.ui.screens.SelectActionScreen
 import com.joinself.app.demo.ui.screens.ServerConnectResultScreen
 import com.joinself.app.demo.ui.screens.ServerConnectStartScreen
+import com.joinself.app.demo.ui.screens.ShareCredentialApprovalScreen
+import com.joinself.app.demo.ui.screens.ShareCredentialResultScreen
+import com.joinself.app.demo.ui.screens.ShareCredentialSelectionScreen
 import com.joinself.app.demo.ui.screens.VerifyDocumentResultScreen
 import com.joinself.app.demo.ui.screens.VerifyDocumentStartScreen
 import com.joinself.app.demo.ui.screens.VerifyEmailResultScreen
 import com.joinself.app.demo.ui.screens.VerifyEmailStartScreen
 import com.joinself.app.demo.ui.screens.VerifySelectionScreen
+import com.joinself.common.CredentialType
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.ui.addDocumentVerificationRoute
 import com.joinself.sdk.ui.addEmailRoute
@@ -53,6 +60,11 @@ sealed class MainRoute {
     @Serializable object VerifyEmailResult
     @Serializable object VerifyDocumentStart
     @Serializable object VerifyDocumentResult
+    @Serializable object ShareCredentialSelection
+    @Serializable object ShareCredentialApproval
+    @Serializable object ShareCredentialResult
+    @Serializable object DocumentSignStart
+    @Serializable object DocumentSignResult
 
     companion object {
         val LivenessRoute = "livenessRoute"
@@ -72,6 +84,7 @@ fun SelfDemoApp(
     val navController = rememberNavController()
     val selfModifier = SelfModifier.sdk()
 
+    var credentialType by remember { mutableStateOf("") }
     val viewModel: MainViewModel = viewModel {
         MainViewModel(context)
     }
@@ -97,7 +110,7 @@ fun SelfDemoApp(
             LaunchedEffect(appState.initialization) {
                 when (val status = appState.initialization) {
                     is InitializationState.Success -> {
-                        val route = if (viewModel.isRegistered()) MainRoute.ConnectToServer else MainRoute.Registration
+                        val route = if (viewModel.isRegistered()) MainRoute.ServerConnectionReady else MainRoute.Registration
                         navController.navigate(route)
                     }
                     is InitializationState.Error -> {
@@ -155,16 +168,16 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.VerifySelection)
                 },
                 onProvideCredentials = {
-
+                    navController.navigate(MainRoute.ShareCredentialSelection)
                 },
                 onSignDocuments = {
-
+                    navController.navigate(MainRoute.DocumentSignStart)
                 }
             )
         }
 
         composable<MainRoute.AuthRequestStart> {
-            AuthStartScreen(
+            AuthRequestStartScreen(
                 onStartAuthentication = {
 //                    navController.navigate(MainRoute.LivenessRoute)
                     navController.navigate(MainRoute.AuthResultResult)
@@ -172,7 +185,7 @@ fun SelfDemoApp(
             )
         }
         composable<MainRoute.AuthResultResult> {
-            AuthResultScreen(
+            AuthRequestResultScreen(
                 isSuccess = true,
                 onContinue = {
                     navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
@@ -217,6 +230,59 @@ fun SelfDemoApp(
         }
         composable<MainRoute.VerifyDocumentResult> {
             VerifyDocumentResultScreen(
+                isSuccess = true,
+                onContinue = {
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
+                }
+            )
+        }
+        composable<MainRoute.ShareCredentialSelection> {
+            ShareCredentialSelectionScreen(
+                onProvideEmail = {
+                    credentialType = CredentialType.Email
+                    navController.navigate(MainRoute.ShareCredentialApproval)
+                },
+                onProvideDocument = {
+                    credentialType = CredentialType.Document
+                    navController.navigate(MainRoute.ShareCredentialApproval)
+                },
+                onBack = {
+
+                }
+            )
+        }
+        composable<MainRoute.ShareCredentialApproval> {
+            ShareCredentialApprovalScreen(
+                credentialType = credentialType,
+                onApprove = {
+                    navController.navigate(MainRoute.ShareCredentialResult)
+                },
+                onDeny = {
+                    navController.navigate(MainRoute.ShareCredentialResult)
+                }
+            )
+        }
+        composable<MainRoute.ShareCredentialResult> {
+            ShareCredentialResultScreen(
+                isSuccess = true,
+                credentialType = credentialType,
+                onContinue = {
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
+                }
+            )
+        }
+        composable<MainRoute.DocumentSignStart> {
+            DocSignStartScreen(
+                onSign = {
+                    navController.navigate(MainRoute.DocumentSignResult)
+                },
+                onReject = {
+
+                }
+            )
+        }
+        composable<MainRoute.DocumentSignResult> {
+            DocSignResultScreen(
                 isSuccess = true,
                 onContinue = {
                     navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)

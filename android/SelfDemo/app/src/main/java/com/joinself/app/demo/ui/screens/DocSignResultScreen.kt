@@ -28,20 +28,6 @@ fun DocSignResultScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // DEBUG: Screen Name Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
-                .padding(8.dp)
-        ) {
-            Text(
-                text = "DEBUG: DOC_SIGN_RESULT",
-                style = AppFonts.caption,
-                color = AppColors.primary,
-                modifier = Modifier.padding(4.dp)
-            )
-        }
         
         LazyColumn(
             modifier = Modifier

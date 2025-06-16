@@ -10,11 +10,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun AuthStartScreen(
+fun AuthRequestStartScreen(
     onStartAuthentication: () -> Unit,
     modifier: Modifier = Modifier
 ) {
