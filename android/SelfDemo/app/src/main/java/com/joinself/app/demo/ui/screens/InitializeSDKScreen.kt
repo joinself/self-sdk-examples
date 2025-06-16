@@ -10,12 +10,11 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.Initialization
 
 @Composable
 fun InitializeSDKScreen(
-    isLoading: Boolean,
-    errorMessage: String?,
+    initialization: Initialization,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -33,13 +32,13 @@ fun InitializeSDKScreen(
         ) {
             item {
                 // Hero Section
-                if (isLoading) {
+                if (initialization is Initialization.Loading) {
                     HeroSection(
                         icon = Icons.Filled.CloudSync,
                         title = "Initializing Self SDK",
                         subtitle = "Setting up your Self environment. This may take a few moments on first launch."
                     )
-                } else if (errorMessage != null) {
+                } else if (initialization is Initialization.Error) {
                     HeroSection(
                         icon = Icons.Filled.Error,
                         title = "Initialization Failed",
@@ -48,7 +47,7 @@ fun InitializeSDKScreen(
                 }
             }
 
-            if (isLoading) {
+            if (initialization is Initialization.Loading) {
                 // Loading content
                 item {
                     // Progress steps
@@ -90,12 +89,12 @@ fun InitializeSDKScreen(
                         type = AlertType.Info
                     )
                 }
-            } else if (errorMessage != null) {
+            } else if (initialization is Initialization.Error) {
                 // Error content
                 item {
                     AlertCard(
                         title = "Initialization Error",
-                        message = errorMessage,
+                        message = initialization.message,
                         type = AlertType.Error
                     )
                 }
@@ -134,7 +133,7 @@ fun InitializeSDKScreen(
         }
 
         // Fixed Retry Button at Bottom (only show if error)
-        if (errorMessage != null) {
+        if (initialization is Initialization.Error && initialization.message.isNotEmpty()) {
             Column(
                 modifier = Modifier
                     .background(Color.White)

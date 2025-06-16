@@ -1,21 +1,14 @@
 package com.joinself.app.demo.ui
 
-import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,9 +23,11 @@ import com.joinself.app.demo.ui.screens.ServerConnectStartScreen
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+
+
+private const val TAG = "SelfDemoApp"
 
 sealed class MainRoute {
     @Serializable object Initializing
@@ -42,6 +37,10 @@ sealed class MainRoute {
     @Serializable object ServerConnectionReady
     @Serializable object AuthStart
     @Serializable object AuthResult
+
+    companion object {
+        val LivenessRoute = "livenessRoute"
+    }
 }
 
 @Composable
@@ -58,6 +57,8 @@ fun SelfDemoApp(
         MainViewModel(context)
     }
 
+    val appState by viewModel.appStateFlow.collectAsState()
+
     NavHost(
         navController = navController,
         startDestination = MainRoute.Initializing,
@@ -68,24 +69,32 @@ fun SelfDemoApp(
 
         composable<MainRoute.Initializing> {
             InitializeSDKScreen(
-                isLoading = true,
-                errorMessage = null,
+                initialization = appState.initialization,
                 onRetry = {
 
                 }
             )
 
-            LaunchedEffect(Unit) {
-                delay(3000)
-                navController.navigate(MainRoute.Registration)
+            LaunchedEffect(appState.initialization) {
+                when (val status = appState.initialization) {
+                    is Initialization.Success -> {
+                        val route = if (viewModel.isRegistered()) MainRoute.ConnectToServer else MainRoute.Registration
+                        navController.navigate(route)
+                    }
+                    is Initialization.Error -> {
+
+                    }
+                    else -> {}
+                }
             }
+
+
         }
 
         composable<MainRoute.Registration> {
             RegistrationIntroScreen(
                 onStartRegistration = {
-//                    navController.navigate("livenessRoute")
-                    navController.navigate(MainRoute.ConnectToServer)
+                    navController.navigate(MainRoute.LivenessRoute)
                 },
                 onOpenSettings = onOpenSettings
             )
@@ -135,7 +144,7 @@ fun SelfDemoApp(
         composable<MainRoute.AuthStart> {
             AuthStartScreen(
                 onStartAuthentication = {
-                    navController.navigate("livenessRoute")
+                    navController.navigate(MainRoute.LivenessRoute)
                 }
             )
         }
@@ -151,15 +160,14 @@ fun SelfDemoApp(
 
         // add liveness check to main navigation
         addLivenessCheckRoute(
-            navController, route = "livenessRoute", selfModifier = selfModifier,
+            navController, route = MainRoute.LivenessRoute, selfModifier = selfModifier,
             account = { viewModel.account },
             withCredential = true,
             onFinish = { selfie, credentials ->
 
-
                 // nav back to main
                 coroutineScope.launch(Dispatchers.Main) {
-                    navController.popBackStack("livenessRoute", true)
+                    navController.popBackStack(MainRoute.LivenessRoute, true)
                 }
             }
         )

@@ -6,9 +6,30 @@ import androidx.lifecycle.ViewModel
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.io.File
 
+private const val TAG = "MainViewModel"
+
+
+sealed class Initialization {
+    data object Success : Initialization()
+    data class Error(val message: String) : Initialization()
+    data object Loading : Initialization()
+    data object Empty : Initialization()
+}
+
+data class AppUiState(
+    var isRegistered: Boolean = false,
+    var initialization: Initialization = Initialization.Loading
+)
+
 class MainViewModel(context: Context): ViewModel() {
+    private val _appUiState = MutableStateFlow(AppUiState())
+    val appStateFlow: StateFlow<AppUiState> = _appUiState.asStateFlow()
 
     val account: Account
     init {
@@ -29,6 +50,27 @@ class MainViewModel(context: Context): ViewModel() {
             .setSandbox(true)
             .setStoragePath(storagePath.absolutePath)
             .build()
+
+        _appUiState.update {
+            it.copy(
+                isRegistered = account.registered(),
+            )
+        }
+
+        account.setOnStatusListener { status ->
+            Log.d(TAG, "initialize status $status")
+
+            _appUiState.update {
+                it.copy(
+                    initialization = if (status == 0L) Initialization.Success else Initialization.Error("can't initialize account"),
+                )
+            }
+        }
+    }
+
+
+    fun isRegistered() : Boolean {
+        return account.registered()
     }
 
 
