@@ -5,11 +5,16 @@
 
 import SwiftUI
 
-struct DocSignResultScreen: View {
+public struct DocSignResultScreen: View {
     let success: Bool
     let onContinue: () -> Void
     
-    var body: some View {
+    public init(success: Bool, onContinue: @escaping () -> Void) {
+        self.success = success
+        self.onContinue = onContinue
+    }
+    
+    public var body: some View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {

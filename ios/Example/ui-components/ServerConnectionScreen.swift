@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct ServerConnectionScreen: View {
+public struct ServerConnectionScreen: View {
     @State private var serverAddress = ""
     @State private var showSuccessMessage = true // Show the success message from registration
     @State private var isConnecting = false
@@ -18,7 +18,14 @@ struct ServerConnectionScreen: View {
         return serverAddress.count == maxCharacters && serverAddress.allSatisfy { $0.isHexDigit }
     }
     
-    var body: some View {
+    public init(serverAddress: String = "", showSuccessMessage: Bool = true, isConnecting: Bool = false, onConnectToServer: @escaping (String) -> Void) {
+        self.serverAddress = serverAddress
+        self.showSuccessMessage = showSuccessMessage
+        self.isConnecting = isConnecting
+        self.onConnectToServer = onConnectToServer
+    }
+    
+    public var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 // DEBUG Header

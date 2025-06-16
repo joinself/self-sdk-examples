@@ -5,10 +5,14 @@
 
 import SwiftUI
 
-struct AuthStartScreen: View {
+public struct AuthStartScreen: View {
     let onStartAuthentication: () -> Void
     
-    var body: some View {
+    public init(onStartAuthentication: @escaping () -> Void) {
+        self.onStartAuthentication = onStartAuthentication
+    }
+    
+    public var body: some View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {

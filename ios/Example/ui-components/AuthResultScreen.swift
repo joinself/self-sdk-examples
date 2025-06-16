@@ -5,11 +5,16 @@
 
 import SwiftUI
 
-struct AuthResultScreen: View {
+public struct AuthResultScreen: View {
     @State private var showSuccessToast = true
     let onContinue: () -> Void
     
-    var body: some View {
+    public init(showSuccessToast: Bool = true, onContinue: @escaping () -> Void) {
+        self.showSuccessToast = showSuccessToast
+        self.onContinue = onContinue
+    }
+    
+    public var body: some View {
         ZStack {
             VStack(spacing: 0) {
                 // DEBUG Header

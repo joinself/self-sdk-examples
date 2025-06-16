@@ -5,24 +5,24 @@
 
 import SwiftUI
 
-enum ActionType {
+public enum ActionType {
     case authenticate
     case verifyCredentials
     case provideCredentials
     case signDocuments
 }
 
-struct ActionSelectionScreen: View {
+public struct ActionSelectionScreen: View {
     @State private var showSuccessToast: Bool
     
     let onActionSelected: (ActionType) -> Void
     
-    init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (ActionType) -> Void) {
+    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (ActionType) -> Void) {
         self.onActionSelected = onActionSelected
         self._showSuccessToast = State(initialValue: showConnectionSuccess)
     }
     
-    var body: some View {
+    public var body: some View {
         ZStack {
             ScrollView {
                 VStack(spacing: 0) {

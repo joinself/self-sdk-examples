@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct ServerConnectionProcessingScreen: View {
+public struct ServerConnectionProcessingScreen: View {
     @State private var currentStep = 1
     @State private var isConnecting = true
     @State private var connectionError: String? = nil
@@ -15,7 +15,17 @@ struct ServerConnectionProcessingScreen: View {
     let onConnectionComplete: () -> Void
     let onGoBack: () -> Void
     
-    var body: some View {
+    public init(currentStep: Int = 1, isConnecting: Bool = true, connectionError: String? = nil, hasTimedOut: Bool = false, serverAddress: String, onConnectionComplete: @escaping () -> Void, onGoBack: @escaping () -> Void) {
+        self.currentStep = currentStep
+        self.isConnecting = isConnecting
+        self.connectionError = connectionError
+        self.hasTimedOut = hasTimedOut
+        self.serverAddress = serverAddress
+        self.onConnectionComplete = onConnectionComplete
+        self.onGoBack = onGoBack
+    }
+    
+    public var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 // DEBUG Header

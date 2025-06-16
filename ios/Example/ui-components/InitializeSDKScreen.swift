@@ -5,14 +5,21 @@
 
 import SwiftUI
 
-struct InitializeSDKScreen: View {
+public struct InitializeSDKScreen: View {
     @StateObject private var sdkExample = SelfSDKInitializationExample()
     @State private var currentStep = 0
     @State private var isInitializing = true
-    
-//    let onInitializationComplete: (Account) -> Void
+    @Binding var isInitialized: Bool
+    let onInitializationComplete: () -> Void
+    public init(currentStep: Int = 0, isInitializing: Bool = true, isInitialized: Binding<Bool>, onInitializationComplete: @escaping () -> Void) {
+        self.currentStep = currentStep
+        self.isInitializing = isInitializing
+        self._isInitialized = isInitialized
+        self.onInitializationComplete = onInitializationComplete
+    }
     
     // Computed properties to simplify complex expressions
+    
     private var statusColor: Color {
         if sdkExample.isInitialized {
             return .green
@@ -52,10 +59,10 @@ struct InitializeSDKScreen: View {
     }
     
     private var step3IsActive: Bool {
-        return currentStep >= 3 || sdkExample.isInitialized
+        return currentStep >= 3 || isInitialized
     }
     
-    var body: some View {
+    public var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 // DEBUG Header
@@ -143,7 +150,7 @@ struct InitializeSDKScreen: View {
                             if sdkExample.isLoading {
                                 ProgressView()
                                     .scaleEffect(0.8)
-                            } else if sdkExample.isInitialized {
+                            } else if isInitialized {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.green)
                                     .font(.system(size: 20))
@@ -182,7 +189,7 @@ struct InitializeSDKScreen: View {
         .onAppear {
             startInitialization()
         }
-        .onChange(of: sdkExample.isInitialized) { isInitialized in
+        .onChange(of: isInitialized) { isInitialized in
             if isInitialized {
                 currentStep = 3
                 isInitializing = false
@@ -190,7 +197,7 @@ struct InitializeSDKScreen: View {
                 // Wait a moment to show the success state, then navigate
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
 //                    if let account = sdkExample.getAccount() {
-//                        onInitializationComplete(account)
+                        onInitializationComplete()
 //                    }
                 }
             }
@@ -215,7 +222,10 @@ struct InitializeSDKScreen: View {
         // Update UI steps as we progress
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             currentStep = 2
+//            isInitialized = true
         }
+        
+        
     }
 }
 
@@ -256,7 +266,15 @@ struct InitializationStepView: View {
 }
 
 #Preview {
-    InitializeSDKScreen()
+    @State var isInitialized = false
+    InitializeSDKScreen(isInitialized: $isInitialized) {
+        
+    }
+    .onAppear {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            isInitialized = true
+        }
+    }
 //    InitializeSDKScreen(onInitializationComplete: { account in
 //        print("Preview: SDK initialization complete with account")
 //    })

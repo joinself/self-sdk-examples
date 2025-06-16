@@ -18,7 +18,13 @@ final class MainViewModel: ObservableObject {
     @Published var isOnboardingCompleted: Bool = false
     
     let account: Account
+    @Published var accountRegistered: Bool = false
+    @Published var isInitialized: Bool = false
+    
     init() {
+        // Initialize SDK
+        SelfSDK.initialize()
+        
         account = Account.Builder()
             .withEnvironment(Environment.preview)
             .withSandbox(true) // if true -> production
@@ -95,10 +101,11 @@ final class MainViewModel: ObservableObject {
                 break;
             }
         }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.isInitialized = true
+        }
     }
-    
-    @Published var accountRegistered: Bool = false
-    
     
     // transform credential into credential item to perform identifiable to display inside a List
     @Published var credentialItems: [CredentialItem] = []

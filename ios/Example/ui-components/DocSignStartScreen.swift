@@ -5,11 +5,16 @@
 
 import SwiftUI
 
-struct DocSignStartScreen: View {
+public struct DocSignStartScreen: View {
     let onSignDocument: () -> Void
     let onRejectDocument: () -> Void
     
-    var body: some View {
+    public init(onSignDocument: @escaping () -> Void, onRejectDocument: @escaping () -> Void) {
+        self.onSignDocument = onSignDocument
+        self.onRejectDocument = onRejectDocument
+    }
+    
+    public var body: some View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {
