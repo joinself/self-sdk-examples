@@ -16,16 +16,23 @@ import java.io.File
 private const val TAG = "MainViewModel"
 
 
-sealed class Initialization {
-    data object Success : Initialization()
-    data class Error(val message: String) : Initialization()
-    data object Loading : Initialization()
-    data object Empty : Initialization()
+sealed class InitializationState {
+    data object None : ServerState()
+    data object Loading : InitializationState()
+    data object Success : InitializationState()
+    data class Error(val message: String) : InitializationState()
+}
+sealed class ServerState {
+    data object None : ServerState()
+    data object Connecting : ServerState()
+    data object Success : ServerState()
+    data class Error(val message: String) : ServerState()
 }
 
 data class AppUiState(
     var isRegistered: Boolean = false,
-    var initialization: Initialization = Initialization.Loading
+    var initialization: InitializationState = InitializationState.Loading,
+    var serverState: ServerState = ServerState.None
 )
 
 class MainViewModel(context: Context): ViewModel() {
@@ -33,6 +40,9 @@ class MainViewModel(context: Context): ViewModel() {
     val appStateFlow: StateFlow<AppUiState> = _appUiState.asStateFlow()
 
     val account: Account
+    var groupAddress: String = ""
+    var serverInboxAddress: String = ""
+
     init {
         // init the sdk
         SelfSDK.initialize(
@@ -63,7 +73,7 @@ class MainViewModel(context: Context): ViewModel() {
 
             _appUiState.update {
                 it.copy(
-                    initialization = if (status == 0L) Initialization.Success else Initialization.Error("can't initialize account"),
+                    initialization = if (status == 0L) InitializationState.Success else InitializationState.Error("can't initialize account"),
                 )
             }
         }
@@ -79,6 +89,18 @@ class MainViewModel(context: Context): ViewModel() {
         return success
     }
 
+    suspend fun connect(inboxAddress: String) {
+        try {
+            _appUiState.update { it.copy(serverState = ServerState.Connecting) }
+            serverInboxAddress = inboxAddress
+
+            groupAddress = account.connectWith(serverInboxAddress, info = mapOf())
+            _appUiState.update { it.copy(serverState = ServerState.Success) }
+        } catch (ex: Exception) {
+            Log.e("Self", ex.message, ex)
+            _appUiState.update { it.copy(serverState = ServerState.Error(ex.message ?: "failed to connect to server")) }
+        }
+    }
 
 
 

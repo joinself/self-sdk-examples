@@ -33,21 +33,6 @@ fun ServerConnectStartScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // DEBUG: Screen Name Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
-                .padding(8.dp)
-        ) {
-            Text(
-                text = "DEBUG: SERVER_CONNECTION_START",
-                style = AppFonts.caption,
-                color = AppColors.primary,
-                modifier = Modifier.padding(4.dp)
-            )
-        }
-        
         // Main content with LazyColumn for better keyboard handling
         LazyColumn(
             modifier = Modifier

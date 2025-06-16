@@ -10,11 +10,11 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.joinself.app.demo.ui.Initialization
+import com.joinself.app.demo.ui.InitializationState
 
 @Composable
 fun InitializeSDKScreen(
-    initialization: Initialization,
+    initialization: InitializationState,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -32,13 +32,13 @@ fun InitializeSDKScreen(
         ) {
             item {
                 // Hero Section
-                if (initialization is Initialization.Loading) {
+                if (initialization is InitializationState.Loading) {
                     HeroSection(
                         icon = Icons.Filled.CloudSync,
                         title = "Initializing Self SDK",
                         subtitle = "Setting up your Self environment. This may take a few moments on first launch."
                     )
-                } else if (initialization is Initialization.Error) {
+                } else if (initialization is InitializationState.Error) {
                     HeroSection(
                         icon = Icons.Filled.Error,
                         title = "Initialization Failed",
@@ -47,7 +47,7 @@ fun InitializeSDKScreen(
                 }
             }
 
-            if (initialization is Initialization.Loading) {
+            if (initialization is InitializationState.Loading) {
                 // Loading content
                 item {
                     // Progress steps
@@ -89,7 +89,7 @@ fun InitializeSDKScreen(
                         type = AlertType.Info
                     )
                 }
-            } else if (initialization is Initialization.Error) {
+            } else if (initialization is InitializationState.Error) {
                 // Error content
                 item {
                     AlertCard(
@@ -133,7 +133,7 @@ fun InitializeSDKScreen(
         }
 
         // Fixed Retry Button at Bottom (only show if error)
-        if (initialization is Initialization.Error && initialization.message.isNotEmpty()) {
+        if (initialization is InitializationState.Error && initialization.message.isNotEmpty()) {
             Column(
                 modifier = Modifier
                     .background(Color.White)

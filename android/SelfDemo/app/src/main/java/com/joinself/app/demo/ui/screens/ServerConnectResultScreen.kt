@@ -12,12 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.ServerState
 
 @Composable
 fun ServerConnectResultScreen(
     serverAddress: String,
-    isConnecting: Boolean,
-    connectionSuccess: Boolean?,
+//    isConnecting: Boolean,
+//    connectionSuccess: Boolean?,
+    serverState: ServerState,
     onContinue: () -> Unit,
     onRetry: () -> Unit,
     onTimeout: () -> Unit,
@@ -27,44 +29,24 @@ fun ServerConnectResultScreen(
     var hasTimedOut by remember { mutableStateOf(false) }
     
     // Start timeout when connecting begins
-    LaunchedEffect(isConnecting) {
-        if (isConnecting) {
+    LaunchedEffect(serverState) {
+        if (serverState is ServerState.Connecting) {
             hasTimedOut = false
-            kotlinx.coroutines.delay(10000) // 10 second timeout
-            if (isConnecting && connectionSuccess == null) {
-                hasTimedOut = true
-                onTimeout()
-            }
-        }
-    }
-    
-    // Auto-navigate on successful connection
-    LaunchedEffect(connectionSuccess) {
-        if (connectionSuccess == true) {
+            kotlinx.coroutines.delay(20000) // 10 second timeout
+
+            hasTimedOut = true
+            onTimeout()
+        } else if (serverState is ServerState.Success) {
             kotlinx.coroutines.delay(1500) // Brief delay to show success state
             onContinue()
         }
     }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // DEBUG: Screen Name Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
-                .padding(8.dp)
-        ) {
-            androidx.compose.material3.Text(
-                text = "DEBUG: SERVER_CONNECTION_PROCESSING",
-                style = AppFonts.caption,
-                color = AppColors.primary,
-                modifier = Modifier.padding(4.dp)
-            )
-        }
-        
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -74,7 +56,7 @@ fun ServerConnectResultScreen(
             item {
                 // Hero Section - different states
                 when {
-                    isConnecting && !hasTimedOut -> {
+                    serverState is ServerState.Connecting && !hasTimedOut -> {
                         HeroSection(
                             icon = Icons.Filled.CloudSync,
                             title = "Connecting to Server",
@@ -88,14 +70,14 @@ fun ServerConnectResultScreen(
                             subtitle = "The connection attempt took too long. Please check your network and try again."
                         )
                     }
-                    connectionSuccess == true -> {
+                    serverState is ServerState.Success -> {
                         HeroSection(
                             icon = Icons.Filled.CheckCircle,
                             title = "Server Connected",
                             subtitle = "Your Self account is now connected to the server. Redirecting to actions..."
                         )
                     }
-                    connectionSuccess == false -> {
+                    serverState is ServerState.Error -> {
                         HeroSection(
                             icon = Icons.Filled.Error,
                             title = "Connection Failed",
@@ -115,7 +97,7 @@ fun ServerConnectResultScreen(
                 )
             }
 
-            if (isConnecting && !hasTimedOut) {
+            if (serverState is ServerState.Connecting && !hasTimedOut) {
                 // Connection process steps
                 item {
                     Column(
@@ -146,7 +128,7 @@ fun ServerConnectResultScreen(
                         )
                     }
                 }
-            } else if (connectionSuccess == true) {
+            } else if (serverState is ServerState.Success) {
                 // Success content
                 item {
                     InfoCard(
@@ -175,7 +157,7 @@ fun ServerConnectResultScreen(
                         )
                     }
                 }
-            } else if (connectionSuccess == false) {
+            } else if (serverState is ServerState.Error) {
                 // Failure content
                 item {
                     AlertCard(
@@ -219,7 +201,7 @@ fun ServerConnectResultScreen(
         }
 
         // Fixed Primary Button at Bottom - only show on failure or timeout
-        if (connectionSuccess == false || hasTimedOut) {
+        if (serverState is ServerState.Error || hasTimedOut) {
             Column(
                 modifier = Modifier
                     .background(Color.White)

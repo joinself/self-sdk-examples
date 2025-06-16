@@ -1,6 +1,5 @@
 package com.joinself.app.demo.ui
 
-import android.widget.Toast
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -25,10 +24,10 @@ import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.ui.addDocumentVerificationRoute
 import com.joinself.sdk.ui.addEmailRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
+import com.joinself.sdk.utils.popAllBackStacks
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 
@@ -82,11 +81,11 @@ fun SelfDemoApp(
 
             LaunchedEffect(appState.initialization) {
                 when (val status = appState.initialization) {
-                    is Initialization.Success -> {
+                    is InitializationState.Success -> {
                         val route = if (viewModel.isRegistered()) MainRoute.ConnectToServer else MainRoute.Registration
                         navController.navigate(route)
                     }
-                    is Initialization.Error -> {
+                    is InitializationState.Error -> {
 
                     }
                     else -> {}
@@ -108,16 +107,19 @@ fun SelfDemoApp(
         composable<MainRoute.ConnectToServer> {
             ServerConnectStartScreen(
                 onContinue = { address ->
+                    coroutineScope.launch(Dispatchers.IO) {
+                        viewModel.connect(inboxAddress = address)
+                    }
                     navController.navigate(MainRoute.ConnectingToServer)
                 }
             )
         }
         composable<MainRoute.ConnectingToServer> {
             ServerConnectResultScreen(
-                serverAddress =  "",
-                isConnecting = false,
-                connectionSuccess = true,
+                serverAddress = viewModel.serverInboxAddress,
+                serverState = appState.serverState,
                 onContinue = {
+                    navController.popAllBackStacks()
                     navController.navigate(MainRoute.ServerConnectionReady)
                 },
                 onRetry = {
