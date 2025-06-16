@@ -6,11 +6,14 @@ import androidx.lifecycle.ViewModel
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
+import com.joinself.sdk.models.ChatMessage
 import com.joinself.sdk.models.Credential
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.io.File
 
 private const val TAG = "MainViewModel"
@@ -104,6 +107,18 @@ class MainViewModel(context: Context): ViewModel() {
 
 
 
+    suspend fun sendChat(message: String) {
+        // build a chat message
+        val chat = ChatMessage.Builder()
+            .setToIdentifier(groupAddress)
+            .setMessage(message)
+            .build()
+
+        // send chat to server
+        account.send(chat) { messageId, _ ->
+
+        }
+    }
 
 
 }

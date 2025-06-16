@@ -1,5 +1,6 @@
 package com.joinself.app.demo.ui
 
+import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -10,6 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,6 +22,11 @@ import com.joinself.app.demo.ui.screens.RegistrationIntroScreen
 import com.joinself.app.demo.ui.screens.SelectActionScreen
 import com.joinself.app.demo.ui.screens.ServerConnectResultScreen
 import com.joinself.app.demo.ui.screens.ServerConnectStartScreen
+import com.joinself.app.demo.ui.screens.VerifyDocumentResultScreen
+import com.joinself.app.demo.ui.screens.VerifyDocumentStartScreen
+import com.joinself.app.demo.ui.screens.VerifyEmailResultScreen
+import com.joinself.app.demo.ui.screens.VerifyEmailStartScreen
+import com.joinself.app.demo.ui.screens.VerifySelectionScreen
 import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.ui.addDocumentVerificationRoute
 import com.joinself.sdk.ui.addEmailRoute
@@ -39,11 +46,19 @@ sealed class MainRoute {
     @Serializable object ConnectToServer
     @Serializable object ConnectingToServer
     @Serializable object ServerConnectionReady
-    @Serializable object AuthStart
-    @Serializable object AuthResult
+    @Serializable object AuthRequestStart
+    @Serializable object AuthResultResult
+    @Serializable object VerifySelection
+    @Serializable object VerifyEmailStart
+    @Serializable object VerifyEmailResult
+    @Serializable object VerifyDocumentStart
+    @Serializable object VerifyDocumentResult
 
     companion object {
         val LivenessRoute = "livenessRoute"
+        val EmailRoute = "emailRoute"
+        val DocumentRoute = "documentRoute"
+        val QRCodeRoute = "qrCodeRoute"
     }
 }
 
@@ -134,10 +149,10 @@ fun SelfDemoApp(
         composable<MainRoute.ServerConnectionReady> {
             SelectActionScreen(
                 onAuthenticate = {
-                    navController.navigate(MainRoute.AuthStart)
+                    navController.navigate(MainRoute.AuthRequestStart)
                 },
                 onVerifyCredentials = {
-
+                    navController.navigate(MainRoute.VerifySelection)
                 },
                 onProvideCredentials = {
 
@@ -148,22 +163,66 @@ fun SelfDemoApp(
             )
         }
 
-        composable<MainRoute.AuthStart> {
+        composable<MainRoute.AuthRequestStart> {
             AuthStartScreen(
                 onStartAuthentication = {
-                    navController.navigate(MainRoute.LivenessRoute)
+//                    navController.navigate(MainRoute.LivenessRoute)
+                    navController.navigate(MainRoute.AuthResultResult)
                 }
             )
         }
-        composable<MainRoute.AuthResult> {
+        composable<MainRoute.AuthResultResult> {
             AuthResultScreen(
                 isSuccess = true,
                 onContinue = {
-
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
                 }
             )
         }
 
+        composable<MainRoute.VerifySelection> {
+            VerifySelectionScreen(
+                onVerifyIdentityDocument = {
+                    navController.navigate(MainRoute.VerifyDocumentStart)
+                },
+                onVerifyEmail = {
+                    navController.navigate(MainRoute.VerifyEmailStart)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable<MainRoute.VerifyEmailStart> {
+            VerifyEmailStartScreen(
+                onStartVerification = {
+                    navController.navigate(MainRoute.EmailRoute)
+                }
+            )
+        }
+        composable<MainRoute.VerifyEmailResult> {
+            VerifyEmailResultScreen(
+                isSuccess = true,
+                onContinue = {
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
+                }
+            )
+        }
+        composable<MainRoute.VerifyDocumentStart> {
+            VerifyDocumentStartScreen(
+                onStartVerification = {
+                    navController.navigate(MainRoute.DocumentRoute)
+                }
+            )
+        }
+        composable<MainRoute.VerifyDocumentResult> {
+            VerifyDocumentResultScreen(
+                isSuccess = true,
+                onContinue = {
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
+                }
+            )
+        }
 
         // add liveness check to main navigation
         addLivenessCheckRoute(navController, route = MainRoute.LivenessRoute, selfModifier = selfModifier,
@@ -191,21 +250,25 @@ fun SelfDemoApp(
             }
         )
 
-        addEmailRoute(navController, route = "emailRoute", selfModifier = selfModifier,
+        addEmailRoute(navController, route = MainRoute.EmailRoute, selfModifier = selfModifier,
             account = { viewModel.account },
             onFinish = { isSuccess, error ->
                 if (isSuccess) {
-
+                    coroutineScope.launch(Dispatchers.Main) {
+                        navController.navigate(MainRoute.VerifyEmailResult)
+                    }
                 }
             }
         )
 
         // integrate passport, idcard verification flow
-        addDocumentVerificationRoute(navController, route = "documentRoute", selfModifier = selfModifier,account = { viewModel.account },
+        addDocumentVerificationRoute(navController, route = MainRoute.DocumentRoute, selfModifier = selfModifier,account = { viewModel.account },
             isDevMode = { false }, // true for testing only
             onFinish = { isSuccess, error ->
                 if (isSuccess) {
-
+                    coroutineScope.launch(Dispatchers.Main) {
+                        navController.navigate(MainRoute.VerifyDocumentResult)
+                    }
                 }
             }
         )

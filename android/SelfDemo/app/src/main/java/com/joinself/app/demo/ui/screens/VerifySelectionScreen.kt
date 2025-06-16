@@ -30,8 +30,7 @@ fun VerifySelectionScreen(
         // Header with back button
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.primary.copy(alpha = 0.1f))
+                .fillMaxWidth().height(48.dp)
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -45,12 +44,6 @@ fun VerifySelectionScreen(
                         tint = AppColors.primary
                     )
                 }
-                androidx.compose.material3.Text(
-                    text = "DEBUG: VERIFY_SELECTION",
-                    style = AppFonts.caption,
-                    color = AppColors.primary,
-                    modifier = Modifier.padding(4.dp)
-                )
             }
         }
         
