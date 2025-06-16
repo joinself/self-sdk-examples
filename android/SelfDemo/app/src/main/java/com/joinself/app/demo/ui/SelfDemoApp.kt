@@ -1,5 +1,6 @@
 package com.joinself.app.demo.ui
 
+import android.widget.Toast
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -20,10 +21,14 @@ import com.joinself.app.demo.ui.screens.RegistrationIntroScreen
 import com.joinself.app.demo.ui.screens.SelectActionScreen
 import com.joinself.app.demo.ui.screens.ServerConnectResultScreen
 import com.joinself.app.demo.ui.screens.ServerConnectStartScreen
+import com.joinself.common.exception.InvalidCredentialException
+import com.joinself.sdk.ui.addDocumentVerificationRoute
+import com.joinself.sdk.ui.addEmailRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 
@@ -159,15 +164,46 @@ fun SelfDemoApp(
 
 
         // add liveness check to main navigation
-        addLivenessCheckRoute(
-            navController, route = MainRoute.LivenessRoute, selfModifier = selfModifier,
+        addLivenessCheckRoute(navController, route = MainRoute.LivenessRoute, selfModifier = selfModifier,
             account = { viewModel.account },
             withCredential = true,
             onFinish = { selfie, credentials ->
-
+                if (!viewModel.isRegistered()) {
+                    coroutineScope.launch(Dispatchers.IO) {
+                        try {
+                            if (selfie.isNotEmpty() && credentials.isNotEmpty()) {
+                                val success = viewModel.register(selfie = selfie, credentials = credentials)
+                                if (success) {
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        navController.navigate(MainRoute.ConnectToServer)
+                                    }
+                                }
+                            }
+                        } catch (_: InvalidCredentialException) { }
+                    }
+                }
                 // nav back to main
                 coroutineScope.launch(Dispatchers.Main) {
                     navController.popBackStack(MainRoute.LivenessRoute, true)
+                }
+            }
+        )
+
+        addEmailRoute(navController, route = "emailRoute", selfModifier = selfModifier,
+            account = { viewModel.account },
+            onFinish = { isSuccess, error ->
+                if (isSuccess) {
+
+                }
+            }
+        )
+
+        // integrate passport, idcard verification flow
+        addDocumentVerificationRoute(navController, route = "documentRoute", selfModifier = selfModifier,account = { viewModel.account },
+            isDevMode = { false }, // true for testing only
+            onFinish = { isSuccess, error ->
+                if (isSuccess) {
+
                 }
             }
         )

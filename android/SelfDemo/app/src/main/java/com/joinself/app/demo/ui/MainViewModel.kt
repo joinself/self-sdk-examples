@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
+import com.joinself.sdk.models.Credential
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,6 +72,11 @@ class MainViewModel(context: Context): ViewModel() {
 
     fun isRegistered() : Boolean {
         return account.registered()
+    }
+    suspend fun register(selfie: ByteArray, credentials: List<Credential>): Boolean {
+        val success = account.register(selfieImage = selfie, credentials = credentials)
+
+        return success
     }
 
 
