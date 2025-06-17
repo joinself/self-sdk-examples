@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SelfDemoTheme {
                 Scaffold(
-                    modifier = Modifier.fillMaxSize().systemBarsPadding(),
+                    modifier = Modifier.fillMaxSize(),
                     containerColor = Color.White
                 ) { innerPadding ->
                     SelfDemoApp(

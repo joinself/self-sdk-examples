@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.joinself.common.ComparisonOperator
-import com.joinself.common.Constants
 import com.joinself.common.CredentialType
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
@@ -25,7 +23,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.collections.plus
 
 private const val TAG = "MainViewModel"
 
@@ -127,6 +124,7 @@ class MainViewModel(context: Context): ViewModel() {
                     // users need to handle msg.proofs() which contains agreement content, to display to user
                     if (msg.types().contains(CredentialType.Agreement)) {
                         verificationRequest = msg
+                        _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
                     }
                 }
             }
@@ -214,7 +212,7 @@ class MainViewModel(context: Context): ViewModel() {
         sendCredentialResponse(storedCredentials, status)
     }
 
-    fun sendAgreementResponse() {
+    fun sendDocSignResponse(status: ResponseStatus) {
         if (verificationRequest == null) return
 
         val verificationResponse = VerificationResponse.Builder()
@@ -222,10 +220,12 @@ class MainViewModel(context: Context): ViewModel() {
             .setTypes(verificationRequest!!.types())
             .setToIdentifier(verificationRequest!!.toIdentifier())
             .setFromIdentifier(verificationRequest!!.fromIdentifier())
-            .setStatus(ResponseStatus.accepted)
+            .setStatus(status)
             .build()
         viewModelScope.launch(Dispatchers.IO) {
-            account.send(verificationResponse)
+            account.send(verificationResponse) { messageId, _ ->
+                _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent) }
+            }
         }
     }
 

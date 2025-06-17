@@ -16,13 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.ServerRequestState
 
 @Composable
 fun DocSignResultScreen(
-    isSuccess: Boolean,
+    requestState: ServerRequestState,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isSuccess = requestState is ServerRequestState.ResponseSent
     Column(
         modifier = modifier
             .fillMaxSize()

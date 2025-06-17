@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.ServerRequestState
 
 @Composable
 fun DocSignStartScreen(
+    requestState: ServerRequestState,
     onSign: () -> Unit,
     onReject: () -> Unit,
     modifier: Modifier = Modifier
@@ -38,7 +40,7 @@ fun DocSignStartScreen(
                 HeroSection(
                     icon = Icons.Filled.PictureAsPdf,
                     title = "PDF Document Signing",
-                    subtitle = "The server has requested you to sign a PDF document. Review the details below and choose whether to sign or reject."
+                    subtitle = if(requestState != ServerRequestState.RequestReceived) { "Waiting for a request from server..."} else {"The server has requested you to sign a PDF document. Review the details below and choose whether to sign or reject."}
                 )
             }
 
@@ -87,11 +89,13 @@ fun DocSignStartScreen(
         ) {
             PrimaryButton(
                 title = "Sign Document",
+                isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onSign
             )
             
             SecondaryButton(
                 title = "Reject",
+                isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onReject
             )
         }

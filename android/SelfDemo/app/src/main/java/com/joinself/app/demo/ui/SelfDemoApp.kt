@@ -318,17 +318,36 @@ fun SelfDemoApp(
         }
         composable<MainRoute.DocumentSignStart> {
             DocSignStartScreen(
+                requestState = appState.requestState,
                 onSign = {
-                    navController.navigate(MainRoute.DocumentSignResult)
+                    viewModel.sendDocSignResponse(status = ResponseStatus.accepted)
                 },
                 onReject = {
-
+                    viewModel.sendDocSignResponse(status = ResponseStatus.rejected)
                 }
             )
+            LaunchedEffect(appState.requestState) {
+                Log.d(TAG, "docsign request state: ${appState.requestState}")
+                when (appState.requestState) {
+                    ServerRequestState.None -> {
+                        withContext(Dispatchers.IO){
+                            viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING)
+                        }
+                    }
+                    ServerRequestState.ResponseSent -> {
+                        withContext(Dispatchers.Main){
+                            navController.navigate(MainRoute.DocumentSignResult)
+                        }
+                    }
+                    else -> {
+
+                    }
+                }
+            }
         }
         composable<MainRoute.DocumentSignResult> {
             DocSignResultScreen(
-                isSuccess = true,
+                requestState = appState.requestState,
                 onContinue = {
                     navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
                 }

@@ -34,7 +34,7 @@ fun SelectActionScreen(
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .padding(AppSpacing.screenPadding),
+                .padding(start = AppSpacing.screenPadding, end = AppSpacing.screenPadding),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sectionSpacing)
         ) {
             item {
