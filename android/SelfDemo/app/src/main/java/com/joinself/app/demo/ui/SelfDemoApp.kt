@@ -42,6 +42,7 @@ import com.joinself.sdk.utils.popAllBackStacks
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 
@@ -178,11 +179,17 @@ fun SelfDemoApp(
 
         composable<MainRoute.AuthRequestStart> {
             AuthRequestStartScreen(
+                requestState = appState.requestState,
                 onStartAuthentication = {
-//                    navController.navigate(MainRoute.LivenessRoute)
-                    navController.navigate(MainRoute.AuthResultResult)
+                    navController.navigate(MainRoute.LivenessRoute)
                 }
             )
+
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO){
+                    viewModel.sendServerRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH)
+                }
+            }
         }
         composable<MainRoute.AuthResultResult> {
             AuthRequestResultScreen(
@@ -308,6 +315,8 @@ fun SelfDemoApp(
                             }
                         } catch (_: InvalidCredentialException) { }
                     }
+                } else {
+                    viewModel.sendCredentialResponse(credentials)
                 }
                 // nav back to main
                 coroutineScope.launch(Dispatchers.Main) {

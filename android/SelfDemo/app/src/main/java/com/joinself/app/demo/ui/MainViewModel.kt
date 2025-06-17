@@ -3,12 +3,21 @@ package com.joinself.app.demo.ui
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.joinself.common.Constants
+import com.joinself.common.CredentialType
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
 import com.joinself.sdk.models.Credential
+import com.joinself.sdk.models.CredentialRequest
+import com.joinself.sdk.models.CredentialResponse
+import com.joinself.sdk.models.ResponseStatus
+import com.joinself.sdk.models.VerificationRequest
+import com.joinself.sdk.models.VerificationResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,11 +40,26 @@ sealed class ServerState {
     data object Success : ServerState()
     data class Error(val message: String) : ServerState()
 }
+sealed class ServerRequestState {
+    data object None : ServerRequestState()
+    data object Sent : ServerRequestState()
+    data object Received : ServerRequestState()
+}
+
+sealed class SERVER_REQUESTS {
+    companion object {
+        val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
+        val REQUEST_CREDENTIAL_EMAIL: String = "REQUEST_CREDENTIAL_EMAIL"
+        val REQUEST_CREDENTIAL_DOCUMENT: String = "REQUEST_CREDENTIAL_DOCUMENT"
+        val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
+    }
+}
 
 data class AppUiState(
     var isRegistered: Boolean = false,
     var initialization: InitializationState = InitializationState.Loading,
-    var serverState: ServerState = ServerState.None
+    var serverState: ServerState = ServerState.None,
+    var requestState: ServerRequestState = ServerRequestState.None
 )
 
 class MainViewModel(context: Context): ViewModel() {
@@ -45,6 +69,7 @@ class MainViewModel(context: Context): ViewModel() {
     val account: Account
     var groupAddress: String = ""
     var serverInboxAddress: String = ""
+    var credentialRequest: CredentialRequest? = null
 
     init {
         // init the sdk
@@ -80,6 +105,32 @@ class MainViewModel(context: Context): ViewModel() {
                 )
             }
         }
+        account.setOnRequestListener { msg ->
+            when (msg) {
+                is CredentialRequest -> {
+                    // check if it's a liveness check request, then open Liveness UI flow
+                    if (msg.details().any { it.types().contains(CredentialType.Liveness) && it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
+                        Log.d("Self", "received liveness request")
+                        credentialRequest = msg
+                        _appUiState.update { it.copy(requestState = ServerRequestState.Received) }
+                    }
+
+                }
+                is VerificationRequest -> {
+                    // check the request is agreement, this example will respond automatically to the request
+                    // users need to handle msg.proofs() which contains agreement content, to display to user
+                    if (msg.types().contains(CredentialType.Agreement)) {
+                        val verificationResponse = VerificationResponse.Builder()
+                            .setRequestId(msg.id())
+                            .setTypes(msg.types())
+                            .setToIdentifier(msg.toIdentifier())
+                            .setFromIdentifier(msg.fromIdentifier())
+                            .setStatus(ResponseStatus.accepted)
+                            .build()
+                    }
+                }
+            }
+        }
     }
 
 
@@ -107,8 +158,7 @@ class MainViewModel(context: Context): ViewModel() {
 
 
 
-    suspend fun sendChat(message: String) {
-        // build a chat message
+    suspend fun sendServerRequest(message: String) {
         val chat = ChatMessage.Builder()
             .setToIdentifier(groupAddress)
             .setMessage(message)
@@ -116,9 +166,25 @@ class MainViewModel(context: Context): ViewModel() {
 
         // send chat to server
         account.send(chat) { messageId, _ ->
-
+            _appUiState.update { it.copy(requestState = ServerRequestState.Sent) }
         }
     }
 
+    fun sendCredentialResponse(credentials: List<Credential>) {
+        if (credentialRequest == null) return
+
+        val credentialResponse = CredentialResponse.Builder()
+            .setRequestId(credentialRequest!!.id())
+            .setTypes(credentialRequest!!.types())
+            .setToIdentifier(credentialRequest!!.toIdentifier())
+            .setFromIdentifier(credentialRequest!!.fromIdentifier())
+            .setStatus(ResponseStatus.accepted)
+            .setCredentials(credentials)
+            .build()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            account.send(credentialResponse)
+        }
+    }
 
 }

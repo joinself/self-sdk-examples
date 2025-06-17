@@ -10,10 +10,12 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.joinself.app.demo.ui.ServerRequestState
 
 
 @Composable
 fun AuthRequestStartScreen(
+    requestState: ServerRequestState,
     onStartAuthentication: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -33,7 +35,7 @@ fun AuthRequestStartScreen(
                 HeroSection(
                     icon = Icons.Filled.Security,
                     title = "Authentication Request",
-                    subtitle = "The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity."
+                    subtitle = if(requestState != ServerRequestState.Received) "Waiting for a request from server..." else "The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity."
                 )
             }
 
@@ -112,6 +114,7 @@ fun AuthRequestStartScreen(
         ) {
             PrimaryButton(
                 title = "Start Authentication",
+                isDisabled = requestState != ServerRequestState.Received,
                 onClick = onStartAuthentication
             )
         }
