@@ -60,7 +60,7 @@ struct ContentView: View {
                 switch currentScreen {
                 case .initialization:
                     InitializeSDKScreen(isInitialized: $viewModel.isInitialized, onInitializationComplete: {
-                        //                        initializedAccount = viewModel.account
+                        initializedAccount = viewModel.account
                         determineNextScreen(account: viewModel.account)
                     })
                 case .registrationIntro:
@@ -102,7 +102,22 @@ struct ContentView: View {
                             print("onConnectionStart: \(serverAddress)")
                             Task {
                                 await viewModel.connectToSelfServer(serverAddress: serverAddress) { success in
-                                    
+                                    // connection completion
+                                    if success {
+                                        // Update server connection state and navigate to action selection
+                                        isServerConnected = true
+                                        connectedServerAddress = serverAddress
+                                        // UserDefaults are app-sandboxed and automatically cleared on app uninstall
+                                        UserDefaults.standard.set(true, forKey: "isServerConnected")
+                                        UserDefaults.standard.set(serverAddress, forKey: "connectedServerAddress")
+                                        // Set up message listener for incoming requests
+                                        setupMessageListener()
+                                        // Show success toast since this is first visit after connection
+                                        showConnectionSuccessToast = true
+                                        withAnimation(.easeInOut(duration: 0.5)) {
+                                            currentScreen = .actionSelection
+                                        }
+                                    }
                                 }
                             }
                             

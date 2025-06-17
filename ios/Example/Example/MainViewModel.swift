@@ -30,7 +30,7 @@ final class MainViewModel: ObservableObject {
         SelfSDK.initialize()
         
         account = Account.Builder()
-            .withEnvironment(Environment.preview)
+            .withEnvironment(Environment.production)
             .withSandbox(true) // if true -> production
             .withGroupId("") // ex: com.example.app.your_app_group
             .withStoragePath(FileManager.storagePath)
