@@ -218,28 +218,8 @@ struct ContentView: View {
             
             // Toast notification
             if showToast {
-                VStack {
-                    Spacer()
-                    
-                    HStack(spacing: 12) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.blue)
-                        
-                        Text(toastMessage)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
-                    .background(Color.black.opacity(0.8))
-                    .cornerRadius(12)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 40)
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                ToastMessageView(message: toastMessage)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
     }
