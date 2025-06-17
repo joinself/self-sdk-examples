@@ -36,6 +36,7 @@ import com.joinself.app.demo.ui.screens.VerifyEmailStartScreen
 import com.joinself.app.demo.ui.screens.VerifySelectionScreen
 import com.joinself.common.CredentialType
 import com.joinself.common.exception.InvalidCredentialException
+import com.joinself.sdk.models.ResponseStatus
 import com.joinself.sdk.ui.addDocumentVerificationRoute
 import com.joinself.sdk.ui.addEmailRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
@@ -190,11 +191,11 @@ fun SelfDemoApp(
             )
 
             LaunchedEffect(appState.requestState) {
-                Log.d(TAG, "request state: ${appState.requestState}")
+                Log.d(TAG, "auth request state: ${appState.requestState}")
                 when (appState.requestState) {
                     ServerRequestState.None -> {
                         withContext(Dispatchers.IO){
-                            viewModel.sendServerRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH)
+                            viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH)
                         }
                     }
                     ServerRequestState.ResponseSent -> {
@@ -278,17 +279,37 @@ fun SelfDemoApp(
         composable<MainRoute.ShareCredentialApproval> {
             ShareCredentialApprovalScreen(
                 credentialType = credentialType,
+                requestState = appState.requestState,
                 onApprove = {
-                    navController.navigate(MainRoute.ShareCredentialResult)
+                    viewModel.shareCredential(status = ResponseStatus.accepted)
                 },
                 onDeny = {
-                    navController.navigate(MainRoute.ShareCredentialResult)
+                    viewModel.shareCredential(status = ResponseStatus.rejected)
                 }
             )
+            LaunchedEffect(appState.requestState) {
+                Log.d(TAG, "credential request state: ${appState.requestState}")
+                when (appState.requestState) {
+                    ServerRequestState.None -> {
+                        withContext(Dispatchers.IO) {
+                            if (credentialType == CredentialType.Email) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL)
+                            else if (credentialType == CredentialType.Document) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT)
+                        }
+                    }
+                    ServerRequestState.ResponseSent -> {
+                        withContext(Dispatchers.Main) {
+                            navController.navigate(MainRoute.ShareCredentialResult)
+                        }
+                    }
+                    else -> {
+
+                    }
+                }
+            }
         }
         composable<MainRoute.ShareCredentialResult> {
             ShareCredentialResultScreen(
-                isSuccess = true,
+                requestState = appState.requestState,
                 credentialType = credentialType,
                 onContinue = {
                     navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
@@ -333,7 +354,7 @@ fun SelfDemoApp(
                         } catch (_: InvalidCredentialException) { }
                     }
                 } else {
-                    viewModel.sendCredentialResponse(credentials)
+                    viewModel.sendCredentialResponse(credentials, status = ResponseStatus.accepted)
                 }
                 // nav back to main
                 coroutineScope.launch(Dispatchers.Main) {

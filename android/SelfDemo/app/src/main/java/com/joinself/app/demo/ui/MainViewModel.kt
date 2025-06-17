@@ -4,12 +4,14 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.joinself.common.ComparisonOperator
 import com.joinself.common.Constants
 import com.joinself.common.CredentialType
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
+import com.joinself.sdk.models.Claim
 import com.joinself.sdk.models.Credential
 import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.CredentialResponse
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.collections.plus
 
 private const val TAG = "MainViewModel"
 
@@ -71,6 +74,7 @@ class MainViewModel(context: Context): ViewModel() {
     var groupAddress: String = ""
     var serverInboxAddress: String = ""
     var credentialRequest: CredentialRequest? = null
+    var verificationRequest: VerificationRequest? = null
 
     init {
         // init the sdk
@@ -109,25 +113,20 @@ class MainViewModel(context: Context): ViewModel() {
         account.setOnRequestListener { msg ->
             when (msg) {
                 is CredentialRequest -> {
+                    credentialRequest = msg
+                    _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
+
                     // check if it's a liveness check request, then open Liveness UI flow
-                    if (msg.details().any { it.types().contains(CredentialType.Liveness) && it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
-                        Log.d("Self", "received liveness request")
-                        credentialRequest = msg
-                        _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
-                    }
+//                    if (msg.details().any { it.types().contains(CredentialType.Liveness) && it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
+//                        Log.d("Self", "received liveness request")
+//                    }
 
                 }
                 is VerificationRequest -> {
                     // check the request is agreement, this example will respond automatically to the request
                     // users need to handle msg.proofs() which contains agreement content, to display to user
                     if (msg.types().contains(CredentialType.Agreement)) {
-                        val verificationResponse = VerificationResponse.Builder()
-                            .setRequestId(msg.id())
-                            .setTypes(msg.types())
-                            .setToIdentifier(msg.toIdentifier())
-                            .setFromIdentifier(msg.fromIdentifier())
-                            .setStatus(ResponseStatus.accepted)
-                            .build()
+                        verificationRequest = msg
                     }
                 }
             }
@@ -163,10 +162,12 @@ class MainViewModel(context: Context): ViewModel() {
 
     fun resetState(requestState: ServerRequestState) {
         _appUiState.update { it.copy(requestState = requestState) }
+        credentialRequest = null
+        verificationRequest = null
     }
 
 
-    suspend fun sendServerRequest(message: String) {
+    suspend fun notifyServerForRequest(message: String) {
         val chat = ChatMessage.Builder()
             .setToIdentifier(groupAddress)
             .setMessage(message)
@@ -178,7 +179,7 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
-    fun sendCredentialResponse(credentials: List<Credential>) {
+    fun sendCredentialResponse(credentials: List<Credential>, status: ResponseStatus) {
         if (credentialRequest == null) return
 
         val credentialResponse = CredentialResponse.Builder()
@@ -186,7 +187,7 @@ class MainViewModel(context: Context): ViewModel() {
             .setTypes(credentialRequest!!.types())
             .setToIdentifier(credentialRequest!!.toIdentifier())
             .setFromIdentifier(credentialRequest!!.fromIdentifier())
-            .setStatus(ResponseStatus.accepted)
+            .setStatus(status)
             .setCredentials(credentials)
             .build()
 
@@ -194,6 +195,37 @@ class MainViewModel(context: Context): ViewModel() {
             account.send(credentialResponse) { messageId, _ ->
                 _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent) }
             }
+        }
+    }
+
+    fun shareCredential(status: ResponseStatus) {
+        if (credentialRequest == null) return
+
+        val details = credentialRequest!!.details().map {
+            Claim.Builder()
+                .setTypes(it.types())
+                .setSubject(it.subject())
+                .setComparisonOperator(it.comparisonOperator())
+                .setValue(it.value())
+                .build()
+        }
+        val storedCredentials = account.lookUpCredentials(details)
+
+        sendCredentialResponse(storedCredentials, status)
+    }
+
+    fun sendAgreementResponse() {
+        if (verificationRequest == null) return
+
+        val verificationResponse = VerificationResponse.Builder()
+            .setRequestId(verificationRequest!!.id())
+            .setTypes(verificationRequest!!.types())
+            .setToIdentifier(verificationRequest!!.toIdentifier())
+            .setFromIdentifier(verificationRequest!!.fromIdentifier())
+            .setStatus(ResponseStatus.accepted)
+            .build()
+        viewModelScope.launch(Dispatchers.IO) {
+            account.send(verificationResponse)
         }
     }
 

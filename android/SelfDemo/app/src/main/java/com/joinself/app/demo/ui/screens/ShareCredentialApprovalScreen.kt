@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.ServerRequestState
 
 @Composable
 fun ShareCredentialApprovalScreen(
     credentialType: String, // "email" or "document"
+    requestState: ServerRequestState,
     onApprove: () -> Unit,
     onDeny: () -> Unit,
     modifier: Modifier = Modifier
@@ -64,7 +66,7 @@ fun ShareCredentialApprovalScreen(
                 InfoCard(
                     icon = Icons.Filled.Share,
                     title = "Server Request",
-                    message = "The server has requested access to your verified ${credentialType} credential. This is a secure, privacy-preserving request that doesn't expose your personal information.",
+                    message = if(requestState != ServerRequestState.RequestReceived) {"Waiting for a request from server..."} else {"The server has requested access to your verified ${credentialType} credential. This is a secure, privacy-preserving request that doesn't expose your personal information."},
                     type = AlertType.Info
                 )
             }
@@ -120,11 +122,13 @@ fun ShareCredentialApprovalScreen(
         ) {
             PrimaryButton(
                 title = "Approve & Share Credential",
+                isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onApprove
             )
             
             SecondaryButton(
                 title = "Deny Request",
+                isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onDeny
             )
         }

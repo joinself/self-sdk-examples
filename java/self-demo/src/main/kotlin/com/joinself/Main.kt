@@ -209,7 +209,6 @@ fun main() {
                                 .expires(Timestamp.now() + 3600)
                                 .finish()
 
-                            val agreementRequestId = agreementRequest.id().toHexString()
                             val sendStatus = account.messageSend(responderAddress!!, agreementRequest)
                             println("send agreement status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress!!.encodeHex()} - requestId:${agreementRequest.id().toHexString()}")
                         }
@@ -221,6 +220,25 @@ fun main() {
                     val read = receipt.read().filter{ it.isNotEmpty() }.map { it.toHexString() }.toList()
                     println("received receipt \ndelivered:$delivered\nread:$read")
                     println("\n\n")
+                }
+                ContentType.CREDENTIAL_PRESENTATION_RESPONSE -> {
+                    val credentialResponse = CredentialPresentationResponse.decode(content)
+                    println("Response received with status:${credentialResponse.status().name}")
+                    credentialResponse.presentations().forEach { pre ->
+                        val credentials = pre.credentials()
+                        credentials.forEach { cred ->
+                            val claims = cred.credentialSubjectClaims()
+                            claims.forEach {
+                                println(
+                                    "credential value" +
+                                            "\ncredentialType:${cred.credentialType().toList()}" +
+                                            "\nfield:${it.key}" +
+                                            "\nvalue:${it.value}"
+                                )
+                                println()
+                            }
+                        }
+                    }
                 }
                 else -> {
 

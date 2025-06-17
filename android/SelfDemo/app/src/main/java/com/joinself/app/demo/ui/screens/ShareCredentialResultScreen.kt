@@ -14,14 +14,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.ServerRequestState
 
 @Composable
 fun ShareCredentialResultScreen(
-    isSuccess: Boolean,
+    requestState: ServerRequestState,
     credentialType: String, // "email" or "document"
     onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isSuccess = requestState is ServerRequestState.ResponseSent
     val (successTitle, successMessage, failureTitle, failureMessage) = when (credentialType) {
         "email" -> Tuple4(
             "Email Credential Shared!",
