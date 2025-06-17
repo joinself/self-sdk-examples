@@ -35,7 +35,7 @@ fun AuthRequestStartScreen(
                 HeroSection(
                     icon = Icons.Filled.Security,
                     title = "Authentication Request",
-                    subtitle = if(requestState != ServerRequestState.Received) "Waiting for a request from server..." else "The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity."
+                    subtitle = if(requestState != ServerRequestState.RequestReceived) "Waiting for a request from server..." else "The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity."
                 )
             }
 
@@ -114,7 +114,7 @@ fun AuthRequestStartScreen(
         ) {
             PrimaryButton(
                 title = "Start Authentication",
-                isDisabled = requestState != ServerRequestState.Received,
+                isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onStartAuthentication
             )
         }

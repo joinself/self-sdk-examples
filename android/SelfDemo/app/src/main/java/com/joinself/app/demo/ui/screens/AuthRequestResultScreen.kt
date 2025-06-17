@@ -11,12 +11,13 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.joinself.app.demo.ui.ServerRequestState
 import com.joinself.app.demo.ui.theme.*
 
 
 @Composable
 fun AuthRequestResultScreen(
-    isSuccess: Boolean,
+    requestState: ServerRequestState,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -33,7 +34,7 @@ fun AuthRequestResultScreen(
         ) {
             item {
                 // Hero Section - Success or Failure
-                if (isSuccess) {
+                if (requestState is ServerRequestState.ResponseSent) {
                     HeroSection(
                         icon = Icons.Filled.CheckCircle,
                         title = "Authentication Successful",
@@ -50,7 +51,7 @@ fun AuthRequestResultScreen(
 
             item {
                 // Result details
-                if (isSuccess) {
+                if (requestState is ServerRequestState.ResponseSent) {
                     InfoCard(
                         icon = Icons.Filled.Verified,
                         title = "Identity Verified",
@@ -66,7 +67,7 @@ fun AuthRequestResultScreen(
                 }
             }
 
-            if (isSuccess) {
+            if (requestState is ServerRequestState.ResponseSent) {
                 item {
                     // What happened during authentication
                     Column(

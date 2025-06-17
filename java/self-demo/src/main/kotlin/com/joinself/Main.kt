@@ -118,11 +118,10 @@ fun main() {
                     val chat = Chat.decode(content)
 
                     println(
-                        "received chat message " +
                         "\nfrom:${message.fromAddress().encodeHex()}" +
                         "\nmessageId:${message.id().toHexString()}" +
                         "\nmessage:${chat.message()}" +
-                        "\nattachments:${chat.attachments().size}"
+                        "\n"
                     )
                     println("\n")
 

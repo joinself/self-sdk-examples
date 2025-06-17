@@ -1,5 +1,6 @@
 package com.joinself.app.demo.ui
 
+import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -111,7 +112,7 @@ fun SelfDemoApp(
             LaunchedEffect(appState.initialization) {
                 when (val status = appState.initialization) {
                     is InitializationState.Success -> {
-                        val route = if (viewModel.isRegistered()) MainRoute.ServerConnectionReady else MainRoute.Registration
+                        val route = if (viewModel.isRegistered()) MainRoute.ConnectToServer else MainRoute.Registration
                         navController.navigate(route)
                     }
                     is InitializationState.Error -> {
@@ -175,6 +176,9 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.DocumentSignStart)
                 }
             )
+            LaunchedEffect(Unit) {
+                viewModel.resetState(ServerRequestState.None)
+            }
         }
 
         composable<MainRoute.AuthRequestStart> {
@@ -185,15 +189,28 @@ fun SelfDemoApp(
                 }
             )
 
-            LaunchedEffect(Unit) {
-                withContext(Dispatchers.IO){
-                    viewModel.sendServerRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH)
+            LaunchedEffect(appState.requestState) {
+                Log.d(TAG, "request state: ${appState.requestState}")
+                when (appState.requestState) {
+                    ServerRequestState.None -> {
+                        withContext(Dispatchers.IO){
+                            viewModel.sendServerRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH)
+                        }
+                    }
+                    ServerRequestState.ResponseSent -> {
+                        withContext(Dispatchers.Main){
+                            navController.navigate(MainRoute.AuthResultResult)
+                        }
+                    }
+                    else -> {
+
+                    }
                 }
             }
         }
         composable<MainRoute.AuthResultResult> {
             AuthRequestResultScreen(
-                isSuccess = true,
+                requestState = appState.requestState,
                 onContinue = {
                     navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
                 }

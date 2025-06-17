@@ -17,7 +17,6 @@ import com.joinself.sdk.models.ResponseStatus
 import com.joinself.sdk.models.VerificationRequest
 import com.joinself.sdk.models.VerificationResponse
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,8 +41,10 @@ sealed class ServerState {
 }
 sealed class ServerRequestState {
     data object None : ServerRequestState()
-    data object Sent : ServerRequestState()
-    data object Received : ServerRequestState()
+    data object RequestSent : ServerRequestState()
+    data object RequestReceived : ServerRequestState()
+    data class RequestError(val message: String) : ServerRequestState()
+    data object ResponseSent : ServerRequestState()
 }
 
 sealed class SERVER_REQUESTS {
@@ -112,7 +113,7 @@ class MainViewModel(context: Context): ViewModel() {
                     if (msg.details().any { it.types().contains(CredentialType.Liveness) && it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
                         Log.d("Self", "received liveness request")
                         credentialRequest = msg
-                        _appUiState.update { it.copy(requestState = ServerRequestState.Received) }
+                        _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
                     }
 
                 }
@@ -156,6 +157,9 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
+    fun resetState(requestState: ServerRequestState) {
+        _appUiState.update { it.copy(requestState = requestState) }
+    }
 
 
     suspend fun sendServerRequest(message: String) {
@@ -166,7 +170,7 @@ class MainViewModel(context: Context): ViewModel() {
 
         // send chat to server
         account.send(chat) { messageId, _ ->
-            _appUiState.update { it.copy(requestState = ServerRequestState.Sent) }
+            _appUiState.update { it.copy(requestState = ServerRequestState.RequestSent) }
         }
     }
 
@@ -183,7 +187,9 @@ class MainViewModel(context: Context): ViewModel() {
             .build()
 
         viewModelScope.launch(Dispatchers.IO) {
-            account.send(credentialResponse)
+            account.send(credentialResponse) { messageId, _ ->
+                _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent) }
+            }
         }
     }
 
