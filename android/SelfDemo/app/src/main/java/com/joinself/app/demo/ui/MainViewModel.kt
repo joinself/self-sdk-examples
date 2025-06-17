@@ -150,7 +150,11 @@ class MainViewModel(context: Context): ViewModel() {
             serverInboxAddress = inboxAddress
 
             groupAddress = account.connectWith(serverInboxAddress, info = mapOf())
-            _appUiState.update { it.copy(serverState = ServerState.Success) }
+            if (groupAddress.isNotEmpty()) {
+                _appUiState.update { it.copy(serverState = ServerState.Success) }
+            } else {
+                _appUiState.update { it.copy(serverState = ServerState.Error("failed to connect to server")) }
+            }
         } catch (ex: Exception) {
             Log.e("Self", ex.message, ex)
             _appUiState.update { it.copy(serverState = ServerState.Error(ex.message ?: "failed to connect to server")) }

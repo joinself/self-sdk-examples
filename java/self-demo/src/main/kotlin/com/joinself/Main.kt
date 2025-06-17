@@ -137,7 +137,7 @@ fun main() {
                             val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
                             println("send auth request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
                         }
-                        SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH -> {
+                        SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL -> {
                             val credentialRequest = CredentialPresentationRequestBuilder()
                                 .presentationType(arrayOf("VerifiablePresentation", "EmailPresentation"))
                                 .details(arrayOf("VerifiableCredential","EmailCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "emailAddress", "")))

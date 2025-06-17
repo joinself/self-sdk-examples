@@ -32,7 +32,7 @@ fun ServerConnectResultScreen(
     LaunchedEffect(serverState) {
         if (serverState is ServerState.Connecting) {
             hasTimedOut = false
-            kotlinx.coroutines.delay(20000) // 10 second timeout
+            kotlinx.coroutines.delay(20000) // 20 second timeout
 
             hasTimedOut = true
             onTimeout()

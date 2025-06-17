@@ -153,7 +153,7 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.ServerConnectionReady)
                 },
                 onRetry = {
-
+                    navController.popBackStack()
                 },
                 onTimeout = {
 
