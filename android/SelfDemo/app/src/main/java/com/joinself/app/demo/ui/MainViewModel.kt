@@ -47,6 +47,14 @@ sealed class ServerRequestState {
     data class RequestError(val message: String) : ServerRequestState()
     data object ResponseSent : ServerRequestState()
 }
+sealed class RestoreState {
+    data object None: RestoreState()
+    data object Restoring: RestoreState()
+    data object Success: RestoreState()
+    data object VerificationFailed: RestoreState()
+    data object DataRecoveryFailed: RestoreState()
+    data class Error(val message: String) : RestoreState()
+}
 
 sealed class SERVER_REQUESTS {
     companion object {
@@ -63,7 +71,8 @@ data class AppUiState(
     var isRegistered: Boolean = false,
     var initialization: InitializationState = InitializationState.Loading,
     var serverState: ServerState = ServerState.None,
-    var requestState: ServerRequestState = ServerRequestState.None
+    var requestState: ServerRequestState = ServerRequestState.None,
+    var restoreState: RestoreState = RestoreState.None
 )
 
 class MainViewModel(context: Context): ViewModel() {
@@ -127,12 +136,6 @@ class MainViewModel(context: Context): ViewModel() {
                 is CredentialRequest -> {
                     credentialRequest = msg
                     _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
-
-                    // check if it's a liveness check request, then open Liveness UI flow
-//                    if (msg.details().any { it.types().contains(CredentialType.Liveness) && it.subject() == Constants.SUBJECT_SOURCE_IMAGE_HASH }) {
-//                        Log.d("Self", "received liveness request")
-//                    }
-
                 }
                 is VerificationRequest -> {
                     // check the request is agreement, this example will respond automatically to the request
@@ -156,6 +159,7 @@ class MainViewModel(context: Context): ViewModel() {
         return success
     }
 
+    // connect with server using an inbox address
     suspend fun connect(inboxAddress: String) {
         try {
             _appUiState.update { it.copy(serverState = ServerState.Connecting) }
@@ -173,6 +177,7 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
+    // reset local variables and states
     fun resetState(requestState: ServerRequestState) {
         Log.d(TAG, "reset states")
         _appUiState.update { it.copy(requestState = requestState) }
@@ -181,6 +186,7 @@ class MainViewModel(context: Context): ViewModel() {
     }
 
 
+    // send a chat message
     suspend fun notifyServerForRequest(message: String) {
         val chat = ChatMessage.Builder()
             .setToIdentifier(groupAddress)
@@ -193,6 +199,7 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
+    // send response for the received request
     fun sendCredentialResponse(credentials: List<Credential>, status: ResponseStatus) {
         if (credentialRequest == null) return
 
@@ -230,6 +237,7 @@ class MainViewModel(context: Context): ViewModel() {
 
     fun storeCredentials() {
         account.storeCredentials(receivedCredentials)
+        receivedCredentials.clear()
     }
 
     fun sendDocSignResponse(status: ResponseStatus) {

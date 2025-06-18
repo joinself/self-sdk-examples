@@ -20,12 +20,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.joinself.app.demo.ui.screens.AuthRequestResultScreen
 import com.joinself.app.demo.ui.screens.AuthRequestStartScreen
+import com.joinself.app.demo.ui.screens.BackupResultScreen
+import com.joinself.app.demo.ui.screens.BackupStartScreen
 import com.joinself.app.demo.ui.screens.DocSignResultScreen
 import com.joinself.app.demo.ui.screens.DocSignStartScreen
 import com.joinself.app.demo.ui.screens.GetCredentialResultScreen
 import com.joinself.app.demo.ui.screens.GetCredentialStartScreen
 import com.joinself.app.demo.ui.screens.InitializeSDKScreen
 import com.joinself.app.demo.ui.screens.RegistrationIntroScreen
+import com.joinself.app.demo.ui.screens.RestoreResultScreen
+import com.joinself.app.demo.ui.screens.RestoreStartScreen
 import com.joinself.app.demo.ui.screens.SelectActionScreen
 import com.joinself.app.demo.ui.screens.ServerConnectResultScreen
 import com.joinself.app.demo.ui.screens.ServerConnectStartScreen
@@ -189,7 +193,7 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.DocumentSignStart)
                 },
                 onBackup = {
-
+                    navController.navigate(MainRoute.BackupStart)
                 }
             )
             LaunchedEffect(Unit) {
@@ -414,6 +418,39 @@ fun SelfDemoApp(
                 onContinue = {
                     navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
                 }
+            )
+        }
+
+        composable<MainRoute.BackupStart> {
+            BackupStartScreen(
+                onStartBackup = {
+
+                }
+            )
+        }
+        composable<MainRoute.BackupResult> {
+            BackupResultScreen(
+                isSuccess = true,
+                onContinue = {
+
+                },
+                onRetry = {}
+            )
+        }
+        composable<MainRoute.RestoreStart> {
+            RestoreStartScreen(
+                onStartRestore = {
+
+                }
+            )
+        }
+        composable<MainRoute.RestoreResult> {
+            RestoreResultScreen(
+                restoreState = appState.restoreState,
+                onContinue = {
+
+                },
+                onRetry = {}
             )
         }
 

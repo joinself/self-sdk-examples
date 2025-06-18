@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.joinself.app.demo.ui.RestoreState
 import com.joinself.app.demo.ui.theme.AlertCard
 import com.joinself.app.demo.ui.theme.AlertType
 import com.joinself.app.demo.ui.theme.AppColors
@@ -29,55 +30,51 @@ import com.joinself.app.demo.ui.theme.PrimaryButton
 import com.joinself.app.demo.ui.theme.ProcessStep
 import com.joinself.app.demo.ui.theme.SecondaryButton
 
-// Enum to represent the different outcomes of the restore process
-enum class RestoreOutcome {
-    Success, // Identity verified, data restored
-    VerificationFailed, // Liveness or Selfie check failed
-    DataRecoveryFailed, // Verification passed, but system couldn't restore data
-    GenericFailure // Other types of errors
-}
-
 @Composable
 fun RestoreResultScreen(
-    restoreOutcome: RestoreOutcome,
+    restoreState: RestoreState,
     onContinue: () -> Unit,
-    onRetryIdentityVerification: (() -> Unit)? = null,
+    onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val isSuccess = restoreOutcome == RestoreOutcome.Success
+    val isSuccess = restoreState == RestoreState.Success
 
     // Determine messages and icons based on outcome
-    val heroIcon = when (restoreOutcome) {
-        RestoreOutcome.Success -> Icons.Filled.SecurityUpdateGood
-        RestoreOutcome.VerificationFailed -> Icons.Filled.VerifiedUser // Or specific liveness/selfie error icon
-        RestoreOutcome.DataRecoveryFailed -> Icons.Filled.SyncProblem
-        RestoreOutcome.GenericFailure -> Icons.Filled.Error
+    val heroIcon = when (restoreState) {
+        is RestoreState.Success -> Icons.Filled.SecurityUpdateGood
+        is RestoreState.VerificationFailed -> Icons.Filled.VerifiedUser // Or specific liveness/selfie error icon
+        is RestoreState.DataRecoveryFailed -> Icons.Filled.SyncProblem
+        is RestoreState.Error -> Icons.Filled.Error
+        else -> Icons.Filled.Error
     }
 
-    val heroTitle = when (restoreOutcome) {
-        RestoreOutcome.Success -> "Account Restored!"
-        RestoreOutcome.VerificationFailed -> "Identity Verification Failed"
-        RestoreOutcome.DataRecoveryFailed -> "Data Recovery Issue"
-        RestoreOutcome.GenericFailure -> "Restoration Failed"
+    val heroTitle = when (restoreState) {
+        is RestoreState.Success -> "Account Restored!"
+        is RestoreState.VerificationFailed -> "Identity Verification Failed"
+        is RestoreState.DataRecoveryFailed -> "Data Recovery Issue"
+        is RestoreState.Error -> "Restoration Failed"
+        else -> ""
     }
 
-    val heroSubtitle = when (restoreOutcome) {
-        RestoreOutcome.Success -> "Your account data has been successfully and securely restored."
-        RestoreOutcome.VerificationFailed -> "We couldn't verify your identity at this time. Please ensure good lighting and follow the instructions carefully."
-        RestoreOutcome.DataRecoveryFailed -> "Your identity was verified, but we encountered an issue while trying to restore your account data."
-        RestoreOutcome.GenericFailure -> "We encountered an unexpected issue while trying to restore your account."
+    val heroSubtitle = when (restoreState) {
+        is RestoreState.Success -> "Your account data has been successfully and securely restored."
+        is RestoreState.VerificationFailed -> "We couldn't verify your identity at this time. Please ensure good lighting and follow the instructions carefully."
+        is RestoreState.DataRecoveryFailed -> "Your identity was verified, but we encountered an issue while trying to restore your account data."
+        is RestoreState.Error -> "We encountered an unexpected issue while trying to restore your account."
+        else -> ""
     }
 
-    val cardTitle = when (restoreOutcome) {
-        RestoreOutcome.Success -> "Restoration Complete"
+    val cardTitle = when (restoreState) {
+        is RestoreState.Success -> "Restoration Complete"
         else -> "What Happened?"
     }
 
-    val cardMessage = when (restoreOutcome) {
-        RestoreOutcome.Success -> "You can now access your account with all your previous information. Welcome back!"
-        RestoreOutcome.VerificationFailed -> "The liveness check or selfie verification could not be completed successfully. You can try the verification process again."
-        RestoreOutcome.DataRecoveryFailed -> "Please try again in a few moments. If the problem persists, you may need to contact support or try setting up a new account if no critical data was in the backup."
-        RestoreOutcome.GenericFailure -> "Please check your internet connection and try again. If the problem continues, please contact our support team."
+    val cardMessage = when (restoreState) {
+        is RestoreState.Success -> "You can now access your account with all your previous information. Welcome back!"
+        is RestoreState.VerificationFailed -> "The liveness check or selfie verification could not be completed successfully. You can try the verification process again."
+        is RestoreState.DataRecoveryFailed -> "Please try again in a few moments. If the problem persists, you may need to contact support or try setting up a new account if no critical data was in the backup."
+        is RestoreState.Error -> "Please check your internet connection and try again. If the problem continues, please contact our support team."
+        else -> ""
     }
 
     val cardAlertType = if (isSuccess) AlertType.Success else AlertType.Error
@@ -131,7 +128,7 @@ fun RestoreResultScreen(
                             style = AppFonts.heading,
                             color = AppColors.textPrimary
                         )
-                        if (restoreOutcome == RestoreOutcome.VerificationFailed && onRetryIdentityVerification != null) {
+                        if (restoreState == RestoreState.VerificationFailed && onRetry != null) {
                             ProcessStep(
                                 number = 1,
                                 title = "Retry Identity Verification",
@@ -161,10 +158,10 @@ fun RestoreResultScreen(
                 title = if (isSuccess) "Get Started" else "Continue", // Or "Go to Home", "Close"
                 onClick = onContinue
             )
-            if (restoreOutcome == RestoreOutcome.VerificationFailed && onRetryIdentityVerification != null) {
+            if (restoreState == RestoreState.VerificationFailed && onRetry != null) {
                 SecondaryButton(
                     title = "Retry Verification",
-                    onClick = onRetryIdentityVerification
+                    onClick = onRetry
                 )
             }
             // Add other buttons like "Contact Support" if applicable for certain errors
@@ -176,7 +173,7 @@ fun RestoreResultScreen(
 @Composable
 fun RestoreResultScreenSuccessPreview() {
     RestoreResultScreen(
-        restoreOutcome = RestoreOutcome.Success,
+        restoreState = RestoreState.Success,
         onContinue = {}
     )
 }
@@ -185,9 +182,9 @@ fun RestoreResultScreenSuccessPreview() {
 @Composable
 fun RestoreResultScreenVerificationFailedPreview() {
     RestoreResultScreen(
-        restoreOutcome = RestoreOutcome.VerificationFailed,
+        restoreState = RestoreState.VerificationFailed,
         onContinue = {},
-        onRetryIdentityVerification = {}
+        onRetry = {}
     )
 }
 
@@ -195,7 +192,7 @@ fun RestoreResultScreenVerificationFailedPreview() {
 @Composable
 fun RestoreResultScreenDataRecoveryFailedPreview() {
     RestoreResultScreen(
-        restoreOutcome = RestoreOutcome.DataRecoveryFailed,
+        restoreState = RestoreState.DataRecoveryFailed,
         onContinue = {}
         // onContactSupport = {} // Example
     )

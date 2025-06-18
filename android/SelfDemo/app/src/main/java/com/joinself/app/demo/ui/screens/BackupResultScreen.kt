@@ -26,20 +26,13 @@ import com.joinself.app.demo.ui.theme.PrimaryButton
 import com.joinself.app.demo.ui.theme.ProcessStep
 import com.joinself.app.demo.ui.theme.SecondaryButton
 
-enum class BackupResult {
-     Success,
-     Failure
- }
-
 @Composable
 fun BackupResultScreen(
-    backupResult: BackupResult,
+    isSuccess: Boolean,
     onContinue: () -> Unit,
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val isSuccess = backupResult == BackupResult.Success
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -170,7 +163,7 @@ fun BackupResultScreen(
 @Composable
 fun BackupResultScreenSuccessSystemManagedPreview() {
     BackupResultScreen(
-        backupResult = BackupResult.Success,
+        isSuccess = true,
         onContinue = {}
     )
 }
@@ -179,7 +172,7 @@ fun BackupResultScreenSuccessSystemManagedPreview() {
 @Composable
 fun BackupResultScreenFailureSystemManagedPreview() {
     BackupResultScreen(
-        backupResult = BackupResult.Failure,
+        isSuccess = false,
         onContinue = {},
         onRetry = {}
     )
