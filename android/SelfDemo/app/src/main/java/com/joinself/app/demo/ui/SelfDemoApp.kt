@@ -178,6 +178,9 @@ fun SelfDemoApp(
                 },
                 onSignDocuments = {
                     navController.navigate(MainRoute.DocumentSignStart)
+                },
+                onBackup = {
+
                 }
             )
             LaunchedEffect(Unit) {
@@ -230,6 +233,9 @@ fun SelfDemoApp(
                 onVerifyEmail = {
                     navController.navigate(MainRoute.VerifyEmailStart)
                 },
+                onGetCredentials = {
+
+                },
                 onBack = {
                     navController.popBackStack()
                 }
@@ -274,6 +280,9 @@ fun SelfDemoApp(
                 onProvideDocument = {
                     credentialType = CredentialType.Document
                     navController.navigate(MainRoute.ShareCredentialApproval)
+                },
+                onProvideCustomCredential = {
+                    
                 },
                 onBack = {
 

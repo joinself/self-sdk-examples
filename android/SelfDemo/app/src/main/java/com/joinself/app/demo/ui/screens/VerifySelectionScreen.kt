@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 fun VerifySelectionScreen(
     onVerifyIdentityDocument: () -> Unit,
     onVerifyEmail: () -> Unit,
+    onGetCredentials: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -88,6 +89,14 @@ fun VerifySelectionScreen(
                         description = "Verify your government-issued identity documents",
                         isEnabled = true,
                         onClick = onVerifyIdentityDocument
+                    )
+
+                    VerificationCard(
+                        icon = Icons.Filled.Badge,
+                        title = "Get Custom Credential",
+                        description = "Get credentials that created and verified by your server",
+                        isEnabled = true,
+                        onClick = onGetCredentials
                     )
                 }
             }

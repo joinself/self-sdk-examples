@@ -23,6 +23,7 @@ fun SelectActionScreen(
     onVerifyCredentials: () -> Unit,
     onProvideCredentials: () -> Unit,
     onSignDocuments: () -> Unit,
+    onBackup: () -> Unit,
     modifier: Modifier = Modifier,
     isAuthenticating: Boolean = false
 ) {
@@ -88,7 +89,12 @@ fun SelectActionScreen(
                         onClick = onSignDocuments
                     )
 
-
+                    ActionCard(
+                        icon = Icons.Filled.Edit,
+                        title = "Backup",
+                        description = "Create an encrypted backup of your account data",
+                        onClick = onBackup
+                    )
                 }
             }
 

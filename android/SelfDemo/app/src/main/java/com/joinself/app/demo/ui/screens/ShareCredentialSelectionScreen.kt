@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 fun ShareCredentialSelectionScreen(
     onProvideEmail: () -> Unit,
     onProvideDocument: () -> Unit,
+    onProvideCustomCredential: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -100,6 +101,15 @@ fun ShareCredentialSelectionScreen(
                         description = "Provide proof of your verified ID number",
                         isEnabled = true,
                         onClick = onProvideDocument
+                    )
+
+                    // Custom credential option
+                    CredentialProvisionCard(
+                        icon = Icons.Filled.Badge,
+                        title = "Share Custom Credential",
+                        description = "Provide proof of your custom credentials",
+                        isEnabled = true,
+                        onClick = onProvideCustomCredential
                     )
                 }
             }
