@@ -52,6 +52,7 @@ struct ContentView: View {
         case serverConnectionProcessing(serverAddress: String)
         case actionSelection
         case verifyCredential
+        case shareCredential
         case authStart
         case authResult
         case docSignStart
@@ -195,6 +196,22 @@ struct ContentView: View {
                             // reload view to display document's credential
                         })
                     })
+                    
+                case .shareCredential:
+                    ProvideCredentialSelectionScreen { credentialActionType in
+                        if credentialActionType == .emailAddress {
+                            // TODO: Share verified email address
+                            
+                        } else if credentialActionType == .identityDocument {
+                            // TODO: Share verified identity document
+                            
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
 
                     
                 case .authStart:
@@ -317,8 +334,11 @@ struct ContentView: View {
         case .verifyCredentials:
             handleVerifyCredentials()
         case .provideCredentials:
-            print("🎯 ContentView: Provide Credentials selected (not implemented yet)")
-            showToastMessage("Provide Credentials feature coming soon!")
+//            print("🎯 ContentView: Provide Credentials selected (not implemented yet)")
+//            showToastMessage("Provide Credentials feature coming soon!")
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .shareCredential
+            }
         case .signDocuments:
             handleSignDocumentsAction()
         @unknown default:

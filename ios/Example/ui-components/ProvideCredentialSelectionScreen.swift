@@ -1,11 +1,11 @@
 //
-//  VerifyCredentialSelectionScreen.swift
+//  ProvideCredentialSelectionScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public struct VerifyCredentialSelectionScreen: View {
+public struct ProvideCredentialSelectionScreen: View {
     @State private var showSuccessToast: Bool
     
     let onActionSelected: (CredentialActionType) -> Void
@@ -57,12 +57,12 @@ public struct VerifyCredentialSelectionScreen: View {
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Verify Credentials")
+                                Text("Provide Credentials")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                 
-                                Text("Choose the type of credential you want to verify. These verifications help establish trust and prove aspects of your identity.")
+                                Text("Share your verified credentials with the server. You control which credentials to share and when to share them.")
                                     .font(.system(size: 16))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -73,7 +73,7 @@ public struct VerifyCredentialSelectionScreen: View {
                         // Available Actions Section
                         VStack(alignment: .leading, spacing: 24) {
                             HStack {
-                                Text("Available Actions")
+                                Text("Available Credentials")
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.black)
                                 Spacer()
@@ -82,8 +82,8 @@ public struct VerifyCredentialSelectionScreen: View {
                             VStack(spacing: 16) {
                                 ActionCardView(
                                     icon: "envelope",
-                                    title: "Verify Email Address",
-                                    description: "Verify ownership of your email address",
+                                    title: "Share Email Credential",
+                                    description: "Provide proof of your verified email address",
                                     action: {
                                         onActionSelected(.emailAddress)
                                     }
@@ -91,8 +91,8 @@ public struct VerifyCredentialSelectionScreen: View {
                                 
                                 ActionCardView(
                                     icon: "person.text.rectangle",
-                                    title: "Verify Identity Document",
-                                    description: "Verify your goverment-issued identity documents",
+                                    title: "Share ID Number",
+                                    description: "Provide proof of your verified ID number",
                                     action: {
                                         onActionSelected(.identityDocument)
                                     }
@@ -144,7 +144,7 @@ public struct VerifyCredentialSelectionScreen: View {
 }
 
 #Preview {
-    VerifyCredentialSelectionScreen(
+    ProvideCredentialSelectionScreen(
         showConnectionSuccess: true,
         onActionSelected: { actionType in
             print("Preview: Selected action: \(actionType)")
