@@ -11,6 +11,7 @@ import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
 import com.joinself.sdk.models.Claim
 import com.joinself.sdk.models.Credential
+import com.joinself.sdk.models.CredentialMessage
 import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.ResponseStatus
@@ -52,7 +53,9 @@ sealed class SERVER_REQUESTS {
         val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
         val REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
         val REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
+        val REQUEST_CREDENTIAL_CUSTOM: String = "PROVIDE_CREDENTIAL_CUSTOM"
         val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
+        val REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
     }
 }
 
@@ -72,7 +75,7 @@ class MainViewModel(context: Context): ViewModel() {
     var serverInboxAddress: String = ""
     var credentialRequest: CredentialRequest? = null
     var verificationRequest: VerificationRequest? = null
-
+    val receivedCredentials = mutableListOf<Credential>()
     init {
         // init the sdk
         SelfSDK.initialize(
@@ -105,6 +108,18 @@ class MainViewModel(context: Context): ViewModel() {
                 it.copy(
                     initialization = if (status == 0L) InitializationState.Success else InitializationState.Error("can't initialize account"),
                 )
+            }
+        }
+        account.setOnMessageListener { msg ->
+            when (msg) {
+                // receive custom credentials messages
+                is CredentialMessage -> {
+                    Log.d("Self", "received credential message")
+                    receivedCredentials.clear()
+                    receivedCredentials.addAll(msg.credentials())
+
+                    _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
+                }
             }
         }
         account.setOnRequestListener { msg ->
@@ -211,6 +226,10 @@ class MainViewModel(context: Context): ViewModel() {
         val storedCredentials = account.lookUpCredentials(details)
 
         sendCredentialResponse(storedCredentials, status)
+    }
+
+    fun storeCredentials() {
+        account.storeCredentials(receivedCredentials)
     }
 
     fun sendDocSignResponse(status: ResponseStatus) {

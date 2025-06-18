@@ -28,25 +28,19 @@ import com.joinself.app.demo.ui.theme.ProcessStep
 import com.joinself.app.demo.ui.theme.SecondaryButton
 
 
-enum class GetCredentialOutcome {
-    Success,
-    Failure
-}
 
 @Composable
 fun GetCredentialResultScreen(
-    outcome: GetCredentialOutcome,
+    isSuccess: Boolean = true,
     credentialName: String = "Digital Credential",
-    successMessage: String = "Your $credentialName has been successfully issued and added to your wallet.",
-    failureMessage: String = "There was an issue issuing your $credentialName. Please try again or contact support.",
     onContinue: () -> Unit, // Navigate to next screen (e.g., wallet, home)
     onRetry: (() -> Unit)? = null, // Optional: To retry the credential issuance
     modifier: Modifier = Modifier
 ) {
-    val isSuccess = outcome == GetCredentialOutcome.Success
-
     val heroIcon = if (isSuccess) Icons.Filled.AssignmentTurnedIn else Icons.Filled.ErrorOutline
     val heroTitle = if (isSuccess) "$credentialName Issued!" else "$credentialName Issuance Failed"
+    val successMessage = "Your $credentialName has been successfully issued and added to your wallet."
+    val failureMessage = "There was an issue issuing your $credentialName. Please try again or contact support."
     val heroSubtitle = if (isSuccess) successMessage else failureMessage
 
     val cardTitle = if (isSuccess) "Credential Ready" else "Error Details"
@@ -162,7 +156,7 @@ fun GetCredentialResultScreen(
 fun GetCredentialResultScreenSuccessPreview() {
     // YourAppTheme {
     GetCredentialResultScreen(
-        outcome = GetCredentialOutcome.Success,
+        isSuccess = true,
         credentialName = "Custom Credentials",
         onContinue = {}
     )
@@ -174,7 +168,7 @@ fun GetCredentialResultScreenSuccessPreview() {
 fun GetCredentialResultScreenFailurePreview() {
     // YourAppTheme {
     GetCredentialResultScreen(
-        outcome = GetCredentialOutcome.Failure,
+        isSuccess = false,
         credentialName = "Proof of Age",
         onContinue = {},
         onRetry = {}
@@ -187,9 +181,8 @@ fun GetCredentialResultScreenFailurePreview() {
 fun GetCredentialResultScreenFailureNoRetryPreview() {
     // YourAppTheme {
     GetCredentialResultScreen(
-        outcome = GetCredentialOutcome.Failure,
+        isSuccess = false,
         credentialName = "Access Pass",
-        failureMessage = "This Access Pass could not be issued at this time due to a server configuration issue. Please try later.",
         onContinue = {}
         // onRetry is null
     )

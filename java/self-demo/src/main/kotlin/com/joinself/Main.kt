@@ -38,7 +38,9 @@ sealed class SERVER_REQUESTS {
         val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
         val REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
         val REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
+        val REQUEST_CREDENTIAL_CUSTOM: String = "PROVIDE_CREDENTIAL_CUSTOM"
         val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
+        val REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
     }
 }
 
@@ -171,6 +173,9 @@ fun main() {
                             val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
                             println("send document credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
                         }
+                        SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM -> {
+
+                        }
                         SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING -> {
                             val terms = "Agreement test"
                             val agreementTerms = BinaryObject.create(
@@ -223,6 +228,31 @@ fun main() {
 
                             val sendStatus = account.messageSend(responderAddress!!, agreementRequest)
                             println("send agreement status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress!!.encodeHex()} - requestId:${agreementRequest.id().toHexString()}")
+                        }
+                        SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
+                            val subjectAddress = Address.key(responderAddress!!)
+                            val issuerAddress = Address.key(inboxAddress!!)
+                            val customerCredential = com.joinself.selfsdk.kmp.credential.CredentialBuilder()
+                                .credentialType(arrayOf("VerifiableCredential", "CustomerCredential"))
+                                .credentialSubject(subjectAddress)
+                                .credentialSubjectClaims(mapOf(
+                                    "customer" to mapOf(
+                                        "name" to "Test Name")))
+                                .issuer(issuerAddress)
+                                .validFrom(Timestamp.now())
+                                .signWith(inboxAddress!!, Timestamp.now())
+                                .finish()
+                            val customerVerifiableCredential = account.credentialIssue(customerCredential)
+
+                            val content = com.joinself.selfsdk.kmp.message.CredentialBuilder()
+                                .credential(customerVerifiableCredential)
+                                .finish()
+
+                            val messageId = content.id().toHexString()
+
+                            val sendStatus = account.messageSend(responderAddress, content)
+                            println("send Custom Credentials status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress.encodeHex()} - messageId:${messageId}")
+
                         }
                     }
                 }

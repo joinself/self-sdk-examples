@@ -29,7 +29,7 @@ import com.joinself.app.demo.ui.theme.PrimaryButton
 
 
 @Composable
-fun GetCredentialsStartScreen(
+fun GetCredentialStartScreen(
     onStartGettingCredentials: () -> Unit,
     modifier: Modifier = Modifier,
     credentialName: String = "Digital Credential" // Example: "Proof of Age", "Membership ID"
@@ -117,7 +117,7 @@ fun GetCredentialsStartScreen(
 fun GetCredentialsStartScreenDefaultPreview() {
     // Wrap with your AppTheme if it's not applied globally in previews
     // YourAppTheme {
-    GetCredentialsStartScreen(
+    GetCredentialStartScreen(
         onStartGettingCredentials = {}
     )
     // }
@@ -127,7 +127,7 @@ fun GetCredentialsStartScreenDefaultPreview() {
 @Composable
 fun GetCredentialsStartScreenCustomNamePreview() {
     // YourAppTheme {
-    GetCredentialsStartScreen(
+    GetCredentialStartScreen(
         onStartGettingCredentials = {},
         credentialName = "Membership Pass"
     )

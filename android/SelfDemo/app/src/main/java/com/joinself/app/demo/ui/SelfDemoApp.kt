@@ -1,7 +1,6 @@
 package com.joinself.app.demo.ui
 
 import android.util.Log
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -23,6 +22,8 @@ import com.joinself.app.demo.ui.screens.AuthRequestResultScreen
 import com.joinself.app.demo.ui.screens.AuthRequestStartScreen
 import com.joinself.app.demo.ui.screens.DocSignResultScreen
 import com.joinself.app.demo.ui.screens.DocSignStartScreen
+import com.joinself.app.demo.ui.screens.GetCredentialResultScreen
+import com.joinself.app.demo.ui.screens.GetCredentialStartScreen
 import com.joinself.app.demo.ui.screens.InitializeSDKScreen
 import com.joinself.app.demo.ui.screens.RegistrationIntroScreen
 import com.joinself.app.demo.ui.screens.SelectActionScreen
@@ -66,11 +67,19 @@ sealed class MainRoute {
     @Serializable object VerifyEmailResult
     @Serializable object VerifyDocumentStart
     @Serializable object VerifyDocumentResult
+    @Serializable object GetCustomCredentialStart
+    @Serializable object GetCustomCredentialResult
+
     @Serializable object ShareCredentialSelection
     @Serializable object ShareCredentialApproval
     @Serializable object ShareCredentialResult
     @Serializable object DocumentSignStart
     @Serializable object DocumentSignResult
+
+    @Serializable object BackupStart
+    @Serializable object BackupResult
+    @Serializable object RestoreStart
+    @Serializable object RestoreResult
 
     companion object {
         val LivenessRoute = "livenessRoute"
@@ -210,9 +219,7 @@ fun SelfDemoApp(
                             navController.navigate(MainRoute.AuthResultResult)
                         }
                     }
-                    else -> {
-
-                    }
+                    else -> {}
                 }
             }
         }
@@ -234,7 +241,7 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.VerifyEmailStart)
                 },
                 onGetCredentials = {
-
+                    navController.navigate(MainRoute.GetCustomCredentialStart)
                 },
                 onBack = {
                     navController.popBackStack()
@@ -271,6 +278,40 @@ fun SelfDemoApp(
                 }
             )
         }
+        composable<MainRoute.GetCustomCredentialStart> {
+            GetCredentialStartScreen(
+                onStartGettingCredentials = {
+                    coroutineScope.launch {
+                        viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL)
+                    }
+                }
+            )
+            LaunchedEffect(appState.requestState) {
+                Log.d(TAG, "custom credential state: ${appState.requestState}")
+                when (appState.requestState) {
+                    ServerRequestState.RequestReceived -> {
+                        withContext(Dispatchers.Main){
+                            navController.navigate(MainRoute.GetCustomCredentialResult)
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+        composable<MainRoute.GetCustomCredentialResult> {
+            GetCredentialResultScreen(
+                isSuccess = true,
+                credentialName = "Custom Credentials",
+                onContinue = {
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
+                    viewModel.storeCredentials()
+                },
+                onRetry = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
         composable<MainRoute.ShareCredentialSelection> {
             ShareCredentialSelectionScreen(
                 onProvideEmail = {
@@ -282,7 +323,7 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.ShareCredentialApproval)
                 },
                 onProvideCustomCredential = {
-                    
+
                 },
                 onBack = {
 
@@ -314,9 +355,7 @@ fun SelfDemoApp(
                             navController.navigate(MainRoute.ShareCredentialResult)
                         }
                     }
-                    else -> {
-
-                    }
+                    else -> {}
                 }
             }
             DisposableEffect(true) {
