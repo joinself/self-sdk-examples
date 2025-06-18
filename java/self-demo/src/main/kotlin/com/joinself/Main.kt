@@ -174,7 +174,15 @@ fun main() {
                             println("send document credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM -> {
+                            val credentialRequest = CredentialPresentationRequestBuilder()
+                                .presentationType(arrayOf("VerifiablePresentation", "CustomPresentation"))
+                                .details(arrayOf("VerifiableCredential","CustomerCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "name", "")))
+                                .expires(Timestamp.now() + 3600)
+                                .finish()
+                            val credentialRequestId = credentialRequest.id().toHexString()
 
+                            val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
+                            println("send document credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING -> {
                             val terms = "Agreement test"
@@ -232,12 +240,11 @@ fun main() {
                         SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
                             val subjectAddress = Address.key(responderAddress!!)
                             val issuerAddress = Address.key(inboxAddress!!)
-                            val customerCredential = com.joinself.selfsdk.kmp.credential.CredentialBuilder()
+                            val customerCredential = CredentialBuilder()
                                 .credentialType(arrayOf("VerifiableCredential", "CustomerCredential"))
                                 .credentialSubject(subjectAddress)
                                 .credentialSubjectClaims(mapOf(
-                                    "customer" to mapOf(
-                                        "name" to "Test Name")))
+                                    "name" to "Test Name"))
                                 .issuer(issuerAddress)
                                 .validFrom(Timestamp.now())
                                 .signWith(inboxAddress!!, Timestamp.now())

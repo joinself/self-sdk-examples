@@ -323,6 +323,8 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.ShareCredentialApproval)
                 },
                 onProvideCustomCredential = {
+                    credentialType = CredentialType.Custom
+                    navController.navigate(MainRoute.ShareCredentialApproval)
 
                 },
                 onBack = {
@@ -348,6 +350,7 @@ fun SelfDemoApp(
                         withContext(Dispatchers.IO) {
                             if (credentialType == CredentialType.Email) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL)
                             else if (credentialType == CredentialType.Document) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT)
+                            else if (credentialType == CredentialType.Custom) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM)
                         }
                     }
                     ServerRequestState.ResponseSent -> {

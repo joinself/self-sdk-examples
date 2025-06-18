@@ -67,3 +67,16 @@ Run with debug, then attach debugger in Android Studio
 ```bash
 ./gradlew :agreement:run --debug-jvm
 ```
+
+## Distribution
+
+- Build executable distribution 
+```bash
+./gradlew :self-demo:distZip # output build/distributions/self-demo.zip
+```
+
+- Unzip `self-demo.zip` & run
+```bash
+cd self-demo
+./bin/self-demo
+```
