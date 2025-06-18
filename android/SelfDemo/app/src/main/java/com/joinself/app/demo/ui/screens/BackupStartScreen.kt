@@ -1,38 +1,42 @@
 package com.joinself.app.demo.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backup // Primary icon for backup
-import androidx.compose.material.icons.filled.CloudUpload // Alternative or supporting icon
-import androidx.compose.material.icons.filled.Info // For informational sections
-import androidx.compose.material.icons.filled.Lock // For security information
-import androidx.compose.material.icons.filled.Security // For security aspects
-import androidx.compose.material.icons.filled.CheckCircle // For features/benefits
-import androidx.compose.material.icons.filled.EnhancedEncryption // Icon for system-managed recovery
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.joinself.app.demo.ui.theme.* // Assuming you have these defined
+import com.joinself.app.demo.ui.theme.AlertType
+import com.joinself.app.demo.ui.theme.AppColors
+import com.joinself.app.demo.ui.theme.AppFonts
+import com.joinself.app.demo.ui.theme.AppSpacing
+import com.joinself.app.demo.ui.theme.FeatureRow
+import com.joinself.app.demo.ui.theme.HeroSection
+import com.joinself.app.demo.ui.theme.InfoCard
+import com.joinself.app.demo.ui.theme.PrimaryButton
+import com.joinself.app.demo.ui.theme.ProcessStep
 
-enum class BackupScreenState {
-    ReadyToStart,
-    LoadingPrerequisites,
-    // Other states as needed
-}
 
 @Composable
 fun BackupStartScreen(
-    // backupScreenState: BackupScreenState,
     onStartBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White) // Or your app's background color
+            .background(Color.White)
     ) {
         LazyColumn(
             modifier = Modifier
@@ -133,22 +137,10 @@ fun BackupStartScreen(
     }
 }
 
-// Ensure you have these Composables defined or adapt them:
-// @Composable fun HeroSection(icon: ImageVector, title: String, subtitle: String) { /* ... */ }
-// @Composable fun InfoCard(icon: ImageVector, title: String, message: String, type: AlertType) { /* ... */ }
-// @Composable fun ProcessStep(icon: ImageVector? = null, number: Int? = null, title: String, description: String) { /* ... */ }
-// @Composable fun FeatureRow(icon: ImageVector, title: String, description: String) { /* ... */ }
-// enum class AlertType { Success, Info, Warning, Error }
-// @Composable fun PrimaryButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, isDisabled: Boolean = false) { /* ... */ }
-
-
-// --- PREVIEWS ---
 @Preview(showBackground = true, name = "Backup Start Screen (System Managed)")
 @Composable
 fun BackupStartScreenSystemManagedPreview() {
-    // YourAppTheme {
     BackupStartScreen(
         onStartBackup = {}
     )
-    // }
 }

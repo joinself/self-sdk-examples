@@ -1,31 +1,35 @@
 package com.joinself.app.demo.ui.screens
 
+// Specific icons for restore
+// import androidx.compose.material.icons.filled.VpnKey // No longer explicitly entered by user
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-// Specific icons for restore
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Restore
-// import androidx.compose.material.icons.filled.VpnKey // No longer explicitly entered by user
-import androidx.compose.material.icons.filled.Info // For informational sections
-import androidx.compose.material.icons.filled.SecurityUpdateGood // For successful restore benefits
-import androidx.compose.material.icons.filled.VerifiedUser // For liveness/selfie check
-import androidx.compose.material.icons.filled.CameraAlt // For selfie capture
-import androidx.compose.material.icons.filled.SyncLock // For secure sync/restore
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.SecurityUpdateGood
+import androidx.compose.material.icons.filled.SyncLock
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.joinself.app.demo.ui.theme.* // Assuming you have these defined
-
-enum class RestoreScreenState {
-    ReadyToStart,
-    // Add other states if needed
-}
+import com.joinself.app.demo.ui.theme.AlertType
+import com.joinself.app.demo.ui.theme.AppColors
+import com.joinself.app.demo.ui.theme.AppFonts
+import com.joinself.app.demo.ui.theme.AppSpacing
+import com.joinself.app.demo.ui.theme.FeatureRow
+import com.joinself.app.demo.ui.theme.HeroSection
+import com.joinself.app.demo.ui.theme.InfoCard
+import com.joinself.app.demo.ui.theme.PrimaryButton
+import com.joinself.app.demo.ui.theme.ProcessStep
 
 @Composable
 fun RestoreStartScreen(
-    // restoreScreenState: RestoreScreenState,
     onStartRestore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -151,22 +155,11 @@ fun RestoreStartScreen(
     }
 }
 
-// Ensure you have these Composables defined or adapt them:
-// @Composable fun HeroSection(icon: ImageVector, title: String, subtitle: String) { /* ... */ }
-// @Composable fun InfoCard(icon: ImageVector, title: String, message: String, type: AlertType) { /* ... */ }
-// @Composable fun ProcessStep(icon: ImageVector? = null, number: Int? = null, title: String, description: String) { /* ... */ }
-// @Composable fun FeatureRow(icon: ImageVector, title: String, description: String) { /* ... */ }
-// enum class AlertType { Success, Info, Warning, Error }
-// @Composable fun PrimaryButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, isDisabled: Boolean = false) { /* ... */ }
 
-
-// --- PREVIEWS ---
 @Preview(showBackground = true, name = "Restore Start Screen (Automated Recovery)")
 @Composable
 fun RestoreStartScreenAutomatedRecoveryPreview() {
-    // YourAppTheme {
     RestoreStartScreen(
         onStartRestore = {}
     )
-    // }
 }

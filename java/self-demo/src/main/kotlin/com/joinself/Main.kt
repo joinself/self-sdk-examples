@@ -9,12 +9,25 @@ import com.joinself.selfsdk.kmp.credential.CredentialBuilder
 import com.joinself.selfsdk.kmp.credential.PresentationBuilder
 import com.joinself.selfsdk.kmp.error.SelfStatus
 import com.joinself.selfsdk.kmp.error.SelfStatusName
-import com.joinself.selfsdk.kmp.event.*
+import com.joinself.selfsdk.kmp.event.Commit
+import com.joinself.selfsdk.kmp.event.Integrity
+import com.joinself.selfsdk.kmp.event.KeyPackage
+import com.joinself.selfsdk.kmp.event.Message
+import com.joinself.selfsdk.kmp.event.Proposal
+import com.joinself.selfsdk.kmp.event.Reference
+import com.joinself.selfsdk.kmp.event.Welcome
 import com.joinself.selfsdk.kmp.keypair.signing.PublicKey
-import com.joinself.selfsdk.kmp.message.*
+import com.joinself.selfsdk.kmp.message.Chat
+import com.joinself.selfsdk.kmp.message.ComparisonOperator
+import com.joinself.selfsdk.kmp.message.ContentType
+import com.joinself.selfsdk.kmp.message.CredentialPresentationDetailParameter
+import com.joinself.selfsdk.kmp.message.CredentialPresentationRequestBuilder
+import com.joinself.selfsdk.kmp.message.CredentialPresentationResponse
+import com.joinself.selfsdk.kmp.message.CredentialVerificationRequestBuilder
+import com.joinself.selfsdk.kmp.message.DiscoveryResponse
+import com.joinself.selfsdk.kmp.message.Receipt
 import com.joinself.selfsdk.kmp.platform.Attestation
 import com.joinself.selfsdk.kmp.time.Timestamp
-import com.joinself.selfsdk.kmp.token.Token
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
@@ -251,8 +264,6 @@ fun main() {
     )
     println("status: ${SelfStatusName.getName(status.code())}")
     signal.acquire()
-
-
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->

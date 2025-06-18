@@ -1,20 +1,33 @@
 package com.joinself.app.demo.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle // General success
-import androidx.compose.material.icons.filled.Error // General error
-import androidx.compose.material.icons.filled.SecurityUpdateGood // Specific success for restore
-import androidx.compose.material.icons.filled.VerifiedUser // If error was at verification stage
-import androidx.compose.material.icons.filled.SyncProblem // If error was at data sync stage
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.SecurityUpdateGood
+import androidx.compose.material.icons.filled.SyncProblem
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.joinself.app.demo.ui.theme.* // Assuming you have these defined
+import com.joinself.app.demo.ui.theme.AlertCard
+import com.joinself.app.demo.ui.theme.AlertType
+import com.joinself.app.demo.ui.theme.AppColors
+import com.joinself.app.demo.ui.theme.AppFonts
+import com.joinself.app.demo.ui.theme.AppSpacing
+import com.joinself.app.demo.ui.theme.HeroSection
+import com.joinself.app.demo.ui.theme.InfoCard
+import com.joinself.app.demo.ui.theme.PrimaryButton
+import com.joinself.app.demo.ui.theme.ProcessStep
+import com.joinself.app.demo.ui.theme.SecondaryButton
 
 // Enum to represent the different outcomes of the restore process
 enum class RestoreOutcome {
@@ -27,9 +40,8 @@ enum class RestoreOutcome {
 @Composable
 fun RestoreResultScreen(
     restoreOutcome: RestoreOutcome,
-    onContinue: () -> Unit, // e.g., to navigate to the app's main screen or login
-    onRetryIdentityVerification: (() -> Unit)? = null, // To retry liveness/selfie
-    // onContactSupport: (() -> Unit)? = null, // Optional: if data recovery fails
+    onContinue: () -> Unit,
+    onRetryIdentityVerification: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val isSuccess = restoreOutcome == RestoreOutcome.Success
@@ -159,17 +171,6 @@ fun RestoreResultScreen(
         }
     }
 }
-
-// Ensure you have these Composables defined, or adapt them:
-// @Composable fun HeroSection(icon: ImageVector, title: String, subtitle: String) { /* ... */ }
-// @Composable fun InfoCard(icon: ImageVector, title: String, message: String, type: AlertType) { /* ... */ }
-// @Composable fun AlertCard(title: String, message: String, type: AlertType) { /* ... */ }
-// @Composable fun ProcessStep(number: Int? = null, icon: ImageVector? = null, title: String, description: String) { /* ... */ }
-// enum class AlertType { Success, Info, Warning, Error }
-// @Composable fun PrimaryButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, isDisabled: Boolean = false) { /* ... */ }
-// @Composable fun SecondaryButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) { /* ... */ }
-
-// --- PREVIEWS ---
 
 @Preview(showBackground = true, name = "Restore Result Success")
 @Composable
