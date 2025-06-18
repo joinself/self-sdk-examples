@@ -43,6 +43,7 @@ struct ContentView: View {
     @State private var currentVerificationRequest: VerificationRequest? = nil
     
     @State private var showVerifyEmail: Bool = false
+    @State private var showVerifyDocument: Bool = false
     
     enum AppScreen {
         case initialization
@@ -169,6 +170,7 @@ struct ContentView: View {
                             showVerifyEmail = true
                         } else if credentialActionType == .identityDocument {
                             // show verify document flow
+                            showVerifyDocument = true
                         }
                         
                     } onBack: {
@@ -182,6 +184,15 @@ struct ContentView: View {
                         EmailFlow(account: viewModel.account, autoDismiss: false, onResult: { success in
                             print("Verify email finished = \(success)")
                             self.showVerifyEmail = false
+                        })
+                    })
+                    .fullScreenCover(isPresented: $showVerifyDocument, onDismiss: {
+                        // dismiss view
+                    }, content: {
+                        DocumentFlow(account: viewModel.account, autoCaptureImage: false, onResult:  { success in
+                            print("Verify document finished: \(success)")
+                            showVerifyDocument = false
+                            // reload view to display document's credential
                         })
                     })
 
