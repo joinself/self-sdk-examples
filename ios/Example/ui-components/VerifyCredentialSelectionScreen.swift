@@ -14,9 +14,11 @@ public struct VerifyCredentialSelectionScreen: View {
     @State private var showSuccessToast: Bool
     
     let onActionSelected: (CredentialActionType) -> Void
+    let onBack: () -> Void
     
-    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (CredentialActionType) -> Void) {
+    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (CredentialActionType) -> Void, onBack: @escaping () -> Void) {
         self.onActionSelected = onActionSelected
+        self.onBack = onBack
         self._showSuccessToast = State(initialValue: showConnectionSuccess)
     }
     
@@ -26,6 +28,13 @@ public struct VerifyCredentialSelectionScreen: View {
                 VStack(spacing: 0) {
                     // DEBUG Header
                     HStack {
+                        Button {
+                            onBack()
+                        } label: {
+                            Image(systemName: "arrow.left")
+                                .foregroundStyle(Color.white)
+                        }
+
                         Text("DEBUG: ACTION_SELECTION")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white)
@@ -144,6 +153,8 @@ public struct VerifyCredentialSelectionScreen: View {
         showConnectionSuccess: true,
         onActionSelected: { actionType in
             print("Preview: Selected action: \(actionType)")
+        }, onBack: {
+            
         }
     )
 } 

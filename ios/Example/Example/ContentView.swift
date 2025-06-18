@@ -42,6 +42,8 @@ struct ContentView: View {
     // Current verification request (needed to send response back)
     @State private var currentVerificationRequest: VerificationRequest? = nil
     
+    @State private var showVerifyEmail: Bool = false
+    
     enum AppScreen {
         case initialization
         case registrationIntro
@@ -162,8 +164,27 @@ struct ContentView: View {
                     
                 case .verifyCredential:
                     VerifyCredentialSelectionScreen { credentialActionType in
+                        if credentialActionType == .emailAddress {
+                            // show verify email flow
+                            showVerifyEmail = true
+                        } else if credentialActionType == .identityDocument {
+                            // show verify document flow
+                        }
                         
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
                     }
+                    .fullScreenCover(isPresented: $showVerifyEmail, onDismiss: {
+                        
+                    }, content: {
+                        EmailFlow(account: viewModel.account, autoDismiss: false, onResult: { success in
+                            print("Verify email finished = \(success)")
+                            self.showVerifyEmail = false
+                        })
+                    })
+
                     
                 case .authStart:
                     AuthStartScreen(

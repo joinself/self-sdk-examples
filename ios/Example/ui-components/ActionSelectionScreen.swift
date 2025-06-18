@@ -79,7 +79,7 @@ public struct ActionSelectionScreen: View {
                             
                             VStack(spacing: 16) {
                                 ActionCardView(
-                                    icon: "shield.pattern.checkered",
+                                    icon: "shield.fill",
                                     title: "Authenticate",
                                     description: "Use your biometric credentials to securely log in to services",
                                     action: {
