@@ -1,23 +1,21 @@
 //
-//  ActionSelectionScreen.swift
+//  VerifyCredentialSelectionScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public enum ActionType {
-    case authenticate
-    case verifyCredentials
-    case provideCredentials
-    case signDocuments
+public enum CredentialActionType {
+    case emailAddress
+    case identityDocument
 }
 
-public struct ActionSelectionScreen: View {
+public struct VerifyCredentialSelectionScreen: View {
     @State private var showSuccessToast: Bool
     
-    let onActionSelected: (ActionType) -> Void
+    let onActionSelected: (CredentialActionType) -> Void
     
-    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (ActionType) -> Void) {
+    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (CredentialActionType) -> Void) {
         self.onActionSelected = onActionSelected
         self._showSuccessToast = State(initialValue: showConnectionSuccess)
     }
@@ -55,12 +53,12 @@ public struct ActionSelectionScreen: View {
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Server Connection Ready")
+                                Text("Verify Credentials")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                 
-                                Text("Your Self account is connected to the server and ready to use. Choose an action below to get started with secure authentication and verification.")
+                                Text("Choose the type of credential you want to verify. These verifications help establish trust and prove aspects of your identity.")
                                     .font(.system(size: 16))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -79,38 +77,20 @@ public struct ActionSelectionScreen: View {
                             
                             VStack(spacing: 16) {
                                 ActionCardView(
-                                    icon: "shield.pattern.checkered",
-                                    title: "Authenticate",
-                                    description: "Use your biometric credentials to securely log in to services",
+                                    icon: "envelope",
+                                    title: "Verify Email Address",
+                                    description: "Verify ownership of your email address",
                                     action: {
-                                        onActionSelected(.authenticate)
+                                        onActionSelected(.emailAddress)
                                     }
                                 )
                                 
                                 ActionCardView(
-                                    icon: "checkmark.shield.fill",
-                                    title: "Verify Credentials",
-                                    description: "Verify information about you such as email and government issued ID",
+                                    icon: "person.text.rectangle",
+                                    title: "Verify Identity Document",
+                                    description: "Verify your goverment-issued identity documents",
                                     action: {
-                                        onActionSelected(.verifyCredentials)
-                                    }
-                                )
-                                
-                                ActionCardView(
-                                    icon: "square.and.arrow.up",
-                                    title: "Provide Credentials",
-                                    description: "Securely share verified information about you",
-                                    action: {
-                                        onActionSelected(.provideCredentials)
-                                    }
-                                )
-                                
-                                ActionCardView(
-                                    icon: "pencil",
-                                    title: "Sign Documents",
-                                    description: "Securely review, sign, and share documents",
-                                    action: {
-                                        onActionSelected(.signDocuments)
+                                        onActionSelected(.identityDocument)
                                     }
                                 )
                             }
@@ -160,8 +140,8 @@ public struct ActionSelectionScreen: View {
 }
 
 #Preview {
-    ActionSelectionScreen(
-        showConnectionSuccess: false,
+    VerifyCredentialSelectionScreen(
+        showConnectionSuccess: true,
         onActionSelected: { actionType in
             print("Preview: Selected action: \(actionType)")
         }

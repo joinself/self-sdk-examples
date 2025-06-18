@@ -48,6 +48,7 @@ struct ContentView: View {
         case serverConnection
         case serverConnectionProcessing(serverAddress: String)
         case actionSelection
+        case verifyCredential
         case authStart
         case authResult
         case docSignStart
@@ -158,6 +159,12 @@ struct ContentView: View {
                             handleActionSelection(actionType)
                         }
                     )
+                    
+                case .verifyCredential:
+                    VerifyCredentialSelectionScreen { credentialActionType in
+                        
+                    }
+                    
                 case .authStart:
                     AuthStartScreen(
                         onStartAuthentication: {
@@ -276,13 +283,14 @@ struct ContentView: View {
         case .authenticate:
             handleAuthenticateAction()
         case .verifyCredentials:
-            print("🎯 ContentView: Verify Credentials selected (not implemented yet)")
-            showToastMessage("Verify Credentials feature coming soon!")
+            handleVerifyCredentials()
         case .provideCredentials:
             print("🎯 ContentView: Provide Credentials selected (not implemented yet)")
             showToastMessage("Provide Credentials feature coming soon!")
         case .signDocuments:
             handleSignDocumentsAction()
+        @unknown default:
+            fatalError()
         }
     }
     
@@ -382,6 +390,14 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+    
+    // MARK: - Verify Credentials
+    
+    private func handleVerifyCredentials() {
+        withAnimation(.easeInOut(duration: 0.5)) {
+            currentScreen = .verifyCredential
         }
     }
     
