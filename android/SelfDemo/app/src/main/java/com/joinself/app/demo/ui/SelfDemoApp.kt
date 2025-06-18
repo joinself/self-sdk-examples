@@ -1,9 +1,11 @@
 package com.joinself.app.demo.ui
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,6 +45,7 @@ import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.sdk.utils.popAllBackStacks
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -178,6 +181,7 @@ fun SelfDemoApp(
                 }
             )
             LaunchedEffect(Unit) {
+                delay(500)
                 viewModel.resetState(ServerRequestState.None)
             }
         }
@@ -303,6 +307,14 @@ fun SelfDemoApp(
                     }
                     else -> {
 
+                    }
+                }
+            }
+            DisposableEffect(true) {
+                onDispose {
+                    Log.d(TAG, "disposable request state: ${appState.requestState}")
+                    if (appState.requestState != ServerRequestState.ResponseSent) {
+                        viewModel.resetState(ServerRequestState.None)
                     }
                 }
             }

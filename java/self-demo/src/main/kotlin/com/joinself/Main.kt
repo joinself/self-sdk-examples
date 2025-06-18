@@ -23,8 +23,8 @@ import kotlin.coroutines.suspendCoroutine
 sealed class SERVER_REQUESTS {
     companion object {
         val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
-        val REQUEST_CREDENTIAL_EMAIL: String = "REQUEST_CREDENTIAL_EMAIL"
-        val REQUEST_CREDENTIAL_DOCUMENT: String = "REQUEST_CREDENTIAL_DOCUMENT"
+        val REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
+        val REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
         val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
     }
 }
@@ -123,7 +123,6 @@ fun main() {
                         "\nmessage:${chat.message()}" +
                         "\n"
                     )
-                    println("\n")
 
                     when (chat.message()) {
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH -> {

@@ -50,8 +50,8 @@ sealed class ServerRequestState {
 sealed class SERVER_REQUESTS {
     companion object {
         val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
-        val REQUEST_CREDENTIAL_EMAIL: String = "REQUEST_CREDENTIAL_EMAIL"
-        val REQUEST_CREDENTIAL_DOCUMENT: String = "REQUEST_CREDENTIAL_DOCUMENT"
+        val REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
+        val REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
         val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
     }
 }
@@ -153,12 +153,13 @@ class MainViewModel(context: Context): ViewModel() {
                 _appUiState.update { it.copy(serverState = ServerState.Error("failed to connect to server")) }
             }
         } catch (ex: Exception) {
-            Log.e("Self", ex.message, ex)
+            Log.e(TAG, ex.message, ex)
             _appUiState.update { it.copy(serverState = ServerState.Error(ex.message ?: "failed to connect to server")) }
         }
     }
 
     fun resetState(requestState: ServerRequestState) {
+        Log.d(TAG, "reset states")
         _appUiState.update { it.copy(requestState = requestState) }
         credentialRequest = null
         verificationRequest = null
