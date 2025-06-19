@@ -155,12 +155,12 @@ fun RestoreResultScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
         ) {
             PrimaryButton(
-                title = if (isSuccess) "Get Started" else "Continue", // Or "Go to Home", "Close"
+                title = "Continue",
                 onClick = onContinue
             )
             if (restoreState == BackupRestoreState.VerificationFailed && onRetry != null) {
                 SecondaryButton(
-                    title = "Retry Verification",
+                    title = "Retry Restoration",
                     onClick = onRetry
                 )
             }

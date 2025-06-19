@@ -147,7 +147,7 @@ fun RestoreStartScreen(
                 .fillMaxWidth()
         ) {
             PrimaryButton(
-                title = "Begin Identity Verification", // Changed button title
+                title = "Start Restoration",
                 isDisabled = restoreState == BackupRestoreState.Processing,
                 onClick = onStartRestore
             )

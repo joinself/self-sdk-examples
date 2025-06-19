@@ -25,27 +25,27 @@ fun ShareCredentialResultScreen(
     modifier: Modifier = Modifier
 ) {
     val isSuccess = requestState is ServerRequestState.ResponseSent
-    val statusName = if (requestState is ServerRequestState.ResponseSent) {
-        if (requestState.status == ResponseStatus.accepted) "Shared" else "Rejected"
-    } else {
-        ""
-    }
+    val isStatusAccepted = requestState is ServerRequestState.ResponseSent && requestState.status == ResponseStatus.accepted
+    val statusName = if (isStatusAccepted) "Shared" else "Rejected"
     val (successTitle, successMessage, failureTitle, failureMessage) = when (credentialType) {
         CredentialType.Email -> Tuple4(
             "Email Credential $statusName!",
-            "Your verified email credential has been successfully shared with the server. The server now has cryptographic proof of your email verification.",
+            if (isStatusAccepted) "Your verified email credential has been successfully shared with the server. The server now has cryptographic proof of your email verification."
+            else "Your verified email credential has been successfully rejected with the server. The server now does not have cryptographic proof of your email verification.",
             "Email Sharing Failed",
             "We were unable to share your email credential with the server. This could be due to network issues or if you don't have a verified email credential."
         )
         CredentialType.Document -> Tuple4(
             "Document Credential $statusName!",
-            "Your verified identity document credential has been successfully shared with the server. The server now has cryptographic proof of your document verification.",
+            if (isStatusAccepted) "Your verified identity document credential has been successfully shared with the server. The server now has cryptographic proof of your document verification."
+            else "Your verified identity document credential has been successfully rejected with the server. The server now does not have cryptographic proof of your document verification.",
             "Document Sharing Failed", 
             "We were unable to share your document credential with the server. This could be due to network issues or if you don't have a verified document credential."
         )
         else -> Tuple4(
             "Credential $statusName!",
-            "Your verified credential has been successfully shared with the server.",
+            if (isStatusAccepted) "Your verified credential has been successfully shared with the server."
+            else "Your verified credential has been successfully rejected with the server.",
             "Credential Sharing Failed",
             "We were unable to share your credential with the server."
         )
@@ -65,7 +65,7 @@ fun ShareCredentialResultScreen(
             item {
                 // Hero Section with Success/Error State
                 HeroSection(
-                    icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error,
+                    icon = if (isSuccess && isStatusAccepted) Icons.Filled.CheckCircle else Icons.Filled.Error,
                     title = if (isSuccess) successTitle else failureTitle,
                     subtitle = if (isSuccess) successMessage else failureMessage
                 )
@@ -76,8 +76,8 @@ fun ShareCredentialResultScreen(
                     // Success information
                     InfoCard(
                         icon = Icons.Filled.Verified,
-                        title = "Credential Shared Successfully",
-                        message = "Your ${credentialType} credential has been securely shared with the server using zero-knowledge cryptographic proofs. Your privacy has been protected throughout the process.",
+                        title = "Credential $statusName Successfully",
+                        message = "Your ${credentialType} credential has been securely ${statusName.lowercase()} with the server using zero-knowledge cryptographic proofs. Your privacy has been protected throughout the process.",
                         type = AlertType.Success
                     )
                 }
