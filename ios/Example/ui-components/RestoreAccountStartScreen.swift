@@ -1,22 +1,22 @@
 //
-//  RegistrationIntroScreen.swift
+//  RestoreAccountStartScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public struct RegistrationIntroScreen: View {
+public struct RestoreAccountStartScreen: View {
     @State private var showingRegistration = false
     @State private var isProcessing = false
     @State private var errorMessage: String? = nil
-    
     let onNext: () -> Void
-    let onRestore: () -> Void
-    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onRestore: @escaping () -> Void) {
+    let onBack: () -> Void
+    public init(showingRegistration: Bool = false, isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.showingRegistration = showingRegistration
         self.isProcessing = isProcessing
         self.errorMessage = errorMessage
         self.onNext = onNext
-        self.onRestore = onRestore
+        self.onBack = onBack
     }
     
     public var body: some View {
@@ -25,12 +25,12 @@ public struct RegistrationIntroScreen: View {
                 // DEBUG Header
                 HStack {
                     Button {
-                        onRestore()
+                        onBack()
                     } label: {
-                        Text("Restore Account")
+                        Image(systemName: "arrow.left")
                             .foregroundStyle(Color.white)
                     }
-                    Text("DEBUG: REGISTRATION_INTRO")
+                    Text("DEBUG: RESTORATION_INTRO")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                     Spacer()
@@ -49,7 +49,7 @@ public struct RegistrationIntroScreen: View {
                                 .fill(Color.blue)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "person.fill")
+                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -57,23 +57,25 @@ public struct RegistrationIntroScreen: View {
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Register Your Account")
+                            Text("Restore Your Account")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Complete a quick liveness check to securely register your Self account")
+                            Text("Verify your identity through a liveness check and selfie to securely restore your account data.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
+                        
+                        CardView(icon: "info.circle.fill", title: "How Account Restoration Works", description: "To ensure security, you'll first complete a liveness check and verify your identity with a selfie. On confirmed, the Self system will automatically retrieve your encryption backup.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("What to Expect")
+                            Text("Restoration Steps")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -96,13 +98,12 @@ public struct RegistrationIntroScreen: View {
                     .padding(.horizontal, 20)
                     
                     // Privacy Protection Section
-                    CardView(icon: "lock.fill", title: "Your Privacy is Protected", description: "All biometric data is processed securely and never stored permanently. Your face data is used only for account registration and then discarded.")
                     
 //                    Spacer(minLength: 40)
                     
                     // Start Registration Button
                     Button(action: {
-                        startRegistration()
+                        onNext()
                     }) {
                         HStack {
                             if isProcessing {
@@ -111,7 +112,7 @@ public struct RegistrationIntroScreen: View {
                                     .scaleEffect(0.8)
                                 Text("Processing...")
                             } else {
-                                Text("Start Registration")
+                                Text("Start Recover Your Account")
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -136,31 +137,12 @@ public struct RegistrationIntroScreen: View {
                 }
             }
         }
-//        .ignoresSafeArea()
         .background(Color.white)
-        .onAppear {
-            checkRegistrationStatus()
-        }
-    }
-    
-    private func checkRegistrationStatus() {
-//        guard let account = account else { return }
-//        
-//        if account.registered() {
-//            print("🎬 RegistrationIntroScreen: Account already registered on appear, navigating to server connection")
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                onRegistrationComplete()
-//            }
-//        }
-    }
-    
-    private func startRegistration() {
-        onNext()
     }
 }
 
 #Preview {
-    RegistrationIntroScreen(onNext: {
+    RestoreAccountStartScreen(onNext: {
             
         }) {
             // restore

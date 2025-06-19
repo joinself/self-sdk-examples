@@ -26,26 +26,6 @@ struct ExampleApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(viewModel)
-//            if viewModel.accountRegistered {
-//                MainContentView()
-//                    .environmentObject(viewModel)
-//            } else if !viewModel.isInitialized {
-//                                
-//                InitializeSDKScreen(isInitialized: $viewModel.isInitialized) {
-//                    print("onInitializationComplete....")
-//                }
-//                
-//            } else {
-//                RegistrationIntroScreen(
-//                    onRegistrationComplete: {
-//                        print("Preview: Registration complete")
-//                    }) {
-//                        // start registration
-//                        viewModel.registerAccount { success in
-//                            viewModel.accountRegistered = success
-//                        }
-//                    }
-//            }
         }
     }
 }

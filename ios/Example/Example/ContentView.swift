@@ -65,6 +65,10 @@ struct ContentView: View {
         case authResult
         case docSignStart
         case docSignResult(success: Bool)
+        case backupStart
+        case backupResult(success: Bool)
+        case restoreStart
+        case restoreResult(success: Bool)
     }
     
     var body: some View {
@@ -78,15 +82,16 @@ struct ContentView: View {
                     })
                 case .registrationIntro:
                     RegistrationIntroScreen {
-                        // FIXME: Should remove this callback
-                    } onNext: {
-                        // TODO:  register account
                         // start registration
                         viewModel.registerAccount { success in
                             viewModel.accountRegistered = success
                             withAnimation(.easeInOut(duration: 0.5)) {
                                 currentScreen = .serverConnection
                             }
+                        }
+                    } onRestore: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .restoreStart
                         }
                     }
                     
@@ -304,9 +309,9 @@ struct ContentView: View {
                 
                 case .shareDocumentStart:
                     ShareDocumentCredentialStartScreen(credentialName: "") {
-                        self.sendIDNumberCredentialRequest()
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted)
                     } onDeny: {
-                        
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected)
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
@@ -357,6 +362,19 @@ struct ContentView: View {
                             }
                         }
                     )
+                    
+                    // MARK: Backup & Restore
+                case .backupStart:
+                    Text("BackupStart")
+                
+                case .backupResult(let success):
+                    Text("BackupResult: \(success)")
+                
+                case .restoreStart:
+                    Text("RestoreStart")
+                
+                case .restoreResult(let success):
+                    Text("RestoreResult: \(success)")
                 }
             }
             
@@ -872,7 +890,7 @@ struct ContentView: View {
         // Hide overlay and navigate to AUTH_START
         showServerRequestOverlay = false
         let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
-        let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Document) ?? false
+        let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Passport) ?? false
         
         if emailCredential {
             withAnimation(.easeInOut(duration: 0.5)) {

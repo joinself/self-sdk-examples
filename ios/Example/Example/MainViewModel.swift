@@ -307,6 +307,28 @@ final class MainViewModel: ObservableObject {
         })
     }
     
+    func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus) {
+        print("responseToCredentialRequest: \(credentialRequest?.id())")
+        
+        guard let credentialRequest = credentialRequest else {
+            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
+            return
+        }
+        
+        
+        let storedCredentials = account.lookUpCredentials(claims: credentialRequest.details())
+        
+        let credentialResponse = CredentialResponse.Builder()
+            .withRequestId(credentialRequest.id())
+            .withTypes(credentialRequest.types())
+            .toIdentifier(credentialRequest.toIdentifier())
+            .withStatus(responseStatus)
+            .withCredentials(storedCredentials)
+            .build()
+        self.sendKMPMessage(message: credentialResponse) { messageId, error in
+        }
+    }
+    
     // MARK: - Backup & Restore
     func backup(completion: ((URL?) -> Void)? = nil) {
         Task (priority: .background) {
