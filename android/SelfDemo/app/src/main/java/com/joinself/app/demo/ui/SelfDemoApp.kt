@@ -115,6 +115,7 @@ fun SelfDemoApp(
 
     val appState by viewModel.appStateFlow.collectAsState()
 
+    // save backup file to local storage
     var backupByteArray by remember { mutableStateOf(byteArrayOf()) }
     val saveLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
@@ -126,6 +127,7 @@ fun SelfDemoApp(
         }
     }
 
+    // pick backup file from local storage
     var isRestoreFlow by remember { mutableStateOf(false) }
     var selfieByteArray by remember { mutableStateOf(byteArrayOf()) }
     val pickerLauncher = rememberLauncherForActivityResult(

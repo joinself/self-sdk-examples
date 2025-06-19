@@ -24,6 +24,7 @@ import com.joinself.selfsdk.kmp.message.CredentialPresentationDetailParameter
 import com.joinself.selfsdk.kmp.message.CredentialPresentationRequestBuilder
 import com.joinself.selfsdk.kmp.message.CredentialPresentationResponse
 import com.joinself.selfsdk.kmp.message.CredentialVerificationRequestBuilder
+import com.joinself.selfsdk.kmp.message.CredentialVerificationResponse
 import com.joinself.selfsdk.kmp.message.DiscoveryResponse
 import com.joinself.selfsdk.kmp.message.Receipt
 import com.joinself.selfsdk.kmp.platform.Attestation
@@ -45,7 +46,7 @@ sealed class SERVER_REQUESTS {
 }
 
 /**
- * run in terminal: ./gradlew :chat:run
+ * run in terminal: ./gradlew :self-demo:run
  */
 @OptIn(ExperimentalStdlibApi::class)
 fun main() {
@@ -113,7 +114,7 @@ fun main() {
         onMessage = { message: Message ->
             val content = message.content()
             val contentType = content.contentType()
-            println("KMP message type: $contentType")
+            println("\nKMP message type: $contentType")
             when (contentType) {
                 ContentType.DISCOVERY_RESPONSE -> {
                     val discoveryResponse = DiscoveryResponse.decode(content)
@@ -279,19 +280,31 @@ fun main() {
                             val claims = cred.credentialSubjectClaims()
                             claims.forEach {
                                 println(
-                                    "credential value" +
-                                            "\ncredentialType:${cred.credentialType().toList()}" +
-                                            "\nfield:${it.key}" +
-                                            "\nvalue:${it.value}"
+                                        "types:${cred.credentialType().toList()}" +
+                                        "\nfield:${it.key}" +
+                                        "\nvalue:${it.value}"
                                 )
                                 println()
                             }
                         }
                     }
                 }
-                else -> {
-
+                ContentType.CREDENTIAL_VERIFICATION_RESPONSE -> {
+                    val verificationResponse = CredentialVerificationResponse.decode(content)
+                    println("Response received with status:${verificationResponse.status().name}")
+                    verificationResponse.credentials().forEach { cred ->
+                        val claims = cred.credentialSubjectClaims()
+                        claims.forEach {
+                            println(
+                                    "types:${cred.credentialType().toList()}" +
+                                    "\nfield:${it.key}" +
+                                    "\nvalue:${it.value}"
+                            )
+                            println()
+                        }
+                    }
                 }
+                else -> { }
             }
         },
         onIntegrity = { integrity: Integrity ->
