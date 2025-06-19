@@ -9,4 +9,5 @@
 public enum CredentialActionType {
     case emailAddress
     case identityDocument
+    case customCredential
 }

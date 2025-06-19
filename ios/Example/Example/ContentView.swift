@@ -269,11 +269,12 @@ struct ContentView: View {
                 case .shareCredential:
                     ProvideCredentialSelectionScreen { credentialActionType in
                         if credentialActionType == .emailAddress {
-                            // TODO: Share verified email address
                             self.sendEmailCredentialRequest()
                         } else if credentialActionType == .identityDocument {
-                            // TODO: Share verified identity document
                             self.sendIDNumberCredentialRequest()
+                        } else if credentialActionType == .customCredential {
+                            // TODO: GET Custom Credential
+                            
                         }
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
