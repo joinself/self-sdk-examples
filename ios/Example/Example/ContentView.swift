@@ -52,7 +52,9 @@ struct ContentView: View {
         case serverConnectionProcessing(serverAddress: String)
         case actionSelection
         case verifyCredential
+        case verifyEmailStart
         case verifyEmailResult
+        case verifyDocumentStart
         case verifyDocumentResult
         case shareCredential
         case authStart
@@ -163,12 +165,25 @@ struct ContentView: View {
                     VerifyCredentialSelectionScreen { credentialActionType in
                         if credentialActionType == .emailAddress {
                             // show verify email flow
-                            showVerifyEmail = true
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .verifyEmailStart
+                            }
                         } else if credentialActionType == .identityDocument {
                             // show verify document flow
-                            showVerifyDocument = true
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .verifyDocumentStart
+                            }
                         }
                         
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                    
+                case .verifyEmailStart:
+                    VerifyEmailStartScreen {
+                        showVerifyEmail = true
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
@@ -191,6 +206,26 @@ struct ContentView: View {
                             }
                         })
                     })
+                    
+                case .verifyEmailResult:
+                    VerifyEmailResultScreen {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
+                case .verifyDocumentStart:
+                    VerifyDocumentStartScreen {
+                        showVerifyDocument = true
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
                     .fullScreenCover(isPresented: $showVerifyDocument, onDismiss: {
                         // dismiss view
                     }, content: {
@@ -210,17 +245,6 @@ struct ContentView: View {
                         })
                     })
                     
-                case .verifyEmailResult:
-                    VerifyEmailResultScreen {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
-                    } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
-                    }
-
                 case .verifyDocumentResult:
                     VerifyDocumentResultScreen {
                         withAnimation(.easeInOut(duration: 0.5)) {
