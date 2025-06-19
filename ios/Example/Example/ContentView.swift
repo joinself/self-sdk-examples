@@ -52,6 +52,8 @@ struct ContentView: View {
         case serverConnectionProcessing(serverAddress: String)
         case actionSelection
         case verifyCredential
+        case verifyEmailResult
+        case verifyDocumentResult
         case shareCredential
         case authStart
         case authResult
@@ -185,17 +187,58 @@ struct ContentView: View {
                         EmailFlow(account: viewModel.account, autoDismiss: false, onResult: { success in
                             print("Verify email finished = \(success)")
                             self.showVerifyEmail = false
+                            if success {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    currentScreen = .verifyEmailResult
+                                }
+                            } else {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    currentScreen = .actionSelection
+                                }
+                            }
                         })
                     })
                     .fullScreenCover(isPresented: $showVerifyDocument, onDismiss: {
                         // dismiss view
                     }, content: {
-                        DocumentFlow(account: viewModel.account, autoCaptureImage: false, onResult:  { success in
+                        // MARK: - Verify Documents
+                        DocumentFlow(account: viewModel.account, devMode: true, autoCaptureImage: false, onResult:  { success in
                             print("Verify document finished: \(success)")
                             showVerifyDocument = false
-                            // reload view to display document's credential
+                            if success {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    currentScreen = .verifyDocumentResult
+                                }
+                            } else {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    currentScreen = .actionSelection
+                                }
+                            }
                         })
                     })
+                    
+                case .verifyEmailResult:
+                    VerifyEmailResultScreen {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
+                case .verifyDocumentResult:
+                    VerifyDocumentResultScreen {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
                     
                 case .shareCredential:
                     ProvideCredentialSelectionScreen { credentialActionType in
