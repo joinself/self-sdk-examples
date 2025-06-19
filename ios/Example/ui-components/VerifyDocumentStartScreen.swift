@@ -81,7 +81,7 @@ public struct VerifyDocumentStartScreen: View {
                     
                     VStack(spacing: 16) {
                         SimpleCardView(
-                            icon: "shield.pattern.checkered",
+                            icon: "shield",
                             title: "Share Your Credentials",
                             description: "Use your verified credentials to authenticate with services",
                             action: {

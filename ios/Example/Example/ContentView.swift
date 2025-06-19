@@ -57,6 +57,10 @@ struct ContentView: View {
         case verifyDocumentStart
         case verifyDocumentResult
         case shareCredential
+        case shareEmailStart
+        case shareEmailResult(success: Bool)
+        case shareDocumentStart
+        case shareDocumentResult(success: Bool)
         case authStart
         case authResult
         case docSignStart
@@ -261,10 +265,29 @@ struct ContentView: View {
                     ProvideCredentialSelectionScreen { credentialActionType in
                         if credentialActionType == .emailAddress {
                             // TODO: Share verified email address
-                            
+                            self.sendEmailCredentialRequest()
                         } else if credentialActionType == .identityDocument {
                             // TODO: Share verified identity document
-                            
+                            self.sendIDNumberCredentialRequest()
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                case .shareEmailStart:
+                    ShareEmailCredentialScreen(credentialName: "Email") {
+                        // approve
+                        self.sendEmailCredentialResponse(responseStatus: .accepted)
+                        // Navigate to result screen
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .shareEmailResult(success: true)
+                        }
+                    } onDeny: {
+                        self.sendEmailCredentialResponse(responseStatus: .rejected)
+                        // Navigate to result screen
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .shareEmailResult(success: false)
                         }
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
@@ -272,7 +295,31 @@ struct ContentView: View {
                         }
                     }
 
+                case .shareEmailResult(let success):
+                    ShareEmailCredentialResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                
+                case .shareDocumentStart:
+                    ShareDocumentCredentialStartScreen(credentialName: "") {
+                        self.sendIDNumberCredentialRequest()
+                    } onDeny: {
+                        
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
 
+                    
+                case .shareDocumentResult(let success):
+                    ShareDocumentCredentialResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
                     
                 case .authStart:
                     AuthStartScreen(
@@ -409,17 +456,12 @@ struct ContentView: View {
     private func handleAuthenticateAction() {
         print("🔐 ContentView: Starting authentication flow...")
         
-        guard let account = initializedAccount else {
-            showToastMessage("Authentication requires an active account")
-            return
-        }
-        
         // Show overlay and spinner
         showServerRequestOverlay = true
         overlayMessage = "Waiting for authentication request..."
         
         // Send authentication request message to server
-        sendAuthenticationRequest(account: account)
+        sendAuthenticationRequest()
         
         // Start 5-second timeout
         serverRequestTimeoutTask = Task {
@@ -436,7 +478,7 @@ struct ContentView: View {
         }
     }
     
-    private func sendAuthenticationRequest(account: Account) {
+    private func sendAuthenticationRequest() {
         print("🔐 ContentView: Sending authentication request message to server...")
         
         guard let serverAddress = connectedServerAddress else {
@@ -456,6 +498,58 @@ struct ContentView: View {
                     showToastMessage("Failed to send authentication request: \(error.localizedDescription)")
                 } else {
                     print("🔐 ContentView: ✅ Authentication request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+            }
+        }
+    }
+    
+    private func sendEmailCredentialRequest() {
+        print("🔐 ContentView: Sending email request message to server...")
+        
+        guard let serverAddress = connectedServerAddress else {
+            print("🔐 ContentView: ❌ Cannot send message - no server connected")
+            showServerRequestOverlay = false
+            showToastMessage("No server connected. Please connect to a server first.")
+            return
+        }
+        
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Email credential request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send email credential request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Email credential request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+            }
+        }
+    }
+    
+    private func sendIDNumberCredentialRequest() {
+        print("🔐 ContentView: Sending ID Number credential request message to server...")
+        
+        guard let serverAddress = connectedServerAddress else {
+            print("🔐 ContentView: ❌ Cannot send message - no server connected")
+            showServerRequestOverlay = false
+            showToastMessage("No server connected. Please connect to a server first.")
+            return
+        }
+        
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send document credential request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Document credential request sent successfully with ID: \(messageId)")
                     // Message sent successfully, now waiting for server response via message listener
                 }
             }
@@ -614,6 +708,31 @@ struct ContentView: View {
         }
     }
     
+    private func sendEmailCredentialResponse(responseStatus: ResponseStatus = .accepted) {
+        guard let account = initializedAccount else {
+            print("Account is nil.")
+            return
+        }
+        
+        guard let credentialRequest = currentCredentialRequest else {
+            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
+            return
+        }
+        
+        
+        let storedCredentials = account.lookUpCredentials(claims: credentialRequest.details())
+        
+        let credentialResponse = CredentialResponse.Builder()
+            .withRequestId(credentialRequest.id())
+            .withTypes(credentialRequest.types())
+            .toIdentifier(credentialRequest.toIdentifier())
+            .withStatus(responseStatus)
+            .withCredentials(storedCredentials)
+            .build()
+        viewModel.sendKMPMessage(message: credentialResponse) { messageId, error in
+        }
+    }
+    
     private func sendCredentialResponse(account: Account, credentials: [Credential]) {
         print("🔐 ContentView: Sending credential response back to server...")
         
@@ -745,13 +864,28 @@ struct ContentView: View {
         // Store the credential request so we can respond to it later
         currentCredentialRequest = credentialRequest
         
+        // check credential request type
+        
         // Cancel timeout if waiting for auth request
         serverRequestTimeoutTask?.cancel()
         
         // Hide overlay and navigate to AUTH_START
         showServerRequestOverlay = false
-        withAnimation(.easeInOut(duration: 0.5)) {
-            currentScreen = .authStart
+        let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
+        let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Document) ?? false
+        
+        if emailCredential {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .shareEmailStart
+            }
+        } else if documentCredential {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .shareDocumentStart
+            }
+        }else {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .authStart
+            }
         }
     }
     

@@ -10,12 +10,14 @@ import SwiftUI
 public struct CardView: View {
     let icon: String
     let iconColor: Color
+    let borderColor: Color
     let title: String
     let description: String
     
-    public init(icon: String, iconColor: Color = .accentColor, title: String, description: String) {
+    public init(icon: String, iconColor: Color = .accentColor, borderColor: Color = .accentColor, title: String, description: String) {
         self.icon = icon
         self.iconColor = iconColor
+        self.borderColor = borderColor
         self.title = title
         self.description = description
     }
@@ -45,7 +47,7 @@ public struct CardView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                .stroke(borderColor.opacity(0.3), lineWidth: 1)
                 .background(Color.blue.opacity(0.05))
         )
         .padding(.horizontal, 20)
@@ -54,7 +56,7 @@ public struct CardView: View {
 
 #Preview {
     VStack {
-        CardView(icon: "faceid", iconColor: .red, title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
+        CardView(icon: "faceid", iconColor: .red, borderColor: .red, title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
         CardView(icon: "faceid", title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
         CardView(icon: "", title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
     }

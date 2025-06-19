@@ -297,9 +297,9 @@ final class MainViewModel: ObservableObject {
             try await self.account.send(message: message, onAcknowledgement: {msgId, error in
                 print("message sent: \(msgId)")
                 if let error = error {
-                    print("🔐 MainViewModel ❌ Request send failed: \(error)")
+                    print("🔐 MainViewModel ❌ message send failed: \(error)")
                 } else {
-                    print("🔐 MainViewModel: ✅ Authentication request sent successfully with ID: \(msgId)")
+                    print("🔐 MainViewModel: ✅ message sent successfully with ID: \(msgId)")
                     // Message sent successfully, now waiting for server response via message listener
                 }
                 completion?(msgId, error)

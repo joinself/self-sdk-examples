@@ -50,7 +50,7 @@ public struct SimpleCardView: View {
 }
 
 #Preview {
-    SimpleCardView(icon: "shield.pattern.checkered",
+    SimpleCardView(icon: "shield",
                    title: "Authenticate",
                    description: "Use your biometric credentials to securely log in to services",
                    action: {

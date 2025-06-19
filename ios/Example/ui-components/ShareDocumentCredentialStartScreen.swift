@@ -1,11 +1,11 @@
 //
-//  ShareEmailCredentialScreen.swift
+//  ShareDocumentCredentialStartScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public struct ShareEmailCredentialScreen: View {
+public struct ShareDocumentCredentialStartScreen: View {
     let credentialName: String
     let onApprove: () -> Void
     let onDeny: () -> Void
@@ -58,14 +58,14 @@ public struct ShareEmailCredentialScreen: View {
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Provide \(credentialName) Credentials?")
+                                Text("Provide Document Credentials?")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                     .padding(.leading)
                                     .padding(.trailing)
                                 
-                                Text("The server is requesting proof of your verified email address. Your actual email address will not be shared - only cryptographic proof that you own a verified email.")
+                                Text("The server is requesting proof of your verified document. Your actual document will not be shared - only cryptographic proof that you own a verified document.")
                                     .font(.system(size: 12))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -92,7 +92,7 @@ public struct ShareEmailCredentialScreen: View {
                                 SimpleCardView(
                                     icon: "checkmark.circle.fill",
                                     title: "Verification Status",
-                                    description: "Proof that you have a verified email credential",
+                                    description: "Proof that you have a verified document credential",
                                     action: {
                                         
                                     }
@@ -110,7 +110,7 @@ public struct ShareEmailCredentialScreen: View {
                                 SimpleCardView(
                                     icon: "exclamationmark.circle",
                                     title: "Personal Data",
-                                    description: "❌ Your actual email address will NOT be shared",
+                                    description: "❌ Your actual document will NOT be shared",
                                     action: {
                                         
                                     }
@@ -162,7 +162,7 @@ public struct ShareEmailCredentialScreen: View {
 }
 
 #Preview {
-    ShareEmailCredentialScreen(credentialName: "Email") {
+    ShareDocumentCredentialStartScreen(credentialName: "Email") {
         
     } onDeny: {
         
