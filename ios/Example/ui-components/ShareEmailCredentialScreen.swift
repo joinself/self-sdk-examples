@@ -110,7 +110,7 @@ public struct ShareEmailCredentialScreen: View {
                                 SimpleCardView(
                                     icon: "exclamationmark.circle",
                                     title: "Personal Data",
-                                    description: "􀆄 Your actual email address will NOT be shared",
+                                    description: "❌ Your actual email address will NOT be shared",
                                     action: {
                                         
                                     }
