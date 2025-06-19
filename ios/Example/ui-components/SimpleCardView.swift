@@ -10,13 +10,15 @@ import SwiftUI
 public struct SimpleCardView: View {
     
     let icon: String
+    let iconColor: Color
     let title: String
     let description: String
     let action: () -> Void
     @State private var isPressed = false
     
-    init(icon: String, title: String, description: String, action: @escaping () -> Void, isPressed: Bool = false) {
+    public init(icon: String, iconColor: Color = .accentColor, title: String, description: String, action: @escaping () -> Void, isPressed: Bool = false) {
         self.icon = icon
+        self.iconColor = iconColor
         self.title = title
         self.description = description
         self.action = action
@@ -26,6 +28,9 @@ public struct SimpleCardView: View {
     public var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
+                .renderingMode(.template)
+                .foregroundStyle(iconColor)
+                .accentColor(iconColor)
                 .font(.system(size: 20))
                 .foregroundColor(.green)
             
