@@ -99,6 +99,7 @@ fun VerifySelectionScreen(
                         isEnabled = true,
                         onClick = onGetCredentials
                     )
+                    Spacer(modifier = Modifier.height(AppSpacing.componentSpacing))
                 }
             }
         }

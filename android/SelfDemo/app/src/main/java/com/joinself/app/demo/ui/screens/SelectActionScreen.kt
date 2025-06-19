@@ -48,8 +48,6 @@ fun SelectActionScreen(
                 )
             }
 
-
-
             item {
                 // Available actions
                 Column(
@@ -96,10 +94,10 @@ fun SelectActionScreen(
                         description = "Create an encrypted backup of your account data",
                         onClick = onBackup
                     )
+
+                    Spacer(modifier = Modifier.height(AppSpacing.componentSpacing))
                 }
             }
-
-
         }
     }
     

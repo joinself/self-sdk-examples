@@ -505,6 +505,7 @@ fun SelfDemoApp(
             RestoreResultScreen(
                 restoreState = appState.backupRestoreState,
                 onContinue = {
+                    isRestoreFlow = false
                     navController.navigate(MainRoute.ConnectToServer)
                 },
                 onRetry = {
