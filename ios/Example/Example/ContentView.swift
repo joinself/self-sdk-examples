@@ -83,14 +83,7 @@ struct ContentView: View {
                             }
                         }
                     }
-
-//                    RegistrationIntroScreen(
-//                        onRegistrationComplete: {
-//                            withAnimation(.easeInOut(duration: 0.5)) {
-//                                currentScreen = .serverConnection
-//                            }
-//                        }
-//                    )
+                    
                 case .serverConnection:
                     ServerConnectionScreen(
                         onConnectToServer: { serverAddress in
@@ -429,30 +422,18 @@ struct ContentView: View {
             return
         }
         
-        Task {
-            do {
-                let chatMessage = ChatMessage.Builder()
-                    .toIdentifier(serverAddress)
-                    .fromIdentifier(account.generateAddress())
-                    .withMessage("REQUEST_CREDENTIAL_AUTH")
-                    .build()
-                
-                try await account.send(message: chatMessage, onAcknowledgement: { messageId, error in
-                    Task { @MainActor in
-                        if let error = error {
-                            print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
-                            showServerRequestOverlay = false
-                            showToastMessage("Failed to send authentication request: \(error.localizedDescription)")
-                        } else {
-                            print("🔐 ContentView: ✅ Authentication request sent successfully with ID: \(messageId)")
-                            // Message sent successfully, now waiting for server response via message listener
-                        }
-                    }
-                })
-            } catch {
-                print("🔐 ContentView: ❌ Failed to build authentication request: \(error)")
-                showServerRequestOverlay = false
-                showToastMessage("Failed to build authentication request: \(error.localizedDescription)")
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send authentication request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Authentication request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
             }
         }
     }
