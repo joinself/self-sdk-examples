@@ -332,7 +332,7 @@ fun main() {
     }
     println("\n\n")
     println("server address: ${inboxAddress.encodeHex()}")
-    println("clients should use this address to connect to the server")
+    println("clients should use this address to connect to this server")
 
     println("\n\n")
     println("Press enter to exit")

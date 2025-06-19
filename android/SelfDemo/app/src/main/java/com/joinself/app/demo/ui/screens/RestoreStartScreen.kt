@@ -147,7 +147,7 @@ fun RestoreStartScreen(
                 .fillMaxWidth()
         ) {
             PrimaryButton(
-                title = "Start Restoration",
+                title = "Start Restore Process",
                 isDisabled = restoreState == BackupRestoreState.Processing,
                 onClick = onStartRestore
             )

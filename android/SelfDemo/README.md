@@ -36,13 +36,14 @@ To get a local copy up and running, follow these simple steps:
 Clone the repository:
 ```bash
 git clone git@github.com:joinself/self-sdk-examples.git
-cd self-sdk-examples/android/SelfDemo
 ```
 
 ## Build
 You can build and install from the command line
 
 ```bash
+cd self-sdk-examples/android/SelfDemo
+
 ./gradlew :app:assembleDebug
 
 adb -d install -r app/build/outputs/apk/debug/app-debug.apk
@@ -55,7 +56,7 @@ For the Self Demo application to function fully (e.g., to connect for credential
 Follow these steps to set up and run the server from the command line, then copy the address for mobile app to connect.
   
 ```bash
-cd self-sdk-examples/java/self-demo
+cd self-sdk-examples/java
 
 ./gradlew :self-demo:run
 ```

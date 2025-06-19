@@ -160,7 +160,7 @@ fun RestoreResultScreen(
             )
             if (restoreState == BackupRestoreState.VerificationFailed && onRetry != null) {
                 SecondaryButton(
-                    title = "Retry Restoration",
+                    title = "Retry Restore",
                     onClick = onRetry
                 )
             }
