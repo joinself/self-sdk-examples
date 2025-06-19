@@ -263,4 +263,14 @@ class MainViewModel(context: Context): ViewModel() {
         _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Success) }
         return backupBytes
     }
+
+    suspend fun restore(backupBytes: ByteArray, selfieBytes: ByteArray) {
+        try {
+            _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Processing) }
+            account.restore(backupBytes, selfieBytes)
+            _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Success) }
+        } catch (ex: Exception) {
+            _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Error(ex.message ?: "restore failed")) }
+        }
+    }
 }

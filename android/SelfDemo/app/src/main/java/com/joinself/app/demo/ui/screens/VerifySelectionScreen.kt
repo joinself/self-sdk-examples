@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Security
@@ -92,7 +93,7 @@ fun VerifySelectionScreen(
                     )
 
                     VerificationCard(
-                        icon = Icons.Filled.Badge,
+                        icon = Icons.Filled.AssignmentInd,
                         title = "Get Custom Credential",
                         description = "Get credentials that created and verified by your server",
                         isEnabled = true,

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Share
@@ -90,7 +91,7 @@ fun SelectActionScreen(
                     )
 
                     ActionCard(
-                        icon = Icons.Filled.Edit,
+                        icon = Icons.Filled.Backup,
                         title = "Backup",
                         description = "Create an encrypted backup of your account data",
                         onClick = onBackup

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -105,7 +106,7 @@ fun ShareCredentialSelectionScreen(
 
                     // Custom credential option
                     CredentialProvisionCard(
-                        icon = Icons.Filled.Badge,
+                        icon = Icons.Filled.AssignmentInd,
                         title = "Share Custom Credential",
                         description = "Provide proof of your custom credentials",
                         isEnabled = true,

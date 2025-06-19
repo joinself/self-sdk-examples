@@ -138,13 +138,15 @@ fun SelfDemoApp(
             if (backupBytes != null && backupBytes.isNotEmpty() && selfieByteArray.isNotEmpty()) {
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
-                        val credentials = viewModel.account.restore(backupBytes, selfieByteArray)
-
+                        viewModel.restore(backupBytes, selfieByteArray)
                     } catch (ex: Exception) {
                         Log.e("SelfSDK", "restore error", ex)
                         withContext(Dispatchers.Main) {
                             Toast.makeText(context, "Restore failed: ${ex.message}", Toast.LENGTH_LONG).show()
                         }
+                    }
+                    withContext(Dispatchers.Main) {
+                        navController.navigate(MainRoute.RestoreResult)
                     }
                 }
             }
@@ -187,6 +189,9 @@ fun SelfDemoApp(
             RegistrationIntroScreen(
                 onStartRegistration = {
                     navController.navigate(MainRoute.LivenessRoute)
+                },
+                onStartRestore = {
+                    navController.navigate(MainRoute.RestoreStart)
                 },
                 onOpenSettings = onOpenSettings
             )
@@ -489,7 +494,8 @@ fun SelfDemoApp(
             RestoreStartScreen(
                 restoreState = appState.backupRestoreState,
                 onStartRestore = {
-
+                    isRestoreFlow = true
+                    navController.navigate(MainRoute.LivenessRoute)
                 }
             )
         }
@@ -497,9 +503,11 @@ fun SelfDemoApp(
             RestoreResultScreen(
                 restoreState = appState.backupRestoreState,
                 onContinue = {
-
+                    navController.navigate(MainRoute.ConnectToServer)
                 },
-                onRetry = {}
+                onRetry = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -508,7 +516,10 @@ fun SelfDemoApp(
             account = { viewModel.account },
             withCredential = true,
             onFinish = { selfie, credentials ->
-                if (!viewModel.isRegistered()) {
+                if (isRestoreFlow) {
+                    selfieByteArray = selfie
+                    pickerLauncher.launch("application/octet-stream")
+                } else if (!viewModel.isRegistered()) {
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
                             if (selfie.isNotEmpty() && credentials.isNotEmpty()) {
