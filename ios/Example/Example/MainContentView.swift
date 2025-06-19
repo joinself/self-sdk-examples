@@ -11,7 +11,7 @@ import SelfUI
 
 struct MainContentView: View {
     
-    @ObservedObject var viewModel: MainViewModel = MainViewModel()
+    @EnvironmentObject var viewModel: MainViewModel
     @State private var showVerifyDocument: Bool = false
     @State private var showVerifyEmail: Bool = false
     @State private var showQRScanner = false
