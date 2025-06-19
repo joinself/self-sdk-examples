@@ -13,8 +13,9 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ui.ServerRequestState
+import com.joinself.common.CredentialType
+import com.joinself.sdk.models.ResponseStatus
 
 @Composable
 fun ShareCredentialResultScreen(
@@ -24,21 +25,26 @@ fun ShareCredentialResultScreen(
     modifier: Modifier = Modifier
 ) {
     val isSuccess = requestState is ServerRequestState.ResponseSent
+    val statusName = if (requestState is ServerRequestState.ResponseSent) {
+        if (requestState.status == ResponseStatus.accepted) "Shared" else "Rejected"
+    } else {
+        ""
+    }
     val (successTitle, successMessage, failureTitle, failureMessage) = when (credentialType) {
-        "email" -> Tuple4(
-            "Email Credential Shared!",
+        CredentialType.Email -> Tuple4(
+            "Email Credential $statusName!",
             "Your verified email credential has been successfully shared with the server. The server now has cryptographic proof of your email verification.",
             "Email Sharing Failed",
             "We were unable to share your email credential with the server. This could be due to network issues or if you don't have a verified email credential."
         )
-        "document" -> Tuple4(
-            "Document Credential Shared!",
+        CredentialType.Document -> Tuple4(
+            "Document Credential $statusName!",
             "Your verified identity document credential has been successfully shared with the server. The server now has cryptographic proof of your document verification.",
             "Document Sharing Failed", 
             "We were unable to share your document credential with the server. This could be due to network issues or if you don't have a verified document credential."
         )
         else -> Tuple4(
-            "Credential Shared!",
+            "Credential $statusName!",
             "Your verified credential has been successfully shared with the server.",
             "Credential Sharing Failed",
             "We were unable to share your credential with the server."

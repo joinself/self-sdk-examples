@@ -261,12 +261,12 @@ fun SelfDemoApp(
             LaunchedEffect(appState.requestState) {
                 Log.d(TAG, "auth request state: ${appState.requestState}")
                 when (appState.requestState) {
-                    ServerRequestState.None -> {
+                    is ServerRequestState.None -> {
                         withContext(Dispatchers.IO){
                             viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH)
                         }
                     }
-                    ServerRequestState.ResponseSent -> {
+                    is ServerRequestState.ResponseSent -> {
                         withContext(Dispatchers.Main){
                             navController.navigate(MainRoute.AuthResultResult)
                         }
@@ -398,14 +398,14 @@ fun SelfDemoApp(
             LaunchedEffect(appState.requestState) {
                 Log.d(TAG, "credential request state: ${appState.requestState}")
                 when (appState.requestState) {
-                    ServerRequestState.None -> {
+                    is ServerRequestState.None -> {
                         withContext(Dispatchers.IO) {
                             if (credentialType == CredentialType.Email) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL)
                             else if (credentialType == CredentialType.Document) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT)
                             else if (credentialType == CredentialType.Custom) viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM)
                         }
                     }
-                    ServerRequestState.ResponseSent -> {
+                    is ServerRequestState.ResponseSent -> {
                         withContext(Dispatchers.Main) {
                             navController.navigate(MainRoute.ShareCredentialResult)
                         }
@@ -416,7 +416,7 @@ fun SelfDemoApp(
             DisposableEffect(true) {
                 onDispose {
                     Log.d(TAG, "disposable request state: ${appState.requestState}")
-                    if (appState.requestState != ServerRequestState.ResponseSent) {
+                    if (appState.requestState !is ServerRequestState.ResponseSent) {
                         viewModel.resetState(ServerRequestState.None)
                     }
                 }
@@ -444,12 +444,12 @@ fun SelfDemoApp(
             LaunchedEffect(appState.requestState) {
                 Log.d(TAG, "docsign request state: ${appState.requestState}")
                 when (appState.requestState) {
-                    ServerRequestState.None -> {
+                    is ServerRequestState.None -> {
                         withContext(Dispatchers.IO){
                             viewModel.notifyServerForRequest(SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING)
                         }
                     }
-                    ServerRequestState.ResponseSent -> {
+                    is ServerRequestState.ResponseSent -> {
                         withContext(Dispatchers.Main){
                             navController.navigate(MainRoute.DocumentSignResult)
                         }

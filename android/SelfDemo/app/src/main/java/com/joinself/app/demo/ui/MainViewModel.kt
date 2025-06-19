@@ -45,7 +45,7 @@ sealed class ServerRequestState {
     data object RequestSent : ServerRequestState()
     data object RequestReceived : ServerRequestState()
     data class  RequestError(val message: String) : ServerRequestState()
-    data object ResponseSent : ServerRequestState()
+    data class ResponseSent(val status: ResponseStatus) : ServerRequestState()
 }
 sealed class BackupRestoreState {
     data object None: BackupRestoreState()
@@ -214,7 +214,7 @@ class MainViewModel(context: Context): ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             account.send(credentialResponse) { messageId, _ ->
-                _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent) }
+                _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent(status)) }
             }
         }
     }
@@ -252,7 +252,7 @@ class MainViewModel(context: Context): ViewModel() {
             .build()
         viewModelScope.launch(Dispatchers.IO) {
             account.send(verificationResponse) { messageId, _ ->
-                _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent) }
+                _appUiState.update { it.copy(requestState = ServerRequestState.ResponseSent(status)) }
             }
         }
     }

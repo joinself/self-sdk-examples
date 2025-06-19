@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ui.ServerRequestState
+import com.joinself.common.CredentialType
 
 @Composable
 fun ShareCredentialApprovalScreen(
@@ -24,12 +25,12 @@ fun ShareCredentialApprovalScreen(
     modifier: Modifier = Modifier
 ) {
     val (title, description, icon) = when (credentialType) {
-        "email" -> Triple(
+        CredentialType.Email -> Triple(
             "Share Email Credential?",
             "The server is requesting proof of your verified email address. Your actual email address will not be shared - only cryptographic proof that you own a verified email.",
             Icons.Filled.Security
         )
-        "document" -> Triple(
+        CredentialType.Document -> Triple(
             "Share ID Number?", 
             "The server is requesting proof of your verified ID number. Your personal information will not be shared - only cryptographic proof that you have a verified ID number.",
             Icons.Filled.Security

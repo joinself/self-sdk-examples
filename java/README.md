@@ -59,6 +59,12 @@ Request email credentials from mobile
 ./gradlew :credential:run
 ```
 
+### Self Demo
+
+```bash
+./gradlew :self-demo:run
+```
+
 
 ## Notes
 

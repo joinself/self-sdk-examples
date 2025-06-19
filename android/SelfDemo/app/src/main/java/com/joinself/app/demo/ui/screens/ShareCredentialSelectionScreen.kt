@@ -112,7 +112,7 @@ fun ShareCredentialSelectionScreen(
                         isEnabled = true,
                         onClick = onProvideCustomCredential
                     )
-                    
+
                     Spacer(modifier = Modifier.height(AppSpacing.componentSpacing))
                 }
             }
