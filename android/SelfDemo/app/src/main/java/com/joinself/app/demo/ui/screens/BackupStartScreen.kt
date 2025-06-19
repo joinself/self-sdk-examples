@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.joinself.app.demo.ui.BackupRestoreState
 import com.joinself.app.demo.ui.theme.AlertType
 import com.joinself.app.demo.ui.theme.AppColors
 import com.joinself.app.demo.ui.theme.AppFonts
@@ -30,6 +31,7 @@ import com.joinself.app.demo.ui.theme.ProcessStep
 
 @Composable
 fun BackupStartScreen(
+    backupState: BackupRestoreState,
     onStartBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -130,7 +132,7 @@ fun BackupStartScreen(
         ) {
             PrimaryButton(
                 title = "Start Backup Process",
-                // isDisabled = backupScreenState != BackupScreenState.ReadyToStart,
+                isDisabled = backupState == BackupRestoreState.Processing,
                 onClick = onStartBackup
             )
         }
@@ -141,6 +143,7 @@ fun BackupStartScreen(
 @Composable
 fun BackupStartScreenSystemManagedPreview() {
     BackupStartScreen(
+        backupState = BackupRestoreState.Processing,
         onStartBackup = {}
     )
 }

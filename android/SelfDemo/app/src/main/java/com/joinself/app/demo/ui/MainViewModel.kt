@@ -32,28 +32,28 @@ sealed class InitializationState {
     data object None : ServerState()
     data object Loading : InitializationState()
     data object Success : InitializationState()
-    data class Error(val message: String) : InitializationState()
+    data class  Error(val message: String) : InitializationState()
 }
 sealed class ServerState {
     data object None : ServerState()
     data object Connecting : ServerState()
     data object Success : ServerState()
-    data class Error(val message: String) : ServerState()
+    data class  Error(val message: String) : ServerState()
 }
 sealed class ServerRequestState {
     data object None : ServerRequestState()
     data object RequestSent : ServerRequestState()
     data object RequestReceived : ServerRequestState()
-    data class RequestError(val message: String) : ServerRequestState()
+    data class  RequestError(val message: String) : ServerRequestState()
     data object ResponseSent : ServerRequestState()
 }
-sealed class RestoreState {
-    data object None: RestoreState()
-    data object Restoring: RestoreState()
-    data object Success: RestoreState()
-    data object VerificationFailed: RestoreState()
-    data object DataRecoveryFailed: RestoreState()
-    data class Error(val message: String) : RestoreState()
+sealed class BackupRestoreState {
+    data object None: BackupRestoreState()
+    data object Processing: BackupRestoreState()
+    data object Success: BackupRestoreState()
+    data class  Error(val message: String) : BackupRestoreState()
+    data object VerificationFailed: BackupRestoreState()
+    data object DataRecoveryFailed: BackupRestoreState()
 }
 
 sealed class SERVER_REQUESTS {
@@ -72,7 +72,7 @@ data class AppUiState(
     var initialization: InitializationState = InitializationState.Loading,
     var serverState: ServerState = ServerState.None,
     var requestState: ServerRequestState = ServerRequestState.None,
-    var restoreState: RestoreState = RestoreState.None
+    var backupRestoreState: BackupRestoreState = BackupRestoreState.None
 )
 
 class MainViewModel(context: Context): ViewModel() {
@@ -257,4 +257,10 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
+    suspend fun backup(): ByteArray {
+        _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Processing) }
+        val backupBytes = account.backup()
+        _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Success) }
+        return backupBytes
+    }
 }

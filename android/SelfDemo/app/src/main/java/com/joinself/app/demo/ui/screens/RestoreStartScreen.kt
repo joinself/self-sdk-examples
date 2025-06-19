@@ -1,7 +1,5 @@
 package com.joinself.app.demo.ui.screens
 
-// Specific icons for restore
-// import androidx.compose.material.icons.filled.VpnKey // No longer explicitly entered by user
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.joinself.app.demo.ui.BackupRestoreState
 import com.joinself.app.demo.ui.theme.AlertType
 import com.joinself.app.demo.ui.theme.AppColors
 import com.joinself.app.demo.ui.theme.AppFonts
@@ -30,6 +29,7 @@ import com.joinself.app.demo.ui.theme.ProcessStep
 
 @Composable
 fun RestoreStartScreen(
+    restoreState: BackupRestoreState,
     onStartRestore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -148,7 +148,7 @@ fun RestoreStartScreen(
         ) {
             PrimaryButton(
                 title = "Begin Identity Verification", // Changed button title
-                // isDisabled = restoreScreenState != RestoreScreenState.ReadyToStart,
+                isDisabled = restoreState == BackupRestoreState.Processing,
                 onClick = onStartRestore
             )
         }
@@ -160,6 +160,7 @@ fun RestoreStartScreen(
 @Composable
 fun RestoreStartScreenAutomatedRecoveryPreview() {
     RestoreStartScreen(
+        restoreState = BackupRestoreState.Processing,
         onStartRestore = {}
     )
 }

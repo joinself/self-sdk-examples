@@ -1,6 +1,10 @@
 package com.joinself.app.demo.ui
 
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -54,6 +58,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlin.collections.isNotEmpty
 
 
 private const val TAG = "SelfDemoApp"
@@ -109,6 +114,42 @@ fun SelfDemoApp(
     }
 
     val appState by viewModel.appStateFlow.collectAsState()
+
+    var backupByteArray by remember { mutableStateOf(byteArrayOf()) }
+    val saveLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.write(backupByteArray)
+            }
+        }
+    }
+
+    var isRestoreFlow by remember { mutableStateOf(false) }
+    var selfieByteArray by remember { mutableStateOf(byteArrayOf()) }
+    val pickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val backupBytes = context.contentResolver.openInputStream(it)?.use { input ->
+                input.readBytes()
+            }
+            if (backupBytes != null && backupBytes.isNotEmpty() && selfieByteArray.isNotEmpty()) {
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val credentials = viewModel.account.restore(backupBytes, selfieByteArray)
+
+                    } catch (ex: Exception) {
+                        Log.e("SelfSDK", "restore error", ex)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Restore failed: ${ex.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -423,22 +464,30 @@ fun SelfDemoApp(
 
         composable<MainRoute.BackupStart> {
             BackupStartScreen(
+                backupState = appState.backupRestoreState,
                 onStartBackup = {
-
+                    coroutineScope.launch(Dispatchers.IO) {
+                        backupByteArray = viewModel.backup()
+                        withContext(Dispatchers.Main) {
+                            navController.navigate(MainRoute.BackupResult)
+                        }
+                    }
                 }
             )
         }
         composable<MainRoute.BackupResult> {
             BackupResultScreen(
-                isSuccess = true,
+                backupState = appState.backupRestoreState,
                 onContinue = {
-
+                    navController.popBackStack(MainRoute.ServerConnectionReady, inclusive = false)
+                    saveLauncher.launch("self_sdk.backup")
                 },
                 onRetry = {}
             )
         }
         composable<MainRoute.RestoreStart> {
             RestoreStartScreen(
+                restoreState = appState.backupRestoreState,
                 onStartRestore = {
 
                 }
@@ -446,7 +495,7 @@ fun SelfDemoApp(
         }
         composable<MainRoute.RestoreResult> {
             RestoreResultScreen(
-                restoreState = appState.restoreState,
+                restoreState = appState.backupRestoreState,
                 onContinue = {
 
                 },

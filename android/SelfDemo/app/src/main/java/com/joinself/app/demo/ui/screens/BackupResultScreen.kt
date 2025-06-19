@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.joinself.app.demo.ui.BackupRestoreState
 import com.joinself.app.demo.ui.theme.AlertCard
 import com.joinself.app.demo.ui.theme.AlertType
 import com.joinself.app.demo.ui.theme.AppColors
@@ -28,7 +29,7 @@ import com.joinself.app.demo.ui.theme.SecondaryButton
 
 @Composable
 fun BackupResultScreen(
-    isSuccess: Boolean,
+    backupState: BackupRestoreState,
     onContinue: () -> Unit,
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -46,7 +47,7 @@ fun BackupResultScreen(
         ) {
             item {
                 // Hero Section - Success or Failure
-                if (isSuccess) {
+                if (backupState is BackupRestoreState.Success) {
                     HeroSection(
                         icon = Icons.Filled.CloudDone,
                         title = "Backup Successful",
@@ -63,7 +64,7 @@ fun BackupResultScreen(
 
             item {
                 // Result details card
-                if (isSuccess) {
+                if (backupState is BackupRestoreState.Success) {
                     InfoCard(
                         icon = Icons.Filled.CheckCircle,
                         title = "Backup Complete & Secured",
@@ -80,7 +81,7 @@ fun BackupResultScreen(
             }
 
             // Optional: Add more sections if needed
-            if (isSuccess) {
+            if (backupState is BackupRestoreState.Success) {
                 item {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
@@ -145,10 +146,10 @@ fun BackupResultScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
         ) {
             PrimaryButton(
-                title = if (isSuccess) "Done" else "Continue",
+                title = if (backupState is BackupRestoreState.Success) "Done" else "Continue",
                 onClick = onContinue
             )
-            if (!isSuccess && onRetry != null) {
+            if (backupState is BackupRestoreState.Error && onRetry != null) {
                 SecondaryButton(
                     title = "Retry Backup",
                     onClick = onRetry
@@ -163,7 +164,7 @@ fun BackupResultScreen(
 @Composable
 fun BackupResultScreenSuccessSystemManagedPreview() {
     BackupResultScreen(
-        isSuccess = true,
+        backupState = BackupRestoreState.Success,
         onContinue = {}
     )
 }
@@ -172,7 +173,7 @@ fun BackupResultScreenSuccessSystemManagedPreview() {
 @Composable
 fun BackupResultScreenFailureSystemManagedPreview() {
     BackupResultScreen(
-        isSuccess = false,
+        backupState = BackupRestoreState.Error("failed"),
         onContinue = {},
         onRetry = {}
     )
