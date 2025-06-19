@@ -12,14 +12,18 @@ public struct CardView: View {
     let iconColor: Color
     let borderColor: Color
     let title: String
+    let titleColor: Color
     let description: String
+    let descriptionColor: Color
     
-    public init(icon: String, iconColor: Color = .accentColor, borderColor: Color = .accentColor, title: String, description: String) {
+    public init(icon: String, iconColor: Color = .accentColor, borderColor: Color = .accentColor, title: String,  titleColor: Color = .black, description: String,  descriptionColor: Color = .gray) {
         self.icon = icon
         self.iconColor = iconColor
         self.borderColor = borderColor
+        self.titleColor = titleColor
         self.title = title
         self.description = description
+        self.descriptionColor = descriptionColor
     }
     
     public var body: some View {
@@ -34,14 +38,14 @@ public struct CardView: View {
                 
                 Text(title)
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.black)
+                    .foregroundColor(titleColor)
                 
                 Spacer()
             }
             
             Text(description)
                 .font(.system(size: 14))
-                .foregroundColor(.gray)
+                .foregroundColor(descriptionColor)
                 .lineLimit(nil)
         }
         .padding(16)
@@ -56,7 +60,7 @@ public struct CardView: View {
 
 #Preview {
     VStack {
-        CardView(icon: "faceid", iconColor: .red, borderColor: .red, title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
+        CardView(icon: "faceid", iconColor: .red, borderColor: .red, title: "Biometric Verification Required", titleColor: .red, description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.", descriptionColor: .green)
         CardView(icon: "faceid", title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
         CardView(icon: "", title: "Biometric Verification Required", description: "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
     }

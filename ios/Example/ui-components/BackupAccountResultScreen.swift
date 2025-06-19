@@ -6,14 +6,10 @@
 import SwiftUI
 
 public struct BackupAccountResultScreen: View {
-    @State private var showingRegistration = false
-    @State private var isProcessing = false
     @State private var errorMessage: String? = nil
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(showingRegistration: Bool = false, isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.showingRegistration = showingRegistration
-        self.isProcessing = isProcessing
+    public init(errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
         self.errorMessage = errorMessage
         self.onNext = onNext
         self.onBack = onBack
@@ -30,7 +26,7 @@ public struct BackupAccountResultScreen: View {
                         Image(systemName: "arrow.left")
                             .foregroundStyle(Color.white)
                     }
-                    Text("DEBUG: RESTORATION_INTRO")
+                    Text("DEBUG: BACKUP_ACCOUNT_INTRO")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                     Spacer()
@@ -69,13 +65,13 @@ public struct BackupAccountResultScreen: View {
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill", title: "How Account Restoration Works", description: "To ensure security, you'll first complete a liveness check and verify your identity with a selfie. On confirmed, the Self system will automatically retrieve your encryption backup.")
+                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("Restoration Steps")
+                            Text("Backup Details")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -84,14 +80,20 @@ public struct BackupAccountResultScreen: View {
                         VStack(spacing: 20) {
                             ExpectationStepView(
                                 stepNumber: 1,
-                                title: "Camera Access",
-                                description: "We'll ask for camera permission when you start"
+                                title: "System-Managed Recovery",
+                                description: "The Self system has secured your backup. Account recovery will involve idenity verification."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 2,
-                                title: "Position Your Face",
-                                description: "Look directly at the camera and follow on-screen instructions"
+                                title: "Data Encrypted",
+                                description: "Your account data was encrypted for securely."
+                            )
+                            
+                            ExpectationStepView(
+                                stepNumber: 3,
+                                title: "Secure Upload",
+                                description: "Encrypted data was uploaded and store securely."
                             )
                         }
                     }
@@ -105,24 +107,14 @@ public struct BackupAccountResultScreen: View {
                     Button(action: {
                         onNext()
                     }) {
-                        HStack {
-                            if isProcessing {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                                Text("Processing...")
-                            } else {
-                                Text("Start Recover Your Account")
-                            }
-                        }
+                        Text("Done")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
+                        .background(Color.blue)
                         .cornerRadius(12)
                     }
-                    .disabled(isProcessing)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                     

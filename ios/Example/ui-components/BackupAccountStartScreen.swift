@@ -6,13 +6,11 @@
 import SwiftUI
 
 public struct BackupAccountStartScreen: View {
-    @State private var showingRegistration = false
     @State private var isProcessing = false
     @State private var errorMessage: String? = nil
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(showingRegistration: Bool = false, isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.showingRegistration = showingRegistration
+    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
         self.isProcessing = isProcessing
         self.errorMessage = errorMessage
         self.onNext = onNext
@@ -30,7 +28,7 @@ public struct BackupAccountStartScreen: View {
                         Image(systemName: "arrow.left")
                             .foregroundStyle(Color.white)
                     }
-                    Text("DEBUG: RESTORATION_INTRO")
+                    Text("DEBUG: BACKUP_ACCOUNT_INTRO")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                     Spacer()
@@ -49,7 +47,7 @@ public struct BackupAccountStartScreen: View {
                                 .fill(Color.blue)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                            Image(systemName: "checkmark.icloud.fill")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -57,25 +55,28 @@ public struct BackupAccountStartScreen: View {
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Restore Your Account")
+                            Text("Backup Successful")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Verify your identity through a liveness check and selfie to securely restore your account data.")
+                            Text("Your account data has been securely backed up by the Self system.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill", title: "How Account Restoration Works", description: "To ensure security, you'll first complete a liveness check and verify your identity with a selfie. On confirmed, the Self system will automatically retrieve your encryption backup.")
+                        CardView(icon: "info.circle.fill",
+                                 iconColor: .green,
+                                 borderColor: .green,
+                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("Restoration Steps")
+                            Text("How Backup Works")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -84,14 +85,20 @@ public struct BackupAccountStartScreen: View {
                         VStack(spacing: 20) {
                             ExpectationStepView(
                                 stepNumber: 1,
-                                title: "Camera Access",
-                                description: "We'll ask for camera permission when you start"
+                                title: "Prepare Data",
+                                description: "Your essestial account data is prepared for backup."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 2,
-                                title: "Position Your Face",
-                                description: "Look directly at the camera and follow on-screen instructions"
+                                title: "Encrypt & Secure",
+                                description: "The data is strongly encrypted, and the Self system sets up secure recovery protocols."
+                            )
+                            
+                            ExpectationStepView(
+                                stepNumber: 3,
+                                title: "Backup Complete",
+                                description: "Your encrypted data is backed up. You can restore it later through idenity verification."
                             )
                         }
                     }
@@ -112,7 +119,7 @@ public struct BackupAccountStartScreen: View {
                                     .scaleEffect(0.8)
                                 Text("Processing...")
                             } else {
-                                Text("Start Recover Your Account")
+                                Text("Start Backup Process")
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -137,6 +144,7 @@ public struct BackupAccountStartScreen: View {
                 }
             }
         }
+        
         .background(Color.white)
     }
 }
