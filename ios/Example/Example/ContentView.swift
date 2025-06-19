@@ -467,6 +467,11 @@ struct ContentView: View {
             }
         case .signDocuments:
             handleSignDocumentsAction()
+            
+        case .backup:
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .backupStart
+            }
         @unknown default:
             fatalError()
         }
