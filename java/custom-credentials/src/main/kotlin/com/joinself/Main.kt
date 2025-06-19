@@ -24,7 +24,7 @@ import kotlin.coroutines.suspendCoroutine
  */
 @OptIn(ExperimentalStdlibApi::class)
 fun main() {
-    println("Credentials Sample")
+    println("Custom Credentials Sample")
 
     val signal = Semaphore(1)
     signal.acquire()
