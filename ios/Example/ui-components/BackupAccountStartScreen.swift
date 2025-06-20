@@ -6,13 +6,10 @@
 import SwiftUI
 
 public struct BackupAccountStartScreen: View {
-    @State private var isProcessing = false
-    @State private var errorMessage: String? = nil
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.isProcessing = isProcessing
-        self.errorMessage = errorMessage
+    
+    public init(onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
         self.onNext = onNext
         self.onBack = onBack
     }
@@ -47,7 +44,7 @@ public struct BackupAccountStartScreen: View {
                                 .fill(Color.blue)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "checkmark.icloud.fill")
+                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -55,28 +52,25 @@ public struct BackupAccountStartScreen: View {
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Backup Successful")
+                            Text("Secure Your Account")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Your account data has been securely backed up by the Self system.")
+                            Text("Created an encrypted backup of your account data, manage by the Self system, to prevent data loss and enable easy recovery.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill",
-                                 iconColor: .green,
-                                 borderColor: .green,
-                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
+                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("How Backup Works")
+                            Text("Backup Details")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -85,20 +79,20 @@ public struct BackupAccountStartScreen: View {
                         VStack(spacing: 20) {
                             ExpectationStepView(
                                 stepNumber: 1,
-                                title: "Prepare Data",
-                                description: "Your essestial account data is prepared for backup."
+                                title: "System-Managed Recovery",
+                                description: "The Self system has secured your backup. Account recovery will involve idenity verification."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 2,
-                                title: "Encrypt & Secure",
-                                description: "The data is strongly encrypted, and the Self system sets up secure recovery protocols."
+                                title: "Data Encrypted",
+                                description: "Your account data was encrypted for securely."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 3,
-                                title: "Backup Complete",
-                                description: "Your encrypted data is backed up. You can restore it later through idenity verification."
+                                title: "Secure Upload",
+                                description: "Encrypted data was uploaded and store securely."
                             )
                         }
                     }
@@ -112,47 +106,31 @@ public struct BackupAccountStartScreen: View {
                     Button(action: {
                         onNext()
                     }) {
-                        HStack {
-                            if isProcessing {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                                Text("Processing...")
-                            } else {
-                                Text("Start Backup Process")
-                            }
-                        }
+                        Text("Start Backup Process")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
+                        .background(Color.blue)
                         .cornerRadius(12)
                     }
-                    .disabled(isProcessing)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                     
-                    // Error Message
-                    if let error = errorMessage {
-                        Text("Error: \(error)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 20)
-                    }
+                    
                 }
             }
         }
-        
         .background(Color.white)
     }
 }
 
 #Preview {
-    BackupAccountStartScreen(onNext: {
+    VStack {
+        BackupAccountStartScreen {
             
-        }) {
-            // restore
+        } onBack: {
+            
         }
+    }
 }

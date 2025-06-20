@@ -1,16 +1,16 @@
 //
-//  BackupAccountResultScreen.swift
+//  BackupAccountStartScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
 public struct BackupAccountResultScreen: View {
-    @State private var errorMessage: String? = nil
+    let success: Bool
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.errorMessage = errorMessage
+    public init(success: Bool, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.success = success
         self.onNext = onNext
         self.onBack = onBack
     }
@@ -42,36 +42,39 @@ public struct BackupAccountResultScreen: View {
                         // User Icon
                         ZStack {
                             Circle()
-                                .fill(Color.blue)
+                                .fill(success ? Color.blue : .gray)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                            Image(systemName: success ? "checkmark.icloud.fill" : "exclamationmark.icloud")
                                 .font(.system(size: 40))
-                                .foregroundColor(.white)
+                                .foregroundColor(success ? .white : .red)
                         }
                         .padding(.top, 40)
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Restore Your Account")
+                            Text(success ? "Backup Successful" : "Backup Failed!")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Verify your identity through a liveness check and selfie to securely restore your account data.")
+                            Text("Your account data has been securely backed up by the Self system.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
+                        CardView(icon: "info.circle.fill",
+                                 iconColor: .green,
+                                 borderColor: .green,
+                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("Backup Details")
+                            Text("How Backup Works")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -80,20 +83,20 @@ public struct BackupAccountResultScreen: View {
                         VStack(spacing: 20) {
                             ExpectationStepView(
                                 stepNumber: 1,
-                                title: "System-Managed Recovery",
-                                description: "The Self system has secured your backup. Account recovery will involve idenity verification."
+                                title: "Prepare Data",
+                                description: "Your essestial account data is prepared for backup."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 2,
-                                title: "Data Encrypted",
-                                description: "Your account data was encrypted for securely."
+                                title: "Encrypt & Secure",
+                                description: "The data is strongly encrypted, and the Self system sets up secure recovery protocols."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 3,
-                                title: "Secure Upload",
-                                description: "Encrypted data was uploaded and store securely."
+                                title: "Backup Complete",
+                                description: "Your encrypted data is backed up. You can restore it later through idenity verification."
                             )
                         }
                     }
@@ -118,25 +121,17 @@ public struct BackupAccountResultScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                     
-                    // Error Message
-                    if let error = errorMessage {
-                        Text("Error: \(error)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 20)
-                    }
                 }
             }
         }
+        
         .background(Color.white)
     }
 }
 
 #Preview {
-    BackupAccountResultScreen(onNext: {
-            
-        }) {
-            // restore
-        }
+    VStack {
+        BackupAccountResultScreen(success: true, onNext: {}, onBack: {})
+        BackupAccountResultScreen(success: false, onNext: {}, onBack: {})
+    }
 }

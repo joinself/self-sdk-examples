@@ -45,6 +45,14 @@ struct ContentView: View {
     @State private var showVerifyEmail: Bool = false
     @State private var showVerifyDocument: Bool = false
     
+    // backup & restore
+    @State private var showDocumentPicker = false
+    @State private var selectedFileName: String?
+    @State private var selectedFileURLs: [URL] = []
+    @State private var fileToShareURLs: [URL] = []
+    @State private var showShareSheet = false
+    
+    
     enum AppScreen {
         case initialization
         case registrationIntro
@@ -366,11 +374,41 @@ struct ContentView: View {
                     
                     // MARK: Backup & Restore
                 case .backupStart:
-                    Text("BackupStart")
+                    BackupAccountStartScreen {
+                        viewModel.backup { backupFile in
+                            // open share extension to save file
+                            if let url = backupFile {
+                                fileToShareURLs = [url]
+                            }
+                            
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .backupResult(success: backupFile != nil)
+                            }
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
                 
                 case .backupResult(let success):
-                    Text("BackupResult: \(success)")
-                
+                    BackupAccountResultScreen(success: success) {
+                        // share backup file
+                        showShareSheet = true
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                    .sheet(isPresented: $showShareSheet) {
+                        ShareSheet(items: fileToShareURLs) {
+                            self.showShareSheet = false
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .actionSelection
+                            }
+                        }
+                    }
+                    
                 case .restoreStart:
                     Text("RestoreStart")
                 
