@@ -7,13 +7,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup job
-        uses: joinself/github-actions-public/setup-job@main
       - name: Publish
         shell: bash
         run: |
-          . ${GITHUB_WORKSPACE}/.ci/env
-
           cd java
           docker build -t ghcr.io/joinself/self-demo:latest .
           docker push ghcr.io/joinself/self-demo:latest
