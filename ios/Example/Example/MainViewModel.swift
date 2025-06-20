@@ -307,7 +307,7 @@ final class MainViewModel: ObservableObject {
         })
     }
     
-    func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus) {
+    func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus, completion: ((String, Error?) -> Void)? = nil) {
         print("responseToCredentialRequest: \(credentialRequest?.id())")
         
         guard let credentialRequest = credentialRequest else {
@@ -326,6 +326,9 @@ final class MainViewModel: ObservableObject {
             .withCredentials(storedCredentials)
             .build()
         self.sendKMPMessage(message: credentialResponse) { messageId, error in
+            Task { @MainActor in
+                completion?(messageId, error)
+            }
         }
     }
     
