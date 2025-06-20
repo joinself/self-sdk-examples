@@ -414,14 +414,47 @@ struct ContentView: View {
                     
                 case .restoreStart:
                     RestoreAccountStartScreen {
-                        
+                        showDocumentPicker = true
                     } onBack: {
-                        
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .registrationIntro
+                        }
+                    }
+                    .onChange(of: self.selectedFileURLs, perform: { newValue in
+                        print("Files change: \(newValue)")
+                        if let url = newValue.first, url.pathExtension == "self_backup" {
+                            // handle restore account
+                            if url.startAccessingSecurityScopedResource() {
+                                print("startAccessingSecurityScopedResource")
+                            }
+                            
+                            // 1. Do liveness to get liveness's selfie image
+                            SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
+                                print("showLivenessCheck credentials: \(credentials)")
+                                viewModel.restore(selfieData: selfieImageData, backupFile: url) { success in
+                                    print("Restore account finished: \(success)")
+                                    withAnimation(.easeInOut(duration: 0.5)) {
+                                        currentScreen = .restoreResult(success: success)
+                                    }
+                                }
+                            })
+                        }
+                    })
+                    .sheet(isPresented: $showDocumentPicker) {
+                        DocumentPicker(selectedFileName: $selectedFileName, selectedFileURLs: $selectedFileURLs)
                     }
 
                 
                 case .restoreResult(let success):
-                    Text("RestoreResult: \(success)")
+                    RestoreAccountResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .serverConnection
+                        }
+                    } onBack: {
+                        
+                    }
+
+
                 }
             }
             

@@ -6,19 +6,14 @@
 import SwiftUI
 
 public struct RestoreAccountResultScreen: View {
-    @State private var showingRegistration = false
-    @State private var isProcessing = false
-    @State private var errorMessage: String? = nil
+    let success: Bool
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(showingRegistration: Bool = false, isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.showingRegistration = showingRegistration
-        self.isProcessing = isProcessing
-        self.errorMessage = errorMessage
+    public init(success: Bool, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.success = success
         self.onNext = onNext
         self.onBack = onBack
     }
-    
     public var body: some View {
         VStack(spacing: 0) {
             // DEBUG Header
@@ -77,34 +72,17 @@ public struct RestoreAccountResultScreen: View {
                     onNext()
                 }) {
                     HStack {
-                        if isProcessing {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                            Text("Processing...")
-                        } else {
-                            Text("Done")
-                        }
+                        Text("Done")
                     }
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
+                    .background(Color.blue)
                     .cornerRadius(12)
                 }
-                .disabled(isProcessing)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
-                
-                // Error Message
-                if let error = errorMessage {
-                    Text("Error: \(error)")
-                        .font(.system(size: 14))
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
-                }
             }
         }
         .background(Color.white)
@@ -112,9 +90,10 @@ public struct RestoreAccountResultScreen: View {
 }
 
 #Preview {
-    RestoreAccountResultScreen(onNext: {
-            
-        }) {
-            // restore
-        }
+    RestoreAccountResultScreen(success: true) {
+        
+    } onBack: {
+        
+    }
+
 }

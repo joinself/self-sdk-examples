@@ -350,7 +350,10 @@ final class MainViewModel: ObservableObject {
                 let credentials = try await account.restore(backupFile: backupFile, selfieImage: selfieData)
                 print("Restore complete with error: \(credentials.count)")
                 if credentials.count > 0  {
-                    // register sandbox
+                    // register sandbox if needed
+                    Task { @MainActor in
+                        completion?(true)
+                    }
                 } else {
                     Task { @MainActor in
                         completion?(false)

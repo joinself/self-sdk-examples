@@ -100,11 +100,6 @@ public struct BackupAccountStartScreen: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    // Privacy Protection Section
-                    
-//                    Spacer(minLength: 40)
-                    
-                    // Start Registration Button
                     Button(action: {
                         onNext()
                     }) {
