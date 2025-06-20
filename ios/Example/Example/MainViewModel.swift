@@ -35,6 +35,8 @@ final class MainViewModel: ObservableObject {
     @Published var hasTimedOut = false
     
     @Published var serverAddress:String?
+    @Published var appScreen: AppScreen = .initialization
+    private var currentCredentialRequest: CredentialRequest? = nil
     
     init() {
         // Initialize SDK
@@ -47,7 +49,18 @@ final class MainViewModel: ObservableObject {
             .withStoragePath(FileManager.storagePath)
             .build()
         
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.isInitialized = true
+        }
+        
         // add listener
+        setupMessageListener()
+    }
+    
+    // MARK: - Message Handling
+    
+    func setupMessageListener() {
         account.setOnInfoRequest { (key: String) in
             print("setOnInfoRequest: \(key)")
         }
@@ -74,12 +87,16 @@ final class MainViewModel: ObservableObject {
             switch message {
             case is ChatMessage:
                 let chatMessage = message as! ChatMessage
+                //self.handleIncomingChatMessage(chatMessage)
 
+            case is CredentialMessage:
+                let credentialMessage = message as! CredentialMessage
+                self.handleIncomingCredentialMessage(credentialMessage)
             case is Receipt:
                 let receipt = message as! Receipt
 
             default:
-                print("TODO: Handle For Message: \(message)")
+                print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
                 break
             }
         }
@@ -89,6 +106,7 @@ final class MainViewModel: ObservableObject {
             switch message {
             case is CredentialRequest:
                 let credentialRequest = message as! CredentialRequest
+                self.handleCredentialRequest(credentialRequest: credentialRequest)
 
             case is VerificationRequest:
                 let verificationRequest = message as! VerificationRequest
@@ -100,7 +118,7 @@ final class MainViewModel: ObservableObject {
                 self.handleSigningRequest(signingRequest: signingRequest)
 
             default:
-                print("TODO: Handle For Request: \(message)")
+                print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
                 break
             }
         }
@@ -112,14 +130,33 @@ final class MainViewModel: ObservableObject {
                 let response = message as! CredentialResponse
 
             default:
-                print("TODO: Handle For Response: \(message)")
+                print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
                 break;
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            self.isInitialized = true
+        /*guard let account = initializedAccount else {
+            print("🎯 ContentView: ⚠️ Cannot setup message listener - no account available")
+            return
         }
+        
+        print("🎯 ContentView: 📚 Setting up message listener...")
+        
+        // Set up request listener for credential and verification requests
+        account.setOnRequestListener { request in
+            Task { @MainActor in
+                handleIncomingRequest(request)
+            }
+        }
+        
+        // Also set up message listener for other message types
+        account.setOnMessageListener { message in
+            Task { @MainActor in
+                handleIncomingMessage(message)
+            }
+        }*/
+        
+        print("🎯 MainViewModel: ✅ Message listeners configured successfully")
     }
     
     // transform credential into credential item to perform identifiable to display inside a List
@@ -162,9 +199,7 @@ final class MainViewModel: ObservableObject {
     }
     
     func handleSigningRequest(signingRequest: SigningRequest) {
-        // assume we will accept the request immediately
         
-        self.respondToSigningRequest(signingRequest: signingRequest, status: .accepted, credentials: [])
     }
     
     func respondToSigningRequest(signingRequest: SigningRequest, status: ResponseStatus, credentials: [Credential]) {
@@ -178,17 +213,66 @@ final class MainViewModel: ObservableObject {
             .withCredentials(credentials)
             .build()
 
-        Task(priority: .background, operation: {
-            try await self.account.send(message: signingResponse, onAcknowledgement: {msgId, error in
-                print("sent signing response with id: \(msgId) error: \(error)")
-            })
-        })
+        self.sendKMPMessage(message: signingResponse) { messageId, error in
+            print("sent signing response with id: \(messageId) error: \(error)")
+        }
     }
     
-    func handleVerificationRequest(verificationRequest: VerificationRequest) {
-        // assume we will accept the request immediately
+    private func handleIncomingMessage(_ message: ChatMessage) {
+        print("🎯 ContentView: 📥 Received incoming message of type: \(type(of: message))")
+//        let messageContent = chatMessage.message()
+//        let fromAddress = chatMessage.fromIdentifier()
+//        print("🎯 ContentView: 💬 Chat message from
+//              
+//        if let chatMessage = message as? ChatMessage {
+//            handleIncomingChatMessage(chatMessage)
+//        } else if let credentialMessage = message as? CredentialMessage {
+//            self.handleIncomingCredentialMessage(credentialMessage)
+//            
+//        } else {
+//            print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
+//        }
+    }
+    
+    private func handleIncomingCredentialMessage(_ credentialMessage: CredentialMessage) {
+        let messageContent = credentialMessage.credentials()
+        let fromAddress = credentialMessage.fromIdentifier()
         
-        self.respondToVerificationRequest(verificationRequest: verificationRequest, status: .accepted, credentials: [])
+        print("🎯 ContentView: 💬 Credential message from \(fromAddress): '\(messageContent)'")
+        // Chat messages are informational, no specific action needed
+//        withAnimation(.easeInOut(duration: 0.5)) {
+//            currentScreen = .getCustomCredentialResult(success: true)
+//        }
+    }
+    
+    private func handleVerificationRequest(verificationRequest: VerificationRequest) {
+        
+    }
+
+    private func handleCredentialRequest(credentialRequest: CredentialRequest) {
+        let fromAddress = credentialRequest.fromIdentifier()
+        print("🎯 ContentView: 🎫 Credential request from \(fromAddress)")
+        currentCredentialRequest = credentialRequest
+        
+        let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
+        let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Passport) ?? false
+        let customCredential = credentialRequest.details().first?.types().contains("CustomerCredential") ?? false
+        
+        if emailCredential {
+            self.notifyAppScreen(screen: .shareEmailStart)
+        } else if documentCredential {
+            self.notifyAppScreen(screen: .shareDocumentStart)
+        } else if customCredential {
+            self.notifyAppScreen(screen: .shareCredentialCustomStart)
+        }else {
+            self.notifyAppScreen(screen: .authStart)
+        }
+    }
+    
+    private func notifyAppScreen(screen: AppScreen) {
+        Task { @MainActor in
+            appScreen = screen
+        }
     }
     
     func respondToVerificationRequest(verificationRequest: VerificationRequest, status: ResponseStatus, credentials: [Credential]) {
@@ -203,11 +287,9 @@ final class MainViewModel: ObservableObject {
             .withCredentials(credentials)
             .build()
 
-        Task(priority: .background, operation: {
-            try await self.account.send(message: verificationResponse, onAcknowledgement: {msgId, error in
-                print("sent verification response with id: \(msgId) error: \(error)")
-            })
-        })
+        self.sendKMPMessage(message: verificationResponse) { messageId, error in
+            print("sent verification response with id: \(messageId) error: \(error)")
+        }
     }
     
     func lfcFlow() {
@@ -309,8 +391,12 @@ final class MainViewModel: ObservableObject {
     
     func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus, completion: ((String, Error?) -> Void)? = nil) {
         print("responseToCredentialRequest: \(credentialRequest?.id())")
+        var temp = credentialRequest
+        if temp == nil {
+            temp = currentCredentialRequest
+        }
         
-        guard let credentialRequest = credentialRequest else {
+        guard let credentialRequest = temp else {
             print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
             return
         }

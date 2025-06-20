@@ -17,6 +17,36 @@ import SwiftUI
 import ui_components
 import self_ios_sdk
 
+enum AppScreen: Equatable {
+    case initialization
+    case registrationIntro
+    case serverConnection
+    case serverConnectionProcessing(serverAddress: String)
+    case actionSelection
+    case verifyCredential
+    case verifyEmailStart
+    case verifyEmailResult
+    case verifyDocumentStart
+    case verifyDocumentResult
+    case getCustomCredentialStart
+    case getCustomCredentialResult(success: Bool)
+    case shareCredential
+    case shareEmailStart
+    case shareEmailResult(success: Bool)
+    case shareDocumentStart
+    case shareDocumentResult(success: Bool)
+    case shareCredentialCustomStart
+    case shareCredentialCustomResult(success: Bool)
+    case authStart
+    case authResult
+    case docSignStart
+    case docSignResult(success: Bool)
+    case backupStart
+    case backupResult(success: Bool)
+    case restoreStart
+    case restoreResult(success: Bool)
+}
+
 struct ContentView: View {
     
     @EnvironmentObject var viewModel: MainViewModel
@@ -53,39 +83,13 @@ struct ContentView: View {
     @State private var fileToShareURLs: [URL] = []
     @State private var showShareSheet = false
     
-    
-    enum AppScreen {
-        case initialization
-        case registrationIntro
-        case serverConnection
-        case serverConnectionProcessing(serverAddress: String)
-        case actionSelection
-        case verifyCredential
-        case verifyEmailStart
-        case verifyEmailResult
-        case verifyDocumentStart
-        case verifyDocumentResult
-        case getCustomCredentialStart
-        case getCustomCredentialResult(success: Bool)
-        case shareCredential
-        case shareEmailStart
-        case shareEmailResult(success: Bool)
-        case shareDocumentStart
-        case shareDocumentResult(success: Bool)
-        case shareCredentialCustomStart
-        case shareCredentialCustomResult(success: Bool)
-        case authStart
-        case authResult
-        case docSignStart
-        case docSignResult(success: Bool)
-        case backupStart
-        case backupResult(success: Bool)
-        case restoreStart
-        case restoreResult(success: Bool)
-    }
-    
     var body: some View {
         ZStack {
+            Color.white.onChange(of: viewModel.appScreen) { appScreen in
+                print("AppScreen: \(appScreen)")
+                setCurrentAppScreen(screen: appScreen)
+            }
+            
             Group {
                 switch currentScreen {
                 case .initialization:
@@ -135,7 +139,7 @@ struct ContentView: View {
                                         UserDefaults.standard.set(true, forKey: "isServerConnected")
                                         UserDefaults.standard.set(serverAddress, forKey: "connectedServerAddress")
                                         // Set up message listener for incoming requests
-                                        setupMessageListener()
+                                        viewModel.setupMessageListener()
                                         // Show success toast since this is first visit after connection
                                         showConnectionSuccessToast = true
                                         withAnimation(.easeInOut(duration: 0.5)) {
@@ -154,7 +158,7 @@ struct ContentView: View {
                             UserDefaults.standard.set(true, forKey: "isServerConnected")
                             UserDefaults.standard.set(serverAddress, forKey: "connectedServerAddress")
                             // Set up message listener for incoming requests
-                            setupMessageListener()
+                            viewModel.setupMessageListener()
                             // Show success toast since this is first visit after connection
                             showConnectionSuccessToast = true
                             withAnimation(.easeInOut(duration: 0.5)) {
@@ -319,18 +323,13 @@ struct ContentView: View {
                     }
                 case .shareEmailStart:
                     ShareEmailCredentialScreen(credentialName: "Email") {
-                        // approve
-                        self.sendEmailCredentialResponse(responseStatus: .accepted)
-                        // Navigate to result screen
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .shareEmailResult(success: true)
-                        }
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
+                        
+                        self.setCurrentAppScreen(screen: .shareEmailResult(success: true))
+                        
                     } onDeny: {
-                        self.sendEmailCredentialResponse(responseStatus: .rejected)
-                        // Navigate to result screen
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .shareEmailResult(success: false)
-                        }
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected)
+                        self.setCurrentAppScreen(screen: .shareEmailResult(success: false))
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
@@ -541,6 +540,12 @@ struct ContentView: View {
         }
     }
     
+    private func setCurrentAppScreen(screen: AppScreen) {
+        withAnimation(.easeInOut(duration: 0.5)) {
+            currentScreen = screen
+        }
+    }
+    
     private func determineNextScreen(account: Account) {
         print("🎯 ContentView: Determining next screen based on account status...")
         
@@ -572,7 +577,7 @@ struct ContentView: View {
             if isRegistered && isServerConnected {
                 print("🎯 ContentView: Account registered AND server connected, navigating to ACTION_SELECTION")
                 // Set up message listener if we have a stored server connection
-                setupMessageListener()
+                viewModel.setupMessageListener()
                 // Don't show connection success toast since user is already connected
                 showConnectionSuccessToast = false
                 currentScreen = .actionSelection
@@ -919,31 +924,6 @@ struct ContentView: View {
         }
     }
     
-    private func sendEmailCredentialResponse(responseStatus: ResponseStatus = .accepted) {
-        guard let account = initializedAccount else {
-            print("Account is nil.")
-            return
-        }
-        
-        guard let credentialRequest = currentCredentialRequest else {
-            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
-            return
-        }
-        
-        
-        let storedCredentials = account.lookUpCredentials(claims: credentialRequest.details())
-        
-        let credentialResponse = CredentialResponse.Builder()
-            .withRequestId(credentialRequest.id())
-            .withTypes(credentialRequest.types())
-            .toIdentifier(credentialRequest.toIdentifier())
-            .withStatus(responseStatus)
-            .withCredentials(storedCredentials)
-            .build()
-        viewModel.sendKMPMessage(message: credentialResponse) { messageId, error in
-        }
-    }
-    
     private func sendCredentialResponse(account: Account, credentials: [Credential]) {
         print("🔐 ContentView: Sending credential response back to server...")
         
@@ -1017,33 +997,6 @@ struct ContentView: View {
                 showToastMessage("Failed to build document signing response: \(error.localizedDescription)")
             }
         }
-    }
-    
-    // MARK: - Message Handling
-    
-    private func setupMessageListener() {
-        guard let account = initializedAccount else {
-            print("🎯 ContentView: ⚠️ Cannot setup message listener - no account available")
-            return
-        }
-        
-        print("🎯 ContentView: 📚 Setting up message listener...")
-        
-        // Set up request listener for credential and verification requests
-        account.setOnRequestListener { request in
-            Task { @MainActor in
-                handleIncomingRequest(request)
-            }
-        }
-        
-        // Also set up message listener for other message types
-        account.setOnMessageListener { message in
-            Task { @MainActor in
-                handleIncomingMessage(message)
-            }
-        }
-        
-        print("🎯 ContentView: ✅ Message listeners configured successfully")
     }
     
     private func handleIncomingRequest(_ request: Any) {
@@ -1182,6 +1135,6 @@ struct ContentView: View {
     }
 }
 
-//#Preview {
-//    ContentView()
-//}
+#Preview {
+    ContentView()
+}
