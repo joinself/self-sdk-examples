@@ -72,6 +72,8 @@ struct ContentView: View {
         case shareEmailResult(success: Bool)
         case shareDocumentStart
         case shareDocumentResult(success: Bool)
+        case shareCredentialCustomStart
+        case shareCredentialCustomResult(success: Bool)
         case authStart
         case authResult
         case docSignStart
@@ -356,6 +358,35 @@ struct ContentView: View {
                     
                 case .shareDocumentResult(let success):
                     ShareDocumentCredentialResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                    
+                case .shareCredentialCustomStart:
+                    ShareCredentialStartScreen(credentialName: "Custom Credential") {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted) { messageId, error in
+                            if error == nil {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    currentScreen = .shareCredentialCustomResult(success: true)
+                                }
+                            } else {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    currentScreen = .shareCredentialCustomResult(success: false)
+                                }
+                            }
+                        }
+                    } onDeny: {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected)
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
+                    
+                case .shareCredentialCustomResult(let success):
+                    ShareEmailCredentialResultScreen(success: success) {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
                         }
@@ -1056,6 +1087,7 @@ struct ContentView: View {
         showServerRequestOverlay = false
         let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
         let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Passport) ?? false
+        let customCredential = credentialRequest.details().first?.types().contains("CustomerCredential") ?? false
         
         if emailCredential {
             withAnimation(.easeInOut(duration: 0.5)) {
@@ -1064,6 +1096,10 @@ struct ContentView: View {
         } else if documentCredential {
             withAnimation(.easeInOut(duration: 0.5)) {
                 currentScreen = .shareDocumentStart
+            }
+        } else if customCredential {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .shareCredentialCustomStart
             }
         }else {
             withAnimation(.easeInOut(duration: 0.5)) {

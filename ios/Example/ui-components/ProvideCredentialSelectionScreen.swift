@@ -97,6 +97,15 @@ public struct ProvideCredentialSelectionScreen: View {
                                         onActionSelected(.identityDocument)
                                     }
                                 )
+                                
+                                ActionCardView(
+                                    icon: "person.crop.rectangle.stack.fill",
+                                    title: "Share Custom Credential",
+                                    description: "Provide proof of your verified custom credential",
+                                    action: {
+                                        onActionSelected(.customCredential)
+                                    }
+                                )
                             }
                         }
                         .padding(.horizontal, 20)
@@ -145,7 +154,7 @@ public struct ProvideCredentialSelectionScreen: View {
 
 #Preview {
     ProvideCredentialSelectionScreen(
-        showConnectionSuccess: true,
+        showConnectionSuccess: false,
         onActionSelected: { actionType in
             print("Preview: Selected action: \(actionType)")
         }, onBack: {
