@@ -46,6 +46,7 @@ struct ContentView: View {
     @State private var showVerifyDocument: Bool = false
     
     // backup & restore
+    @State private var isBackingUp = false
     @State private var showDocumentPicker = false
     @State private var selectedFileName: String?
     @State private var selectedFileURLs: [URL] = []
@@ -374,12 +375,14 @@ struct ContentView: View {
                     
                     // MARK: Backup & Restore
                 case .backupStart:
-                    BackupAccountStartScreen {
+                    BackupAccountStartScreen(isProcessing: isBackingUp) {
+                        self.isBackingUp = true
                         viewModel.backup { backupFile in
                             // open share extension to save file
                             if let url = backupFile {
                                 fileToShareURLs = [url]
                             }
+                            self.isBackingUp = false
                             
                             withAnimation(.easeInOut(duration: 0.5)) {
                                 currentScreen = .backupResult(success: backupFile != nil)
@@ -410,7 +413,12 @@ struct ContentView: View {
                     }
                     
                 case .restoreStart:
-                    Text("RestoreStart")
+                    RestoreAccountStartScreen {
+                        
+                    } onBack: {
+                        
+                    }
+
                 
                 case .restoreResult(let success):
                     Text("RestoreResult: \(success)")

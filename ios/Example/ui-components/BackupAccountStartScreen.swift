@@ -6,10 +6,12 @@
 import SwiftUI
 
 public struct BackupAccountStartScreen: View {
+    @State private var isProcessing = false
     let onNext: () -> Void
     let onBack: () -> Void
     
-    public init(onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+    public init(isProcessing: Bool = false, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.isProcessing = isProcessing
         self.onNext = onNext
         self.onBack = onBack
     }
@@ -106,18 +108,25 @@ public struct BackupAccountStartScreen: View {
                     Button(action: {
                         onNext()
                     }) {
-                        Text("Start Backup Process")
+                        HStack {
+                            if isProcessing {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.8)
+                                Text("Processing...")
+                            } else {
+                                Text("Start Backup Process")
+                            }
+                        }
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color.blue)
+                        .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
                         .cornerRadius(12)
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
-                    
-                    
                 }
             }
         }

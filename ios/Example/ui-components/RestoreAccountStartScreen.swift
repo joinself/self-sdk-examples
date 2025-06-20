@@ -6,13 +6,11 @@
 import SwiftUI
 
 public struct RestoreAccountStartScreen: View {
-    @State private var showingRegistration = false
     @State private var isProcessing = false
     @State private var errorMessage: String? = nil
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(showingRegistration: Bool = false, isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.showingRegistration = showingRegistration
+    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
         self.isProcessing = isProcessing
         self.errorMessage = errorMessage
         self.onNext = onNext
