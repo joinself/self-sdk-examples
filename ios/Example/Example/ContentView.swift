@@ -65,6 +65,8 @@ struct ContentView: View {
         case verifyEmailResult
         case verifyDocumentStart
         case verifyDocumentResult
+        case getCustomCredentialStart
+        case getCustomCredentialResult(success: Bool)
         case shareCredential
         case shareEmailStart
         case shareEmailResult(success: Bool)
@@ -191,6 +193,10 @@ struct ContentView: View {
                             withAnimation(.easeInOut(duration: 0.5)) {
                                 currentScreen = .verifyDocumentStart
                             }
+                        } else if credentialActionType == .customCredential {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .getCustomCredentialStart
+                            }
                         }
                         
                     } onBack: {
@@ -274,6 +280,26 @@ struct ContentView: View {
                         }
                     }
 
+                case .getCustomCredentialStart:
+                    VerifyCustomCredentialsStartScreen {
+                        self.sendCustomCredentialRequest()
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
+                case .getCustomCredentialResult(let success):
+                    VerifyCustomCredentialsResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
                     
                 case .shareCredential:
                     ProvideCredentialSelectionScreen { credentialActionType in
@@ -282,8 +308,7 @@ struct ContentView: View {
                         } else if credentialActionType == .identityDocument {
                             self.sendIDNumberCredentialRequest()
                         } else if credentialActionType == .customCredential {
-                            // TODO: GET Custom Credential
-                            
+                            self.requestCredentialCustomRequest()
                         }
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
@@ -633,6 +658,58 @@ struct ContentView: View {
         }
     }
     
+    private func requestCredentialCustomRequest() {
+        print("🔐 ContentView: Sending custom credential request message to server...")
+        
+        guard let serverAddress = connectedServerAddress else {
+            print("🔐 ContentView: ❌ Cannot send message - no server connected")
+            showServerRequestOverlay = false
+            showToastMessage("No server connected. Please connect to a server first.")
+            return
+        }
+        
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Get custom credentials request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send custom credentials request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ custom credentials request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+            }
+        }
+    }
+    
+    private func sendCustomCredentialRequest() {
+        print("🔐 ContentView: Sending custom credential request message to server...")
+        
+        guard let serverAddress = connectedServerAddress else {
+            print("🔐 ContentView: ❌ Cannot send message - no server connected")
+            showServerRequestOverlay = false
+            showToastMessage("No server connected. Please connect to a server first.")
+            return
+        }
+        
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Get custom credentials request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send custom credentials request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ custom credentials request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+            }
+        }
+    }
+    
     private func sendIDNumberCredentialRequest() {
         print("🔐 ContentView: Sending ID Number credential request message to server...")
         
@@ -955,6 +1032,9 @@ struct ContentView: View {
         
         if let chatMessage = message as? ChatMessage {
             handleIncomingChatMessage(chatMessage)
+        } else if let credentialMessage = message as? CredentialMessage {
+            self.handleIncomingCredentialMessage(credentialMessage)
+            
         } else {
             print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
         }
@@ -1016,6 +1096,17 @@ struct ContentView: View {
         let fromAddress = chatMessage.fromIdentifier()
         print("🎯 ContentView: 💬 Chat message from \(fromAddress): '\(messageContent)'")
         // Chat messages are informational, no specific action needed
+    }
+    
+    private func handleIncomingCredentialMessage(_ credentialMessage: CredentialMessage) {
+        let messageContent = credentialMessage.credentials()
+        let fromAddress = credentialMessage.fromIdentifier()
+        
+        print("🎯 ContentView: 💬 Credential message from \(fromAddress): '\(messageContent)'")
+        // Chat messages are informational, no specific action needed
+        withAnimation(.easeInOut(duration: 0.5)) {
+            currentScreen = .getCustomCredentialResult(success: true)
+        }
     }
     
     private func showToastMessage(_ message: String) {
