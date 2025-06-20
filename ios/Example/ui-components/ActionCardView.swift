@@ -88,7 +88,7 @@ public struct ActionCardView: View {
 #Preview {
     VStack {
         ActionCardView(
-            icon: "shield.pattern.checkered",
+            icon: "shield",
             title: "Authenticate",
             description: "Use your biometric credentials to securely log in to services",
             action: {

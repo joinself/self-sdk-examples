@@ -14,6 +14,15 @@ struct CredentialItem: Identifiable {
     var claims: [Claim]
 }
 
+struct SERVER_REQUESTS {
+    static let REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
+    static let REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
+    static let REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
+    static let REQUEST_CREDENTIAL_CUSTOM: String = "PROVIDE_CREDENTIAL_CUSTOM"
+    static let REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
+    static let REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
+}
+
 final class MainViewModel: ObservableObject {
     @Published var isOnboardingCompleted: Bool = false
     
@@ -24,6 +33,8 @@ final class MainViewModel: ObservableObject {
     @Published var isConnecting = true
     @Published var connectionError: String? = nil
     @Published var hasTimedOut = false
+    
+    @Published var serverAddress:String?
     
     init() {
         // Initialize SDK
@@ -222,6 +233,7 @@ final class MainViewModel: ObservableObject {
     // MARK: - Server connection
     func connectToSelfServer(serverAddress: String, completion: @escaping((Bool) -> Void)) async {
         print("🌐 ServerConnectionProcessing: Connecting to Self server with address: \(serverAddress)")
+        self.serverAddress = serverAddress
         
         // Check if we already timed out
         if !isConnecting {
@@ -262,6 +274,60 @@ final class MainViewModel: ObservableObject {
         }
     }
     
+    func notifyServerForRequest(message: String, completion: @escaping((String, Error?) -> Void)) {
+        guard let serverAddress = serverAddress else {
+            print("serverAddress is nil.")
+            return
+        }
+        
+        let chatMessage = ChatMessage.Builder()
+            .toIdentifier(serverAddress)
+            .fromIdentifier(account.generateAddress())
+            .withMessage(message)
+            .build()
+
+        // send chat to server
+        self.sendKMPMessage(message: chatMessage) { messageId, error in
+            completion(messageId, error)
+        }
+    }
+    
+    func sendKMPMessage(message: Message, completion: ((_ messageId: String, _ error: Error?) -> ())? = nil) {
+        Task(priority: .background, operation: {
+            try await self.account.send(message: message, onAcknowledgement: {msgId, error in
+                print("message sent: \(msgId)")
+                if let error = error {
+                    print("🔐 MainViewModel ❌ message send failed: \(error)")
+                } else {
+                    print("🔐 MainViewModel: ✅ message sent successfully with ID: \(msgId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+                completion?(msgId, error)
+            })
+        })
+    }
+    
+    func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus) {
+        print("responseToCredentialRequest: \(credentialRequest?.id())")
+        
+        guard let credentialRequest = credentialRequest else {
+            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
+            return
+        }
+        
+        
+        let storedCredentials = account.lookUpCredentials(claims: credentialRequest.details())
+        
+        let credentialResponse = CredentialResponse.Builder()
+            .withRequestId(credentialRequest.id())
+            .withTypes(credentialRequest.types())
+            .toIdentifier(credentialRequest.toIdentifier())
+            .withStatus(responseStatus)
+            .withCredentials(storedCredentials)
+            .build()
+        self.sendKMPMessage(message: credentialResponse) { messageId, error in
+        }
+    }
     
     // MARK: - Backup & Restore
     func backup(completion: ((URL?) -> Void)? = nil) {
@@ -284,7 +350,10 @@ final class MainViewModel: ObservableObject {
                 let credentials = try await account.restore(backupFile: backupFile, selfieImage: selfieData)
                 print("Restore complete with error: \(credentials.count)")
                 if credentials.count > 0  {
-                    // register sandbox
+                    // register sandbox if needed
+                    Task { @MainActor in
+                        completion?(true)
+                    }
                 } else {
                     Task { @MainActor in
                         completion?(false)

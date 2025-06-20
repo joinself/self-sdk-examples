@@ -1,22 +1,18 @@
 //
-//  RegistrationIntroScreen.swift
+//  BackupAccountStartScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public struct RegistrationIntroScreen: View {
-    @State private var showingRegistration = false
-    @State private var isProcessing = false
-    @State private var errorMessage: String? = nil
-    
+public struct BackupAccountResultScreen: View {
+    let success: Bool
     let onNext: () -> Void
-    let onRestore: () -> Void
-    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onRestore: @escaping () -> Void) {
-        self.isProcessing = isProcessing
-        self.errorMessage = errorMessage
+    let onBack: () -> Void
+    public init(success: Bool, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.success = success
         self.onNext = onNext
-        self.onRestore = onRestore
+        self.onBack = onBack
     }
     
     public var body: some View {
@@ -25,12 +21,12 @@ public struct RegistrationIntroScreen: View {
                 // DEBUG Header
                 HStack {
                     Button {
-                        onRestore()
+                        onBack()
                     } label: {
-                        Text("Restore Account")
+                        Image(systemName: "arrow.left")
                             .foregroundStyle(Color.white)
                     }
-                    Text("DEBUG: REGISTRATION_INTRO")
+                    Text("DEBUG: BACKUP_ACCOUNT_INTRO")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                     Spacer()
@@ -46,34 +42,39 @@ public struct RegistrationIntroScreen: View {
                         // User Icon
                         ZStack {
                             Circle()
-                                .fill(Color.blue)
+                                .fill(success ? Color.blue : .gray)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "person.fill")
+                            Image(systemName: success ? "checkmark.icloud.fill" : "exclamationmark.icloud")
                                 .font(.system(size: 40))
-                                .foregroundColor(.white)
+                                .foregroundColor(success ? .white : .red)
                         }
                         .padding(.top, 40)
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Register Your Account")
+                            Text(success ? "Backup Successful" : "Backup Failed!")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Complete a quick liveness check to securely register your Self account")
+                            Text("Your account data has been securely backed up by the Self system.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
+                        
+                        CardView(icon: "info.circle.fill",
+                                 iconColor: .green,
+                                 borderColor: .green,
+                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("What to Expect")
+                            Text("How Backup Works")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -82,87 +83,55 @@ public struct RegistrationIntroScreen: View {
                         VStack(spacing: 20) {
                             ExpectationStepView(
                                 stepNumber: 1,
-                                title: "Camera Access",
-                                description: "We'll ask for camera permission when you start"
+                                title: "Prepare Data",
+                                description: "Your essestial account data is prepared for backup."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 2,
-                                title: "Position Your Face",
-                                description: "Look directly at the camera and follow on-screen instructions"
+                                title: "Encrypt & Secure",
+                                description: "The data is strongly encrypted, and the Self system sets up secure recovery protocols."
+                            )
+                            
+                            ExpectationStepView(
+                                stepNumber: 3,
+                                title: "Backup Complete",
+                                description: "Your encrypted data is backed up. You can restore it later through idenity verification."
                             )
                         }
                     }
                     .padding(.horizontal, 20)
                     
                     // Privacy Protection Section
-                    CardView(icon: "lock.fill", title: "Your Privacy is Protected", description: "All biometric data is processed securely and never stored permanently. Your face data is used only for account registration and then discarded.")
                     
 //                    Spacer(minLength: 40)
                     
                     // Start Registration Button
                     Button(action: {
-                        startRegistration()
+                        onNext()
                     }) {
-                        HStack {
-                            if isProcessing {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                                Text("Processing...")
-                            } else {
-                                Text("Start Registration")
-                            }
-                        }
+                        Text("Done")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
+                        .background(Color.blue)
                         .cornerRadius(12)
                     }
-                    .disabled(isProcessing)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                     
-                    // Error Message
-                    if let error = errorMessage {
-                        Text("Error: \(error)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 20)
-                    }
                 }
             }
         }
-//        .ignoresSafeArea()
+        
         .background(Color.white)
-        .onAppear {
-            checkRegistrationStatus()
-        }
-    }
-    
-    private func checkRegistrationStatus() {
-//        guard let account = account else { return }
-//        
-//        if account.registered() {
-//            print("🎬 RegistrationIntroScreen: Account already registered on appear, navigating to server connection")
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                onRegistrationComplete()
-//            }
-//        }
-    }
-    
-    private func startRegistration() {
-        onNext()
     }
 }
 
 #Preview {
-    RegistrationIntroScreen(onNext: {
-            
-        }) {
-            // restore
-        }
+    VStack {
+        BackupAccountResultScreen(success: true, onNext: {}, onBack: {})
+        BackupAccountResultScreen(success: false, onNext: {}, onBack: {})
+    }
 }

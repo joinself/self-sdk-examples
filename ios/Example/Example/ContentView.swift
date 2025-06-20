@@ -45,6 +45,15 @@ struct ContentView: View {
     @State private var showVerifyEmail: Bool = false
     @State private var showVerifyDocument: Bool = false
     
+    // backup & restore
+    @State private var isBackingUp = false
+    @State private var showDocumentPicker = false
+    @State private var selectedFileName: String?
+    @State private var selectedFileURLs: [URL] = []
+    @State private var fileToShareURLs: [URL] = []
+    @State private var showShareSheet = false
+    
+    
     enum AppScreen {
         case initialization
         case registrationIntro
@@ -52,13 +61,23 @@ struct ContentView: View {
         case serverConnectionProcessing(serverAddress: String)
         case actionSelection
         case verifyCredential
+        case verifyEmailStart
         case verifyEmailResult
+        case verifyDocumentStart
         case verifyDocumentResult
         case shareCredential
+        case shareEmailStart
+        case shareEmailResult(success: Bool)
+        case shareDocumentStart
+        case shareDocumentResult(success: Bool)
         case authStart
         case authResult
         case docSignStart
         case docSignResult(success: Bool)
+        case backupStart
+        case backupResult(success: Bool)
+        case restoreStart
+        case restoreResult(success: Bool)
     }
     
     var body: some View {
@@ -72,9 +91,6 @@ struct ContentView: View {
                     })
                 case .registrationIntro:
                     RegistrationIntroScreen {
-                        // FIXME: Should remove this callback
-                    } onNext: {
-                        // TODO:  register account
                         // start registration
                         viewModel.registerAccount { success in
                             viewModel.accountRegistered = success
@@ -82,15 +98,12 @@ struct ContentView: View {
                                 currentScreen = .serverConnection
                             }
                         }
+                    } onRestore: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .restoreStart
+                        }
                     }
-
-//                    RegistrationIntroScreen(
-//                        onRegistrationComplete: {
-//                            withAnimation(.easeInOut(duration: 0.5)) {
-//                                currentScreen = .serverConnection
-//                            }
-//                        }
-//                    )
+                    
                 case .serverConnection:
                     ServerConnectionScreen(
                         onConnectToServer: { serverAddress in
@@ -170,12 +183,25 @@ struct ContentView: View {
                     VerifyCredentialSelectionScreen { credentialActionType in
                         if credentialActionType == .emailAddress {
                             // show verify email flow
-                            showVerifyEmail = true
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .verifyEmailStart
+                            }
                         } else if credentialActionType == .identityDocument {
                             // show verify document flow
-                            showVerifyDocument = true
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .verifyDocumentStart
+                            }
                         }
                         
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                    
+                case .verifyEmailStart:
+                    VerifyEmailStartScreen {
+                        showVerifyEmail = true
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
@@ -198,6 +224,26 @@ struct ContentView: View {
                             }
                         })
                     })
+                    
+                case .verifyEmailResult:
+                    VerifyEmailResultScreen {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+
+                case .verifyDocumentStart:
+                    VerifyDocumentStartScreen {
+                        showVerifyDocument = true
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
                     .fullScreenCover(isPresented: $showVerifyDocument, onDismiss: {
                         // dismiss view
                     }, content: {
@@ -217,17 +263,6 @@ struct ContentView: View {
                         })
                     })
                     
-                case .verifyEmailResult:
-                    VerifyEmailResultScreen {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
-                    } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
-                    }
-
                 case .verifyDocumentResult:
                     VerifyDocumentResultScreen {
                         withAnimation(.easeInOut(duration: 0.5)) {
@@ -243,10 +278,11 @@ struct ContentView: View {
                 case .shareCredential:
                     ProvideCredentialSelectionScreen { credentialActionType in
                         if credentialActionType == .emailAddress {
-                            // TODO: Share verified email address
-                            
+                            self.sendEmailCredentialRequest()
                         } else if credentialActionType == .identityDocument {
-                            // TODO: Share verified identity document
+                            self.sendIDNumberCredentialRequest()
+                        } else if credentialActionType == .customCredential {
+                            // TODO: GET Custom Credential
                             
                         }
                     } onBack: {
@@ -254,8 +290,51 @@ struct ContentView: View {
                             currentScreen = .actionSelection
                         }
                     }
+                case .shareEmailStart:
+                    ShareEmailCredentialScreen(credentialName: "Email") {
+                        // approve
+                        self.sendEmailCredentialResponse(responseStatus: .accepted)
+                        // Navigate to result screen
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .shareEmailResult(success: true)
+                        }
+                    } onDeny: {
+                        self.sendEmailCredentialResponse(responseStatus: .rejected)
+                        // Navigate to result screen
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .shareEmailResult(success: false)
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
 
+                case .shareEmailResult(let success):
+                    ShareEmailCredentialResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                
+                case .shareDocumentStart:
+                    ShareDocumentCredentialStartScreen(credentialName: "") {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted)
+                    } onDeny: {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected)
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
 
+                    
+                case .shareDocumentResult(let success):
+                    ShareDocumentCredentialResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
                     
                 case .authStart:
                     AuthStartScreen(
@@ -293,6 +372,89 @@ struct ContentView: View {
                             }
                         }
                     )
+                    
+                    // MARK: Backup & Restore
+                case .backupStart:
+                    BackupAccountStartScreen(isProcessing: isBackingUp) {
+                        self.isBackingUp = true
+                        viewModel.backup { backupFile in
+                            // open share extension to save file
+                            if let url = backupFile {
+                                fileToShareURLs = [url]
+                            }
+                            self.isBackingUp = false
+                            
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .backupResult(success: backupFile != nil)
+                            }
+                        }
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                
+                case .backupResult(let success):
+                    BackupAccountResultScreen(success: success) {
+                        // share backup file
+                        showShareSheet = true
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .actionSelection
+                        }
+                    }
+                    .sheet(isPresented: $showShareSheet) {
+                        ShareSheet(items: fileToShareURLs) {
+                            self.showShareSheet = false
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                currentScreen = .actionSelection
+                            }
+                        }
+                    }
+                    
+                case .restoreStart:
+                    RestoreAccountStartScreen {
+                        showDocumentPicker = true
+                    } onBack: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .registrationIntro
+                        }
+                    }
+                    .onChange(of: self.selectedFileURLs, perform: { newValue in
+                        print("Files change: \(newValue)")
+                        if let url = newValue.first, url.pathExtension == "self_backup" {
+                            // handle restore account
+                            if url.startAccessingSecurityScopedResource() {
+                                print("startAccessingSecurityScopedResource")
+                            }
+                            
+                            // 1. Do liveness to get liveness's selfie image
+                            SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
+                                print("showLivenessCheck credentials: \(credentials)")
+                                viewModel.restore(selfieData: selfieImageData, backupFile: url) { success in
+                                    print("Restore account finished: \(success)")
+                                    withAnimation(.easeInOut(duration: 0.5)) {
+                                        currentScreen = .restoreResult(success: success)
+                                    }
+                                }
+                            })
+                        }
+                    })
+                    .sheet(isPresented: $showDocumentPicker) {
+                        DocumentPicker(selectedFileName: $selectedFileName, selectedFileURLs: $selectedFileURLs)
+                    }
+
+                
+                case .restoreResult(let success):
+                    RestoreAccountResultScreen(success: success) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentScreen = .serverConnection
+                        }
+                    } onBack: {
+                        
+                    }
+
+
                 }
             }
             
@@ -384,6 +546,11 @@ struct ContentView: View {
             }
         case .signDocuments:
             handleSignDocumentsAction()
+            
+        case .backup:
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .backupStart
+            }
         @unknown default:
             fatalError()
         }
@@ -392,17 +559,12 @@ struct ContentView: View {
     private func handleAuthenticateAction() {
         print("🔐 ContentView: Starting authentication flow...")
         
-        guard let account = initializedAccount else {
-            showToastMessage("Authentication requires an active account")
-            return
-        }
-        
         // Show overlay and spinner
         showServerRequestOverlay = true
         overlayMessage = "Waiting for authentication request..."
         
         // Send authentication request message to server
-        sendAuthenticationRequest(account: account)
+        sendAuthenticationRequest()
         
         // Start 5-second timeout
         serverRequestTimeoutTask = Task {
@@ -419,7 +581,7 @@ struct ContentView: View {
         }
     }
     
-    private func sendAuthenticationRequest(account: Account) {
+    private func sendAuthenticationRequest() {
         print("🔐 ContentView: Sending authentication request message to server...")
         
         guard let serverAddress = connectedServerAddress else {
@@ -429,30 +591,70 @@ struct ContentView: View {
             return
         }
         
-        Task {
-            do {
-                let chatMessage = ChatMessage.Builder()
-                    .toIdentifier(serverAddress)
-                    .fromIdentifier(account.generateAddress())
-                    .withMessage("REQUEST_CREDENTIAL_AUTH")
-                    .build()
-                
-                try await account.send(message: chatMessage, onAcknowledgement: { messageId, error in
-                    Task { @MainActor in
-                        if let error = error {
-                            print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
-                            showServerRequestOverlay = false
-                            showToastMessage("Failed to send authentication request: \(error.localizedDescription)")
-                        } else {
-                            print("🔐 ContentView: ✅ Authentication request sent successfully with ID: \(messageId)")
-                            // Message sent successfully, now waiting for server response via message listener
-                        }
-                    }
-                })
-            } catch {
-                print("🔐 ContentView: ❌ Failed to build authentication request: \(error)")
-                showServerRequestOverlay = false
-                showToastMessage("Failed to build authentication request: \(error.localizedDescription)")
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send authentication request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Authentication request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+            }
+        }
+    }
+    
+    private func sendEmailCredentialRequest() {
+        print("🔐 ContentView: Sending email request message to server...")
+        
+        guard let serverAddress = connectedServerAddress else {
+            print("🔐 ContentView: ❌ Cannot send message - no server connected")
+            showServerRequestOverlay = false
+            showToastMessage("No server connected. Please connect to a server first.")
+            return
+        }
+        
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Email credential request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send email credential request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Email credential request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
+            }
+        }
+    }
+    
+    private func sendIDNumberCredentialRequest() {
+        print("🔐 ContentView: Sending ID Number credential request message to server...")
+        
+        guard let serverAddress = connectedServerAddress else {
+            print("🔐 ContentView: ❌ Cannot send message - no server connected")
+            showServerRequestOverlay = false
+            showToastMessage("No server connected. Please connect to a server first.")
+            return
+        }
+        
+        // FIXME: Set server address to view model
+        viewModel.serverAddress = serverAddress
+        viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT) { messageId, error in
+            Task { @MainActor in
+                if let error = error {
+                    print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
+                    showServerRequestOverlay = false
+                    showToastMessage("Failed to send document credential request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Document credential request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
+                }
             }
         }
     }
@@ -609,6 +811,31 @@ struct ContentView: View {
         }
     }
     
+    private func sendEmailCredentialResponse(responseStatus: ResponseStatus = .accepted) {
+        guard let account = initializedAccount else {
+            print("Account is nil.")
+            return
+        }
+        
+        guard let credentialRequest = currentCredentialRequest else {
+            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
+            return
+        }
+        
+        
+        let storedCredentials = account.lookUpCredentials(claims: credentialRequest.details())
+        
+        let credentialResponse = CredentialResponse.Builder()
+            .withRequestId(credentialRequest.id())
+            .withTypes(credentialRequest.types())
+            .toIdentifier(credentialRequest.toIdentifier())
+            .withStatus(responseStatus)
+            .withCredentials(storedCredentials)
+            .build()
+        viewModel.sendKMPMessage(message: credentialResponse) { messageId, error in
+        }
+    }
+    
     private func sendCredentialResponse(account: Account, credentials: [Credential]) {
         print("🔐 ContentView: Sending credential response back to server...")
         
@@ -740,13 +967,28 @@ struct ContentView: View {
         // Store the credential request so we can respond to it later
         currentCredentialRequest = credentialRequest
         
+        // check credential request type
+        
         // Cancel timeout if waiting for auth request
         serverRequestTimeoutTask?.cancel()
         
         // Hide overlay and navigate to AUTH_START
         showServerRequestOverlay = false
-        withAnimation(.easeInOut(duration: 0.5)) {
-            currentScreen = .authStart
+        let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
+        let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Passport) ?? false
+        
+        if emailCredential {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .shareEmailStart
+            }
+        } else if documentCredential {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .shareDocumentStart
+            }
+        }else {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentScreen = .authStart
+            }
         }
     }
     

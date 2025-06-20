@@ -1,11 +1,11 @@
 //
-//  VerifyDocumentResultScreen.swift
+//  VerifyDocumentStartScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public struct VerifyDocumentResultScreen: View {
+public struct VerifyDocumentStartScreen: View {
     let onContinue: () -> Void
     let onBack: () -> Void
     
@@ -41,19 +41,19 @@ public struct VerifyDocumentResultScreen: View {
                     VStack(spacing: 24) {
                         // Shield with Checkmark Icon
                         ZStack {
-                            Image(systemName: "checkmark.circle.fill")
+                            Image(systemName: "person.text.rectangle.fill")
                                 .font(.system(size: 80))
                                 .foregroundColor(.blue)
                             
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.white)
+//                            Image(systemName: "checkmark")
+//                                .font(.system(size: 32, weight: .bold))
+//                                .foregroundColor(.white)
                         }
                         .padding(.top, 40)
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Document Verified Successfully!")
+                            Text("Identity Document Verification")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
@@ -116,7 +116,7 @@ public struct VerifyDocumentResultScreen: View {
                     Button(action: {
                         onContinue()
                     }) {
-                        Text("Continue")
+                        Text("Start Document Verification")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -135,7 +135,7 @@ public struct VerifyDocumentResultScreen: View {
 }
 
 #Preview {
-    VerifyDocumentResultScreen {
+    VerifyDocumentStartScreen {
         
     } onBack: {
         

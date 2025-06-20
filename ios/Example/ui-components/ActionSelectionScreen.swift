@@ -10,6 +10,7 @@ public enum ActionType {
     case verifyCredentials
     case provideCredentials
     case signDocuments
+    case backup
 }
 
 public struct ActionSelectionScreen: View {
@@ -111,6 +112,15 @@ public struct ActionSelectionScreen: View {
                                     description: "Securely review, sign, and share documents",
                                     action: {
                                         onActionSelected(.signDocuments)
+                                    }
+                                )
+                                
+                                ActionCardView(
+                                    icon: "icloud.and.arrow.up.fill",
+                                    title: "Backup",
+                                    description: "Create an encrypted backup of your account data",
+                                    action: {
+                                        onActionSelected(.backup)
                                     }
                                 )
                             }

@@ -1,22 +1,19 @@
 //
-//  RegistrationIntroScreen.swift
+//  BackupAccountStartScreen.swift
 //  ios-client
 //
 
 import SwiftUI
 
-public struct RegistrationIntroScreen: View {
-    @State private var showingRegistration = false
+public struct BackupAccountStartScreen: View {
     @State private var isProcessing = false
-    @State private var errorMessage: String? = nil
-    
     let onNext: () -> Void
-    let onRestore: () -> Void
-    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onRestore: @escaping () -> Void) {
+    let onBack: () -> Void
+    
+    public init(isProcessing: Bool = false, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
         self.isProcessing = isProcessing
-        self.errorMessage = errorMessage
         self.onNext = onNext
-        self.onRestore = onRestore
+        self.onBack = onBack
     }
     
     public var body: some View {
@@ -25,12 +22,12 @@ public struct RegistrationIntroScreen: View {
                 // DEBUG Header
                 HStack {
                     Button {
-                        onRestore()
+                        onBack()
                     } label: {
-                        Text("Restore Account")
+                        Image(systemName: "arrow.left")
                             .foregroundStyle(Color.white)
                     }
-                    Text("DEBUG: REGISTRATION_INTRO")
+                    Text("DEBUG: BACKUP_ACCOUNT_INTRO")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                     Spacer()
@@ -49,7 +46,7 @@ public struct RegistrationIntroScreen: View {
                                 .fill(Color.blue)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "person.fill")
+                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -57,23 +54,25 @@ public struct RegistrationIntroScreen: View {
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Register Your Account")
+                            Text("Secure Your Account")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Complete a quick liveness check to securely register your Self account")
+                            Text("Created an encrypted backup of your account data, manage by the Self system, to prevent data loss and enable easy recovery.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
+                        
+                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
                     }
                     
                     // What to Expect Section
                     VStack(alignment: .leading, spacing: 24) {
                         HStack {
-                            Text("What to Expect")
+                            Text("Backup Details")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                             Spacer()
@@ -82,27 +81,27 @@ public struct RegistrationIntroScreen: View {
                         VStack(spacing: 20) {
                             ExpectationStepView(
                                 stepNumber: 1,
-                                title: "Camera Access",
-                                description: "We'll ask for camera permission when you start"
+                                title: "System-Managed Recovery",
+                                description: "The Self system has secured your backup. Account recovery will involve idenity verification."
                             )
                             
                             ExpectationStepView(
                                 stepNumber: 2,
-                                title: "Position Your Face",
-                                description: "Look directly at the camera and follow on-screen instructions"
+                                title: "Data Encrypted",
+                                description: "Your account data was encrypted for securely."
+                            )
+                            
+                            ExpectationStepView(
+                                stepNumber: 3,
+                                title: "Secure Upload",
+                                description: "Encrypted data was uploaded and store securely."
                             )
                         }
                     }
                     .padding(.horizontal, 20)
                     
-                    // Privacy Protection Section
-                    CardView(icon: "lock.fill", title: "Your Privacy is Protected", description: "All biometric data is processed securely and never stored permanently. Your face data is used only for account registration and then discarded.")
-                    
-//                    Spacer(minLength: 40)
-                    
-                    // Start Registration Button
                     Button(action: {
-                        startRegistration()
+                        onNext()
                     }) {
                         HStack {
                             if isProcessing {
@@ -111,7 +110,7 @@ public struct RegistrationIntroScreen: View {
                                     .scaleEffect(0.8)
                                 Text("Processing...")
                             } else {
-                                Text("Start Registration")
+                                Text("Start Backup Process")
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -121,48 +120,21 @@ public struct RegistrationIntroScreen: View {
                         .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
                         .cornerRadius(12)
                     }
-                    .disabled(isProcessing)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
-                    
-                    // Error Message
-                    if let error = errorMessage {
-                        Text("Error: \(error)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 20)
-                    }
                 }
             }
         }
-//        .ignoresSafeArea()
         .background(Color.white)
-        .onAppear {
-            checkRegistrationStatus()
-        }
-    }
-    
-    private func checkRegistrationStatus() {
-//        guard let account = account else { return }
-//        
-//        if account.registered() {
-//            print("🎬 RegistrationIntroScreen: Account already registered on appear, navigating to server connection")
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                onRegistrationComplete()
-//            }
-//        }
-    }
-    
-    private func startRegistration() {
-        onNext()
     }
 }
 
 #Preview {
-    RegistrationIntroScreen(onNext: {
+    VStack {
+        BackupAccountStartScreen {
             
-        }) {
-            // restore
+        } onBack: {
+            
         }
+    }
 }
