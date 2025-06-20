@@ -1,0 +1,21 @@
+name: Publish - Self Demo (Docker)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:24.0.6-git
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Publish
+        shell: sh
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          cd java
+          docker build -t ghcr.io/joinself/self-demo:latest .
+          docker push ghcr.io/joinself/self-demo:latest
