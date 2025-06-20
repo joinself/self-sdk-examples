@@ -16,9 +16,16 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters.clear()
+            abiFilters.add("arm64-v8a")
+        }
     }
 
     buildTypes {
+        debug {
+
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -42,6 +49,13 @@ android {
         resources {
             excludes.addAll(listOf("META-INF/NOTICE", "META-INF/LICENSE", "META-INF/DEPENDENCIES", "META-INF/versions/9/OSGI-INF/MANIFEST.MF"))
         }
+        dex {
+            useLegacyPackaging = true
+        }
+    }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 }
 

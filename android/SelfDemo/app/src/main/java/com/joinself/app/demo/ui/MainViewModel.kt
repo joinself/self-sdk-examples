@@ -45,7 +45,7 @@ sealed class ServerRequestState {
     data object RequestSent : ServerRequestState()
     data object RequestReceived : ServerRequestState()
     data class  RequestError(val message: String) : ServerRequestState()
-    data class ResponseSent(val status: ResponseStatus) : ServerRequestState()
+    data class  ResponseSent(val status: ResponseStatus) : ServerRequestState()
 }
 sealed class BackupRestoreState {
     data object None: BackupRestoreState()
@@ -58,12 +58,12 @@ sealed class BackupRestoreState {
 
 sealed class SERVER_REQUESTS {
     companion object {
-        val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
-        val REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
-        val REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
-        val REQUEST_CREDENTIAL_CUSTOM: String = "PROVIDE_CREDENTIAL_CUSTOM"
-        val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
-        val REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
+        const val REQUEST_CREDENTIAL_AUTH: String = "REQUEST_CREDENTIAL_AUTH"
+        const val REQUEST_CREDENTIAL_EMAIL: String = "PROVIDE_CREDENTIAL_EMAIL"
+        const val REQUEST_CREDENTIAL_DOCUMENT: String = "PROVIDE_CREDENTIAL_DOCUMENT"
+        const val REQUEST_CREDENTIAL_CUSTOM: String = "PROVIDE_CREDENTIAL_CUSTOM"
+        const val REQUEST_DOCUMENT_SIGNING: String = "REQUEST_DOCUMENT_SIGNING"
+        const val REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
     }
 }
 
