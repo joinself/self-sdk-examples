@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.joinself.app.demo"
-        minSdk = 30
+        minSdk = 28
         versionCode = 1
         versionName = "1.0"
 
