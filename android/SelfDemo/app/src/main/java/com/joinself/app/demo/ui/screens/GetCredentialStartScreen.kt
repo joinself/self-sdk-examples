@@ -32,7 +32,7 @@ import com.joinself.app.demo.ui.theme.PrimaryButton
 fun GetCredentialStartScreen(
     onStartGettingCredentials: () -> Unit,
     modifier: Modifier = Modifier,
-    credentialName: String = "Digital Credential" // Example: "Proof of Age", "Membership ID"
+    credentialName: String = "Custom Credential" // Example: "Proof of Age", "Membership ID"
 ) {
     Column(
         modifier = modifier

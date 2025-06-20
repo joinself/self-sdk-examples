@@ -62,12 +62,16 @@ fun ShareCredentialApprovalScreen(
                 )
             }
 
+            val infoTitle = if (requestState is ServerRequestState.RequestSent) "Waiting for a request from server..."
+            else if (requestState is ServerRequestState.RequestReceived) "The server has requested access to your verified ${credentialType} credential. This is a secure, privacy-preserving request that doesn't expose your personal information."
+            else if (requestState is ServerRequestState.RequestError) "The request timed out. Please go back, check the server and try again."
+            else "Credential Request"
             item {
                 // Request details
                 InfoCard(
                     icon = Icons.Filled.Share,
                     title = "Server Request",
-                    message = if(requestState != ServerRequestState.RequestReceived) {"Waiting for a request from server..."} else {"The server has requested access to your verified ${credentialType} credential. This is a secure, privacy-preserving request that doesn't expose your personal information."},
+                    message = infoTitle,
                     type = AlertType.Info
                 )
             }

@@ -32,7 +32,7 @@ import com.joinself.app.demo.ui.theme.SecondaryButton
 @Composable
 fun GetCredentialResultScreen(
     isSuccess: Boolean = true,
-    credentialName: String = "Digital Credential",
+    credentialName: String = "Custom Credential",
     onContinue: () -> Unit, // Navigate to next screen (e.g., wallet, home)
     onRetry: (() -> Unit)? = null, // Optional: To retry the credential issuance
     modifier: Modifier = Modifier

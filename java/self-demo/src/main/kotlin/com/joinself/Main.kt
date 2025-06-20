@@ -166,7 +166,7 @@ fun main() {
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT -> {
                             val credentialRequest = CredentialPresentationRequestBuilder()
                                 .presentationType(arrayOf("VerifiablePresentation", "DocumentPresentation"))
-                                .details(arrayOf("VerifiableCredential","DocumentCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "documentNumber", "")))
+                                .details(arrayOf("VerifiableCredential","PassportCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "documentNumber", "")))
                                 .expires(Timestamp.now() + 3600)
                                 .finish()
                             val credentialRequestId = credentialRequest.id().toHexString()
@@ -183,7 +183,7 @@ fun main() {
                             val credentialRequestId = credentialRequest.id().toHexString()
 
                             val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
-                            println("send document credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
+                            println("send custom credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING -> {
                             val terms = "Agreement test"

@@ -19,6 +19,10 @@ fun AuthRequestStartScreen(
     onStartAuthentication: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val heroTitle = if (requestState is ServerRequestState.RequestSent) "Waiting for a request from server..."
+                    else if (requestState is ServerRequestState.RequestReceived) "The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity."
+                    else if (requestState is ServerRequestState.RequestError) "The request timed out. Please go back, check the server and try again."
+                    else "Authentication Request"
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -35,7 +39,7 @@ fun AuthRequestStartScreen(
                 HeroSection(
                     icon = Icons.Filled.Security,
                     title = "Authentication Request",
-                    subtitle = if(requestState != ServerRequestState.RequestReceived) { "Waiting for a request from server..."} else {"The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity."}
+                    subtitle = heroTitle
                 )
             }
 
