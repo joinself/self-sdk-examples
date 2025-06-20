@@ -22,10 +22,6 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.google")
             }
         }
-        println("path:${rootDir.parentFile.parentFile.parentFile.parentFile.path}")
-        maven("${rootDir.parentFile.parentFile.parentFile.parentFile.path}/repos/snapshots")
-        maven("${rootDir.parentFile.parentFile.parentFile.path}/repos/snapshots")
-        maven("${rootDir.path}/repos/snapshots")
         maven {
             name = "Central Portal Snapshots"
             url = uri("https://central.sonatype.com/repository/maven-snapshots/")
