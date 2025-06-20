@@ -6,15 +6,12 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    container:
-      image: docker:24.0.6-git
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
       - name: Publish
-        shell: sh
+        shell: bash
         run: |
-          sleep 3600
           . ${GITHUB_WORKSPACE}/.ci/env
 
           cd java
