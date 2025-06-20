@@ -17,9 +17,12 @@ import com.joinself.sdk.models.CredentialResponse
 import com.joinself.sdk.models.ResponseStatus
 import com.joinself.sdk.models.VerificationRequest
 import com.joinself.sdk.models.VerificationResponse
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,31 +30,30 @@ import java.io.File
 
 private const val TAG = "MainViewModel"
 
-
 sealed class InitializationState {
-    data object None : ServerState()
-    data object Loading : InitializationState()
-    data object Success : InitializationState()
-    data class  Error(val message: String) : InitializationState()
+    data object None: ServerState()
+    data object Loading: InitializationState()
+    data object Success: InitializationState()
+    data class  Error(val message: String): InitializationState()
 }
 sealed class ServerState {
-    data object None : ServerState()
-    data object Connecting : ServerState()
-    data object Success : ServerState()
-    data class  Error(val message: String) : ServerState()
+    data object None: ServerState()
+    data object Connecting: ServerState()
+    data object Success: ServerState()
+    data class  Error(val message: String): ServerState()
 }
 sealed class ServerRequestState {
-    data object None : ServerRequestState()
-    data object RequestSent : ServerRequestState()
-    data object RequestReceived : ServerRequestState()
-    data class  RequestError(val message: String) : ServerRequestState()
-    data class  ResponseSent(val status: ResponseStatus) : ServerRequestState()
+    data object None: ServerRequestState()
+    data object RequestSent: ServerRequestState()
+    data object RequestReceived: ServerRequestState()
+    data class  RequestError(val message: String): ServerRequestState()
+    data class  ResponseSent(val status: ResponseStatus): ServerRequestState()
 }
 sealed class BackupRestoreState {
     data object None: BackupRestoreState()
     data object Processing: BackupRestoreState()
     data object Success: BackupRestoreState()
-    data class  Error(val message: String) : BackupRestoreState()
+    data class  Error(val message: String): BackupRestoreState()
     data object VerificationFailed: BackupRestoreState()
     data object DataRecoveryFailed: BackupRestoreState()
 }
@@ -80,11 +82,13 @@ class MainViewModel(context: Context): ViewModel() {
     val appStateFlow: StateFlow<AppUiState> = _appUiState.asStateFlow()
 
     val account: Account
-    var groupAddress: String = ""
     var serverInboxAddress: String = ""
-    var credentialRequest: CredentialRequest? = null
-    var verificationRequest: VerificationRequest? = null
-    val receivedCredentials = mutableListOf<Credential>()
+    private var groupAddress: String = ""
+    private var credentialRequest: CredentialRequest? = null
+    private var verificationRequest: VerificationRequest? = null
+    private var requestTimeoutJob: Job? = null
+    private val receivedCredentials = mutableListOf<Credential>()
+
     init {
         // init the sdk
         SelfSDK.initialize(
@@ -128,6 +132,8 @@ class MainViewModel(context: Context): ViewModel() {
                     receivedCredentials.addAll(msg.credentials())
 
                     _appUiState.update { it.copy(requestState = ServerRequestState.RequestReceived) }
+
+                    cancelRequestTimeout()
                 }
             }
         }
@@ -146,6 +152,8 @@ class MainViewModel(context: Context): ViewModel() {
                     }
                 }
             }
+
+            cancelRequestTimeout()
         }
     }
 
@@ -197,6 +205,23 @@ class MainViewModel(context: Context): ViewModel() {
         account.send(chat) { messageId, _ ->
             _appUiState.update { it.copy(requestState = ServerRequestState.RequestSent) }
         }
+
+        startRequestTimeout()
+    }
+
+    /**
+     * Starts a timeout for a request.
+     * If the request is not received within 20 seconds, the request state is updated to [ServerRequestState.RequestError].
+     */
+    private fun startRequestTimeout() {
+        requestTimeoutJob = viewModelScope.launch(Dispatchers.IO) {
+            delay(20000)
+            if (_appUiState.value.requestState == ServerRequestState.RequestSent)
+                _appUiState.update { it.copy(requestState = ServerRequestState.RequestError("request timed out")) }
+        }
+    }
+    private fun cancelRequestTimeout() {
+        requestTimeoutJob?.cancel()
     }
 
     // send response for the received request
