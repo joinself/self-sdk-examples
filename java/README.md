@@ -63,9 +63,7 @@ Request email credentials from mobile
 
 Self Demo is a backend app for demonstrating platform features using the Self Demo mobile apps.
 
-### Usage
-
-#### Docker
+### Docker
 
 Quickest and easiest option.
 
@@ -76,7 +74,7 @@ Requirements:
 docker run -it ghcr.io/joinself/self-sdk-demo:latest
 ```
 
-#### Source
+### Source
 
 If you're looking to experiment with making changes to the backend app, building it from source is the way to go.
 
