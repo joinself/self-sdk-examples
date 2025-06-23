@@ -59,12 +59,31 @@ Request email credentials from mobile
 ./gradlew :credential:run
 ```
 
-### Self Demo
+## Self Demo
+
+Self Demo is a backend app for demonstrating platform features using the Self Demo mobile apps.
+
+### Docker
+
+Quickest and easiest option.
+
+Requirements:
+- Docker
+
+```bash
+docker run -it ghcr.io/joinself/self-sdk-demo:latest
+```
+
+### Source
+
+If you're looking to experiment with making changes to the backend app, building it from source is the way to go.
+
+Requirements:
+- Java 17
 
 ```bash
 ./gradlew :self-demo:run
 ```
-
 
 ## Notes
 
@@ -72,17 +91,4 @@ Run with debug, then attach debugger in Android Studio
 
 ```bash
 ./gradlew :agreement:run --debug-jvm
-```
-
-## Distribution
-
-- Build executable distribution 
-```bash
-./gradlew :self-demo:distZip # output build/distributions/self-demo.zip
-```
-
-- Unzip `self-demo.zip` & run
-```bash
-cd self-demo
-./bin/self-demo
 ```
