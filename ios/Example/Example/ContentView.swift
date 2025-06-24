@@ -184,6 +184,8 @@ struct ContentView: View {
                             // Reset the connection success toast flag after first visit
                             showConnectionSuccessToast = false
                             handleActionSelection(actionType)
+                        }, onBack: {
+                            self.setCurrentAppScreen(screen: .serverConnection)
                         }
                     )
                     
@@ -1135,6 +1137,6 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    ContentView()
-}
+//#Preview {
+//    ContentView()
+//}
