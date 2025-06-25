@@ -79,6 +79,9 @@ struct ContentView: View {
     @State private var fileToShareURLs: [URL] = []
     @State private var showShareSheet = false
     
+    @State private var isRestoring = false
+    @State private var isRegistering = false
+    
     var body: some View {
         ZStack {
             Color.white.onChange(of: viewModel.appScreen) { appScreen in
@@ -93,10 +96,12 @@ struct ContentView: View {
                         determineNextScreen()
                     })
                 case .registrationIntro:
-                    RegistrationIntroScreen {
+                    RegistrationIntroScreen(isProcessing: $isRegistering) {
                         // start registration
+                        self.isRegistering = true
                         viewModel.registerAccount { success in
                             viewModel.accountRegistered = success
+                            self.isRegistering = success
                             withAnimation(.easeInOut(duration: 0.5)) {
                                 currentScreen = .serverConnection
                             }
@@ -466,7 +471,7 @@ struct ContentView: View {
                     }
                     
                 case .restoreStart:
-                    RestoreAccountStartScreen {
+                    RestoreAccountStartScreen(isProcessing: $isRestoring) {
                         showDocumentPicker = true
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
@@ -484,8 +489,10 @@ struct ContentView: View {
                             // 1. Do liveness to get liveness's selfie image
                             SelfSDK.showLiveness(account: viewModel.account, showIntroduction: true, autoDismiss: true, isVerificationRequired: false, onResult: { selfieImageData, credentials, error in
                                 print("showLivenessCheck credentials: \(credentials)")
+                                self.isRestoring = true
                                 viewModel.restore(selfieData: selfieImageData, backupFile: url) { success in
                                     print("Restore account finished: \(success)")
+                                    self.isRestoring = false
                                     withAnimation(.easeInOut(duration: 0.5)) {
                                         currentScreen = .restoreResult(success: success)
                                     }

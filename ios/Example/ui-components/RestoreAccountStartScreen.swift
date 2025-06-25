@@ -6,12 +6,12 @@
 import SwiftUI
 
 public struct RestoreAccountStartScreen: View {
-    @State private var isProcessing = false
+    @Binding private var isProcessing: Bool
     @State private var errorMessage: String? = nil
     let onNext: () -> Void
     let onBack: () -> Void
-    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.isProcessing = isProcessing
+    public init(isProcessing: Binding<Bool> = .constant(false), errorMessage: String? = nil, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self._isProcessing = isProcessing
         self.errorMessage = errorMessage
         self.onNext = onNext
         self.onBack = onBack
@@ -47,7 +47,7 @@ public struct RestoreAccountStartScreen: View {
                                 .fill(Color.blue)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                            Image(systemName: "icloud.and.arrow.down")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -108,7 +108,7 @@ public struct RestoreAccountStartScreen: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                     .scaleEffect(0.8)
-                                Text("Processing...")
+                                Text("Restoring...")
                             } else {
                                 Text("Start Recover Your Account")
                             }
