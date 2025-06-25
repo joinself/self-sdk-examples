@@ -1,0 +1,28 @@
+name: Self Demo - Android
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'android/SelfDemo/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/joinself/docker/android-build:latest
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Publish
+        shell: bash
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          cd android/SelfDemo
+          ./gradlew :app:assembleDebug
+
+          gh release delete "android-latest" -y --cleanup-tag
+          gh release create "android-latest" --notes "" app/build/outputs/apk/debug/*.apk
