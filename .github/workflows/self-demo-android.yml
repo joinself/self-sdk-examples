@@ -18,6 +18,8 @@ jobs:
         uses: joinself/github-actions-public/setup-job@main
       - name: Publish
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
 
