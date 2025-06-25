@@ -27,4 +27,4 @@ jobs:
           ./gradlew :app:assembleDebug
 
           gh release delete "android-latest" -y --cleanup-tag || true
-          gh release create "android-latest" --notes "" app/build/outputs/apk/debug/*.apk
+          gh release create "android-latest" --latest=false --notes "" app/build/outputs/apk/debug/*.apk
