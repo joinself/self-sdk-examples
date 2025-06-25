@@ -23,6 +23,11 @@ struct SERVER_REQUESTS {
     static let REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
 }
 
+struct UserDefaultKeys {
+    static let isServerConnected = "isServerConnected"
+    static let connectedServerAddress = "connectedServerAddress"
+}
+
 final class MainViewModel: ObservableObject {
     @Published var isOnboardingCompleted: Bool = false
     
@@ -34,9 +39,13 @@ final class MainViewModel: ObservableObject {
     @Published var connectionError: String? = nil
     @Published var hasTimedOut = false
     
-    @Published var serverAddress:String?
+    private var serverAddress:String?
     @Published var appScreen: AppScreen = .initialization
+    private var isServerConnected: Bool = false
+    private var connectedServerAddress: String?
+    
     private var currentCredentialRequest: CredentialRequest? = nil
+    private var currentVerificationRequest: VerificationRequest? = nil
     
     init() {
         // Initialize SDK
@@ -49,6 +58,9 @@ final class MainViewModel: ObservableObject {
             .withStoragePath(FileManager.storagePath)
             .build()
         
+        isServerConnected = self.getServerConnected()
+        connectedServerAddress = self.getServerAddress()
+        serverAddress = connectedServerAddress
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             self.isInitialized = true
@@ -246,12 +258,17 @@ final class MainViewModel: ObservableObject {
     }
     
     private func handleVerificationRequest(verificationRequest: VerificationRequest) {
+        let fromAddress = verificationRequest.fromIdentifier()
+        print("🎯 MainViewModel: 🎫 Verification request from \(fromAddress)")
+        currentVerificationRequest = verificationRequest
         
+        // FIXME: Currently, we just assumed that the verification is document signing request
+        self.notifyAppScreen(screen: .docSignStart)
     }
 
     private func handleCredentialRequest(credentialRequest: CredentialRequest) {
         let fromAddress = credentialRequest.fromIdentifier()
-        print("🎯 ContentView: 🎫 Credential request from \(fromAddress)")
+        print("🎯 MainViewModel: 🎫 Credential request from \(fromAddress)")
         currentCredentialRequest = credentialRequest
         
         let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
@@ -275,8 +292,18 @@ final class MainViewModel: ObservableObject {
         }
     }
     
-    func respondToVerificationRequest(verificationRequest: VerificationRequest, status: ResponseStatus, credentials: [Credential]) {
-        print("respondToVerificationRequest: \(verificationRequest.id()) -> status: \(status)")
+    func respondToVerificationRequest(verificationRequest: VerificationRequest?, status: ResponseStatus, credentials: [Credential] = [], completion: ((String, Error?) -> Void)? = nil) {
+        print("respondToVerificationRequest: \(verificationRequest?.id()) -> status: \(status)")
+        
+        var temp = verificationRequest
+        if temp == nil {
+            temp = currentVerificationRequest
+        }
+        
+        guard let verificationRequest = temp else {
+            print("📄 MainViewModel: ❌ Cannot send verification response - no stored verification request")
+            return
+        }
         
         let verificationResponse = VerificationResponse.Builder()
             .withRequestId(verificationRequest.id())
@@ -289,6 +316,9 @@ final class MainViewModel: ObservableObject {
 
         self.sendKMPMessage(message: verificationResponse) { messageId, error in
             print("sent verification response with id: \(messageId) error: \(error)")
+            Task { @MainActor in
+                completion?(messageId, error)
+            }
         }
     }
     
@@ -362,6 +392,9 @@ final class MainViewModel: ObservableObject {
             return
         }
         
+        print("serverAddress: \(serverAddress)")
+        print("withMessage: \(message)")
+        
         let chatMessage = ChatMessage.Builder()
             .toIdentifier(serverAddress)
             .fromIdentifier(account.generateAddress())
@@ -389,7 +422,7 @@ final class MainViewModel: ObservableObject {
         })
     }
     
-    func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus, completion: ((String, Error?) -> Void)? = nil) {
+    func responseToCredentialRequest(credentialRequest: CredentialRequest? = nil, responseStatus: ResponseStatus, completion: ((String, Error?) -> Void)? = nil) {
         print("responseToCredentialRequest: \(credentialRequest?.id())")
         var temp = credentialRequest
         if temp == nil {
@@ -397,7 +430,7 @@ final class MainViewModel: ObservableObject {
         }
         
         guard let credentialRequest = temp else {
-            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
+            print("🔐 MainViewModel: ❌ Cannot send credential response - no stored credential request")
             return
         }
         
@@ -416,6 +449,29 @@ final class MainViewModel: ObservableObject {
                 completion?(messageId, error)
             }
         }
+    }
+    
+    func saveServerConnected(isConnected: Bool) {
+        // UserDefaults are app-sandboxed and automatically cleared on app uninstall
+        UserDefaults.standard.set(true, forKey: UserDefaultKeys.isServerConnected)
+    }
+    
+    func getServerConnected() -> Bool {
+        return UserDefaults.standard.bool(forKey: UserDefaultKeys.isServerConnected)
+    }
+    
+    func saveServerAddress(serverAddress: String) {
+        // UserDefaults are app-sandboxed and automatically cleared on app uninstall
+        UserDefaults.standard.set(serverAddress, forKey: UserDefaultKeys.connectedServerAddress)
+    }
+    
+    func getServerAddress() -> String? {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.connectedServerAddress)
+    }
+    
+    func resetUserDefaults() {
+        UserDefaults.standard.set(false, forKey: UserDefaultKeys.isServerConnected)
+        UserDefaults.standard.removeObject(forKey: UserDefaultKeys.connectedServerAddress)
     }
     
     // MARK: - Backup & Restore
