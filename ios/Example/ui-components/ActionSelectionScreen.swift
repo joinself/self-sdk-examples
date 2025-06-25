@@ -17,10 +17,12 @@ public struct ActionSelectionScreen: View {
     @State private var showSuccessToast: Bool
     
     let onActionSelected: (ActionType) -> Void
+    let onBack: (() -> Void)?
     
-    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (ActionType) -> Void) {
+    public init(showConnectionSuccess: Bool = false, onActionSelected: @escaping (ActionType) -> Void, onBack: (() -> Void)? = nil) {
         self.onActionSelected = onActionSelected
         self._showSuccessToast = State(initialValue: showConnectionSuccess)
+        self.onBack = onBack
     }
     
     public var body: some View {
@@ -29,6 +31,13 @@ public struct ActionSelectionScreen: View {
                 VStack(spacing: 0) {
                     // DEBUG Header
                     HStack {
+                        Button {
+                            onBack?()
+                        } label: {
+                            Image(systemName: "arrow.left")
+                                .foregroundStyle(Color.white)
+                        }
+                        
                         Text("DEBUG: ACTION_SELECTION")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white)

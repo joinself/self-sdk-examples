@@ -17,14 +17,40 @@ import SwiftUI
 import ui_components
 import self_ios_sdk
 
+enum AppScreen: Equatable {
+    case initialization
+    case registrationIntro
+    case serverConnection
+    case serverConnectionProcessing(serverAddress: String)
+    case actionSelection
+    case verifyCredential
+    case verifyEmailStart
+    case verifyEmailResult
+    case verifyDocumentStart
+    case verifyDocumentResult
+    case getCustomCredentialStart
+    case getCustomCredentialResult(success: Bool)
+    case shareCredential
+    case shareEmailStart
+    case shareEmailResult(success: Bool)
+    case shareDocumentStart
+    case shareDocumentResult(success: Bool)
+    case shareCredentialCustomStart
+    case shareCredentialCustomResult(success: Bool)
+    case authStart
+    case authResult
+    case docSignStart
+    case docSignResult(success: Bool)
+    case backupStart
+    case backupResult(success: Bool)
+    case restoreStart
+    case restoreResult(success: Bool)
+}
+
 struct ContentView: View {
     
     @EnvironmentObject var viewModel: MainViewModel
     @State private var currentScreen: AppScreen = .initialization
-    @State private var initializedAccount: Account? = nil
-    // Note: UserDefaults are automatically cleared when app is uninstalled (iOS sandbox behavior)
-    @State private var isServerConnected: Bool = UserDefaults.standard.bool(forKey: "isServerConnected")
-    @State private var connectedServerAddress: String? = UserDefaults.standard.string(forKey: "connectedServerAddress")
     
     // Track whether to show connection success toast on ActionSelectionScreen
     @State private var showConnectionSuccessToast: Bool = false
@@ -53,45 +79,18 @@ struct ContentView: View {
     @State private var fileToShareURLs: [URL] = []
     @State private var showShareSheet = false
     
-    
-    enum AppScreen {
-        case initialization
-        case registrationIntro
-        case serverConnection
-        case serverConnectionProcessing(serverAddress: String)
-        case actionSelection
-        case verifyCredential
-        case verifyEmailStart
-        case verifyEmailResult
-        case verifyDocumentStart
-        case verifyDocumentResult
-        case getCustomCredentialStart
-        case getCustomCredentialResult(success: Bool)
-        case shareCredential
-        case shareEmailStart
-        case shareEmailResult(success: Bool)
-        case shareDocumentStart
-        case shareDocumentResult(success: Bool)
-        case shareCredentialCustomStart
-        case shareCredentialCustomResult(success: Bool)
-        case authStart
-        case authResult
-        case docSignStart
-        case docSignResult(success: Bool)
-        case backupStart
-        case backupResult(success: Bool)
-        case restoreStart
-        case restoreResult(success: Bool)
-    }
-    
     var body: some View {
         ZStack {
+            Color.white.onChange(of: viewModel.appScreen) { appScreen in
+                print("AppScreen: \(appScreen)")
+                setCurrentAppScreen(screen: appScreen)
+            }
+            
             Group {
                 switch currentScreen {
                 case .initialization:
                     InitializeSDKScreen(isInitialized: $viewModel.isInitialized, onInitializationComplete: {
-                        initializedAccount = viewModel.account
-                        determineNextScreen(account: viewModel.account)
+                        determineNextScreen()
                     })
                 case .registrationIntro:
                     RegistrationIntroScreen {
@@ -129,18 +128,13 @@ struct ContentView: View {
                                     // connection completion
                                     if success {
                                         // Update server connection state and navigate to action selection
-                                        isServerConnected = true
-                                        connectedServerAddress = serverAddress
-                                        // UserDefaults are app-sandboxed and automatically cleared on app uninstall
-                                        UserDefaults.standard.set(true, forKey: "isServerConnected")
-                                        UserDefaults.standard.set(serverAddress, forKey: "connectedServerAddress")
-                                        // Set up message listener for incoming requests
-                                        setupMessageListener()
+                                        viewModel.saveServerConnected(isConnected: true)
+                                        viewModel.saveServerAddress(serverAddress: serverAddress)
                                         // Show success toast since this is first visit after connection
                                         showConnectionSuccessToast = true
-                                        withAnimation(.easeInOut(duration: 0.5)) {
-                                            currentScreen = .actionSelection
-                                        }
+                                        self.setCurrentAppScreen(screen: .actionSelection)
+                                    } else {
+                                        print("Server connection error!")
                                     }
                                 }
                             }
@@ -148,28 +142,14 @@ struct ContentView: View {
                         },
                         onConnectionComplete: {
                             // Update server connection state and navigate to action selection
-                            isServerConnected = true
-                            connectedServerAddress = serverAddress
-                            // UserDefaults are app-sandboxed and automatically cleared on app uninstall
-                            UserDefaults.standard.set(true, forKey: "isServerConnected")
-                            UserDefaults.standard.set(serverAddress, forKey: "connectedServerAddress")
-                            // Set up message listener for incoming requests
-                            setupMessageListener()
                             // Show success toast since this is first visit after connection
                             showConnectionSuccessToast = true
-                            withAnimation(.easeInOut(duration: 0.5)) {
-                                currentScreen = .actionSelection
-                            }
+                            self.setCurrentAppScreen(screen: .actionSelection)
                         },
                         onGoBack: {
                             // Reset connection state and go back to server connection screen
-                            isServerConnected = false
-                            connectedServerAddress = nil
-                            UserDefaults.standard.set(false, forKey: "isServerConnected")
-                            UserDefaults.standard.removeObject(forKey: "connectedServerAddress")
-                            withAnimation(.easeInOut(duration: 0.5)) {
-                                currentScreen = .serverConnection
-                            }
+                            self.viewModel.resetUserDefaults()
+                            self.setCurrentAppScreen(screen: .serverConnection)
                         }
                     )
                 case .actionSelection:
@@ -180,6 +160,9 @@ struct ContentView: View {
                             // Reset the connection success toast flag after first visit
                             showConnectionSuccessToast = false
                             handleActionSelection(actionType)
+                        }, onBack: {
+                            self.viewModel.resetUserDefaults()
+                            self.setCurrentAppScreen(screen: .serverConnection)
                         }
                     )
                     
@@ -306,7 +289,11 @@ struct ContentView: View {
                 case .shareCredential:
                     ProvideCredentialSelectionScreen { credentialActionType in
                         if credentialActionType == .emailAddress {
-                            self.sendEmailCredentialRequest()
+                            self.sendEmailCredentialRequest { success in
+                                if success {
+                                    self.setCurrentAppScreen(screen: .shareEmailStart)
+                                }
+                            }
                         } else if credentialActionType == .identityDocument {
                             self.sendIDNumberCredentialRequest()
                         } else if credentialActionType == .customCredential {
@@ -319,18 +306,13 @@ struct ContentView: View {
                     }
                 case .shareEmailStart:
                     ShareEmailCredentialScreen(credentialName: "Email") {
-                        // approve
-                        self.sendEmailCredentialResponse(responseStatus: .accepted)
-                        // Navigate to result screen
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .shareEmailResult(success: true)
-                        }
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
+                        
+                        self.setCurrentAppScreen(screen: .shareEmailResult(success: true))
+                        
                     } onDeny: {
-                        self.sendEmailCredentialResponse(responseStatus: .rejected)
-                        // Navigate to result screen
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .shareEmailResult(success: false)
-                        }
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected)
+                        self.setCurrentAppScreen(screen: .shareEmailResult(success: false))
                     } onBack: {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
@@ -411,10 +393,25 @@ struct ContentView: View {
                 case .docSignStart:
                     DocSignStartScreen(
                         onSignDocument: {
-                            startDocumentSigning()
+//                            startDocumentSigning()
+                            viewModel.respondToVerificationRequest(verificationRequest: nil, status: .accepted, completion: { messageId, error in
+                                if error == nil {
+                                    self.setCurrentAppScreen(screen: .docSignResult(success: true))
+                                } else {
+                                    self.setCurrentAppScreen(screen: .docSignResult(success: false))
+                                }
+                            })
                         },
                         onRejectDocument: {
-                            rejectDocumentSigning()
+                            //rejectDocumentSigning()
+                            viewModel.respondToVerificationRequest(verificationRequest: nil, status: .rejected, completion: { messageId, error in
+                                // FIXME: This should be doc sign rejected
+                                if error == nil {
+                                    self.setCurrentAppScreen(screen: .docSignResult(success: true))
+                                } else {
+                                    self.setCurrentAppScreen(screen: .docSignResult(success: false))
+                                }
+                            })
                         }
                     )
                 case .docSignResult(let success):
@@ -431,7 +428,7 @@ struct ContentView: View {
                     
                     // MARK: Backup & Restore
                 case .backupStart:
-                    BackupAccountStartScreen(isProcessing: isBackingUp) {
+                    BackupAccountStartScreen(isProcessing: $isBackingUp) {
                         self.isBackingUp = true
                         viewModel.backup { backupFile in
                             // open share extension to save file
@@ -541,16 +538,22 @@ struct ContentView: View {
         }
     }
     
-    private func determineNextScreen(account: Account) {
+    private func setCurrentAppScreen(screen: AppScreen) {
+        withAnimation(.easeInOut(duration: 0.5)) {
+            currentScreen = screen
+        }
+    }
+    
+    private func determineNextScreen() {
         print("🎯 ContentView: Determining next screen based on account status...")
         
         // Check if account is registered
-        let isRegistered = account.registered()
+        let isRegistered = viewModel.accountIsRegistered()//account.registered()
         print("🎯 ContentView: Account registered: \(isRegistered)")
         
         // Check stored connection state and validate it
-        let storedConnectionState = UserDefaults.standard.bool(forKey: "isServerConnected")
-        let storedServerAddress = UserDefaults.standard.string(forKey: "connectedServerAddress")
+        let storedConnectionState = viewModel.getServerConnected()
+        let storedServerAddress =  viewModel.getServerAddress()
         print("🎯 ContentView: Stored server connection state: \(storedConnectionState)")
         print("🎯 ContentView: Stored server address: \(storedServerAddress ?? "nil")")
         
@@ -559,12 +562,11 @@ struct ContentView: View {
         if storedConnectionState && storedServerAddress == nil {
             print("🎯 ContentView: ⚠️ Inconsistent state: connection marked as true but no server address. Resetting connection state.")
             // Reset inconsistent state
-            UserDefaults.standard.set(false, forKey: "isServerConnected")
-            UserDefaults.standard.removeObject(forKey: "connectedServerAddress")
+            viewModel.resetUserDefaults()
         }
         
-        isServerConnected = hasValidConnection
-        connectedServerAddress = storedServerAddress
+        let isServerConnected = hasValidConnection
+        let connectedServerAddress = storedServerAddress
         print("🎯 ContentView: Final server connected state: \(isServerConnected)")
         print("🎯 ContentView: Final server address: \(connectedServerAddress ?? "nil")")
         
@@ -572,7 +574,7 @@ struct ContentView: View {
             if isRegistered && isServerConnected {
                 print("🎯 ContentView: Account registered AND server connected, navigating to ACTION_SELECTION")
                 // Set up message listener if we have a stored server connection
-                setupMessageListener()
+                viewModel.setupMessageListener()
                 // Don't show connection success toast since user is already connected
                 showConnectionSuccessToast = false
                 currentScreen = .actionSelection
@@ -591,7 +593,13 @@ struct ContentView: View {
     private func handleActionSelection(_ actionType: ActionType) {
         switch actionType {
         case .authenticate:
-            handleAuthenticateAction()
+            self.notifyServerForRequest(requestMessage: SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH) { messageId, error in
+                if error == nil {
+                    print("Notify server for AUTH success with messageId: \(messageId)")
+                } else {
+                    print("Notify server for AUTH error: \(error)")
+                }
+            }
         case .verifyCredentials:
             handleVerifyCredentials()
         case .provideCredentials:
@@ -601,7 +609,14 @@ struct ContentView: View {
                 currentScreen = .shareCredential
             }
         case .signDocuments:
-            handleSignDocumentsAction()
+            self.setCurrentAppScreen(screen: .docSignStart)
+            self.notifyServerForRequest(requestMessage: SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING) { messageId, error in
+                if error == nil {
+                    print("Notify server for REQUEST_DOCUMENT_SIGNING success with messageId: \(messageId)")
+                } else {
+                    print("Notify server for REQUEST_DOCUMENT_SIGNING error: \(String(describing: error))")
+                }
+            }
             
         case .backup:
             withAnimation(.easeInOut(duration: 0.5)) {
@@ -612,26 +627,19 @@ struct ContentView: View {
         }
     }
     
-    private func handleAuthenticateAction() {
-        print("🔐 ContentView: Starting authentication flow...")
-        
-        // Show overlay and spinner
+    private func notifyServerForRequest(requestMessage: String, completion: @escaping ((String, Error?) -> Void)) {
         showServerRequestOverlay = true
-        overlayMessage = "Waiting for authentication request..."
-        
-        // Send authentication request message to server
-        sendAuthenticationRequest()
-        
-        // Start 5-second timeout
-        serverRequestTimeoutTask = Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
-            
-            await MainActor.run {
-                if showServerRequestOverlay {
-                    // Timeout occurred
-                    print("🔐 ContentView: Authentication request timed out")
+        viewModel.notifyServerForRequest(message: requestMessage) { messageId, error in
+            Task { @MainActor in
+                completion(messageId, error)
+                self.showServerRequestOverlay = false
+                if let error = error {
+                    print("🔐 ContentView: ❌ Authentication request send failed: \(error)")
                     showServerRequestOverlay = false
-                    showToastMessage("Authentication request timed out. Please try again.")
+                    showToastMessage("Failed to send authentication request: \(error.localizedDescription)")
+                } else {
+                    print("🔐 ContentView: ✅ Authentication request sent successfully with ID: \(messageId)")
+                    // Message sent successfully, now waiting for server response via message listener
                 }
             }
         }
@@ -639,16 +647,6 @@ struct ContentView: View {
     
     private func sendAuthenticationRequest() {
         print("🔐 ContentView: Sending authentication request message to server...")
-        
-        guard let serverAddress = connectedServerAddress else {
-            print("🔐 ContentView: ❌ Cannot send message - no server connected")
-            showServerRequestOverlay = false
-            showToastMessage("No server connected. Please connect to a server first.")
-            return
-        }
-        
-        // FIXME: Set server address to view model
-        viewModel.serverAddress = serverAddress
         viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH) { messageId, error in
             Task { @MainActor in
                 if let error = error {
@@ -663,27 +661,19 @@ struct ContentView: View {
         }
     }
     
-    private func sendEmailCredentialRequest() {
+    private func sendEmailCredentialRequest(completion: ((Bool) -> Void)? = nil) {
         print("🔐 ContentView: Sending email request message to server...")
-        
-        guard let serverAddress = connectedServerAddress else {
-            print("🔐 ContentView: ❌ Cannot send message - no server connected")
-            showServerRequestOverlay = false
-            showToastMessage("No server connected. Please connect to a server first.")
-            return
-        }
-        
-        // FIXME: Set server address to view model
-        viewModel.serverAddress = serverAddress
         viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL) { messageId, error in
             Task { @MainActor in
                 if let error = error {
                     print("🔐 ContentView: ❌ Email credential request send failed: \(error)")
                     showServerRequestOverlay = false
                     showToastMessage("Failed to send email credential request: \(error.localizedDescription)")
+                    completion?(false)
                 } else {
                     print("🔐 ContentView: ✅ Email credential request sent successfully with ID: \(messageId)")
                     // Message sent successfully, now waiting for server response via message listener
+                    completion?(true)
                 }
             }
         }
@@ -691,16 +681,6 @@ struct ContentView: View {
     
     private func requestCredentialCustomRequest() {
         print("🔐 ContentView: Sending custom credential request message to server...")
-        
-        guard let serverAddress = connectedServerAddress else {
-            print("🔐 ContentView: ❌ Cannot send message - no server connected")
-            showServerRequestOverlay = false
-            showToastMessage("No server connected. Please connect to a server first.")
-            return
-        }
-        
-        // FIXME: Set server address to view model
-        viewModel.serverAddress = serverAddress
         viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM) { messageId, error in
             Task { @MainActor in
                 if let error = error {
@@ -717,16 +697,6 @@ struct ContentView: View {
     
     private func sendCustomCredentialRequest() {
         print("🔐 ContentView: Sending custom credential request message to server...")
-        
-        guard let serverAddress = connectedServerAddress else {
-            print("🔐 ContentView: ❌ Cannot send message - no server connected")
-            showServerRequestOverlay = false
-            showToastMessage("No server connected. Please connect to a server first.")
-            return
-        }
-        
-        // FIXME: Set server address to view model
-        viewModel.serverAddress = serverAddress
         viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL) { messageId, error in
             Task { @MainActor in
                 if let error = error {
@@ -743,16 +713,6 @@ struct ContentView: View {
     
     private func sendIDNumberCredentialRequest() {
         print("🔐 ContentView: Sending ID Number credential request message to server...")
-        
-        guard let serverAddress = connectedServerAddress else {
-            print("🔐 ContentView: ❌ Cannot send message - no server connected")
-            showServerRequestOverlay = false
-            showToastMessage("No server connected. Please connect to a server first.")
-            return
-        }
-        
-        // FIXME: Set server address to view model
-        viewModel.serverAddress = serverAddress
         viewModel.notifyServerForRequest(message: SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT) { messageId, error in
             Task { @MainActor in
                 if let error = error {
@@ -770,13 +730,8 @@ struct ContentView: View {
     private func startAuthenticationLivenessCheck() {
         print("🔐 ContentView: Starting authentication liveness check with SelfUI")
         
-        guard let account = initializedAccount else {
-            showToastMessage("Authentication requires an active account")
-            return
-        }
-        
         // Use SelfUI to perform liveness check
-        SelfSDK.showLiveness(account: account) { data, credentials, error in
+        SelfSDK.showLiveness(account: viewModel.account) { data, credentials, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("🔐 ContentView: ❌ Authentication liveness check failed: \(error)")
@@ -787,12 +742,11 @@ struct ContentView: View {
                     print("🔐 ContentView: Received \(credentials.count) credentials")
                     
                     // Send credential response back to server
-                    sendCredentialResponse(account: account, credentials: credentials)
+//                    sendCredentialResponse(account: account, credentials: credentials)
+                    viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
                     
                     // Navigate to result screen
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        currentScreen = .authResult
-                    }
+                    self.setCurrentAppScreen(screen: .authResult)
                 }
             }
         }
@@ -808,7 +762,7 @@ struct ContentView: View {
     
     // MARK: - Document Signing Methods
     
-    private func handleSignDocumentsAction() {
+    /*private func handleSignDocumentsAction() {
         print("📄 ContentView: Starting document signing flow...")
         
         guard let account = initializedAccount else {
@@ -836,8 +790,9 @@ struct ContentView: View {
                 }
             }
         }
-    }
+    }*/
     
+    /*
     private func sendDocumentSigningRequest(account: Account) {
         print("📄 ContentView: Sending document signing request message to server...")
         
@@ -875,7 +830,9 @@ struct ContentView: View {
             }
         }
     }
+    */
     
+    /*
     private func startDocumentSigning() {
         print("📄 ContentView: Starting document signing with Self SDK")
         
@@ -898,7 +855,9 @@ struct ContentView: View {
             }
         }
     }
+    */
     
+    /*
     private func rejectDocumentSigning() {
         print("📄 ContentView: User rejected document signing")
         
@@ -917,32 +876,7 @@ struct ContentView: View {
                 currentScreen = .docSignResult(success: false)
             }
         }
-    }
-    
-    private func sendEmailCredentialResponse(responseStatus: ResponseStatus = .accepted) {
-        guard let account = initializedAccount else {
-            print("Account is nil.")
-            return
-        }
-        
-        guard let credentialRequest = currentCredentialRequest else {
-            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
-            return
-        }
-        
-        
-        let storedCredentials = account.lookUpCredentials(claims: credentialRequest.details())
-        
-        let credentialResponse = CredentialResponse.Builder()
-            .withRequestId(credentialRequest.id())
-            .withTypes(credentialRequest.types())
-            .toIdentifier(credentialRequest.toIdentifier())
-            .withStatus(responseStatus)
-            .withCredentials(storedCredentials)
-            .build()
-        viewModel.sendKMPMessage(message: credentialResponse) { messageId, error in
-        }
-    }
+    }*/
     
     private func sendCredentialResponse(account: Account, credentials: [Credential]) {
         print("🔐 ContentView: Sending credential response back to server...")
@@ -1017,33 +951,6 @@ struct ContentView: View {
                 showToastMessage("Failed to build document signing response: \(error.localizedDescription)")
             }
         }
-    }
-    
-    // MARK: - Message Handling
-    
-    private func setupMessageListener() {
-        guard let account = initializedAccount else {
-            print("🎯 ContentView: ⚠️ Cannot setup message listener - no account available")
-            return
-        }
-        
-        print("🎯 ContentView: 📚 Setting up message listener...")
-        
-        // Set up request listener for credential and verification requests
-        account.setOnRequestListener { request in
-            Task { @MainActor in
-                handleIncomingRequest(request)
-            }
-        }
-        
-        // Also set up message listener for other message types
-        account.setOnMessageListener { message in
-            Task { @MainActor in
-                handleIncomingMessage(message)
-            }
-        }
-        
-        print("🎯 ContentView: ✅ Message listeners configured successfully")
     }
     
     private func handleIncomingRequest(_ request: Any) {
@@ -1171,14 +1078,8 @@ struct ContentView: View {
     /// It only clears app-level state, not Self SDK internal state (keys, credentials).
     private func clearAllAppState() {
         print("🧹 ContentView: Clearing all app-specific persistent state")
-        UserDefaults.standard.removeObject(forKey: "isServerConnected")
-        UserDefaults.standard.removeObject(forKey: "connectedServerAddress")
-        isServerConnected = false
-        connectedServerAddress = nil
-        
         // Reset to initial screen
         currentScreen = .initialization
-        initializedAccount = nil
     }
 }
 

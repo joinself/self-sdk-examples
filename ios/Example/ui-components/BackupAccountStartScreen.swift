@@ -6,12 +6,12 @@
 import SwiftUI
 
 public struct BackupAccountStartScreen: View {
-    @State private var isProcessing = false
+    @Binding private var isProcessing: Bool
     let onNext: () -> Void
     let onBack: () -> Void
     
-    public init(isProcessing: Bool = false, onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.isProcessing = isProcessing
+    public init(isProcessing: Binding<Bool> = .constant(false), onNext: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self._isProcessing = isProcessing
         self.onNext = onNext
         self.onBack = onBack
     }
@@ -46,7 +46,7 @@ public struct BackupAccountStartScreen: View {
                                 .fill(Color.blue)
                                 .frame(width: 80, height: 80)
                             
-                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                            Image(systemName: "icloud.and.arrow.up")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -66,7 +66,11 @@ public struct BackupAccountStartScreen: View {
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
+                        
+                        CardView(icon: "info.circle.fill",
+                                 iconColor: .accentColor,
+                                 borderColor: .accentColor,
+                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
                     }
                     
                     // What to Expect Section
@@ -108,7 +112,7 @@ public struct BackupAccountStartScreen: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                     .scaleEffect(0.8)
-                                Text("Processing...")
+                                Text("Backing up...")
                             } else {
                                 Text("Start Backup Process")
                             }

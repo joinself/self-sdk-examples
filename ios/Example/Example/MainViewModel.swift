@@ -23,6 +23,11 @@ struct SERVER_REQUESTS {
     static let REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
 }
 
+struct UserDefaultKeys {
+    static let isServerConnected = "isServerConnected"
+    static let connectedServerAddress = "connectedServerAddress"
+}
+
 final class MainViewModel: ObservableObject {
     @Published var isOnboardingCompleted: Bool = false
     
@@ -34,7 +39,13 @@ final class MainViewModel: ObservableObject {
     @Published var connectionError: String? = nil
     @Published var hasTimedOut = false
     
-    @Published var serverAddress:String?
+    private var serverAddress:String?
+    @Published var appScreen: AppScreen = .initialization
+    private var isServerConnected: Bool = false
+    private var connectedServerAddress: String?
+    
+    private var currentCredentialRequest: CredentialRequest? = nil
+    private var currentVerificationRequest: VerificationRequest? = nil
     
     init() {
         // Initialize SDK
@@ -47,7 +58,21 @@ final class MainViewModel: ObservableObject {
             .withStoragePath(FileManager.storagePath)
             .build()
         
+        isServerConnected = self.getServerConnected()
+        connectedServerAddress = self.getServerAddress()
+        serverAddress = connectedServerAddress
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.isInitialized = true
+        }
+        
         // add listener
+        setupMessageListener()
+    }
+    
+    // MARK: - Message Handling
+    
+    func setupMessageListener() {
         account.setOnInfoRequest { (key: String) in
             print("setOnInfoRequest: \(key)")
         }
@@ -74,12 +99,16 @@ final class MainViewModel: ObservableObject {
             switch message {
             case is ChatMessage:
                 let chatMessage = message as! ChatMessage
+                //self.handleIncomingChatMessage(chatMessage)
 
+            case is CredentialMessage:
+                let credentialMessage = message as! CredentialMessage
+                self.handleIncomingCredentialMessage(credentialMessage)
             case is Receipt:
                 let receipt = message as! Receipt
 
             default:
-                print("TODO: Handle For Message: \(message)")
+                print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
                 break
             }
         }
@@ -89,6 +118,7 @@ final class MainViewModel: ObservableObject {
             switch message {
             case is CredentialRequest:
                 let credentialRequest = message as! CredentialRequest
+                self.handleCredentialRequest(credentialRequest: credentialRequest)
 
             case is VerificationRequest:
                 let verificationRequest = message as! VerificationRequest
@@ -100,7 +130,7 @@ final class MainViewModel: ObservableObject {
                 self.handleSigningRequest(signingRequest: signingRequest)
 
             default:
-                print("TODO: Handle For Request: \(message)")
+                print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
                 break
             }
         }
@@ -112,14 +142,33 @@ final class MainViewModel: ObservableObject {
                 let response = message as! CredentialResponse
 
             default:
-                print("TODO: Handle For Response: \(message)")
+                print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
                 break;
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            self.isInitialized = true
+        /*guard let account = initializedAccount else {
+            print("🎯 ContentView: ⚠️ Cannot setup message listener - no account available")
+            return
         }
+        
+        print("🎯 ContentView: 📚 Setting up message listener...")
+        
+        // Set up request listener for credential and verification requests
+        account.setOnRequestListener { request in
+            Task { @MainActor in
+                handleIncomingRequest(request)
+            }
+        }
+        
+        // Also set up message listener for other message types
+        account.setOnMessageListener { message in
+            Task { @MainActor in
+                handleIncomingMessage(message)
+            }
+        }*/
+        
+        print("🎯 MainViewModel: ✅ Message listeners configured successfully")
     }
     
     // transform credential into credential item to perform identifiable to display inside a List
@@ -162,9 +211,7 @@ final class MainViewModel: ObservableObject {
     }
     
     func handleSigningRequest(signingRequest: SigningRequest) {
-        // assume we will accept the request immediately
         
-        self.respondToSigningRequest(signingRequest: signingRequest, status: .accepted, credentials: [])
     }
     
     func respondToSigningRequest(signingRequest: SigningRequest, status: ResponseStatus, credentials: [Credential]) {
@@ -178,21 +225,85 @@ final class MainViewModel: ObservableObject {
             .withCredentials(credentials)
             .build()
 
-        Task(priority: .background, operation: {
-            try await self.account.send(message: signingResponse, onAcknowledgement: {msgId, error in
-                print("sent signing response with id: \(msgId) error: \(error)")
-            })
-        })
+        self.sendKMPMessage(message: signingResponse) { messageId, error in
+            print("sent signing response with id: \(messageId) error: \(error)")
+        }
     }
     
-    func handleVerificationRequest(verificationRequest: VerificationRequest) {
-        // assume we will accept the request immediately
+    private func handleIncomingMessage(_ message: ChatMessage) {
+        print("🎯 ContentView: 📥 Received incoming message of type: \(type(of: message))")
+//        let messageContent = chatMessage.message()
+//        let fromAddress = chatMessage.fromIdentifier()
+//        print("🎯 ContentView: 💬 Chat message from
+//              
+//        if let chatMessage = message as? ChatMessage {
+//            handleIncomingChatMessage(chatMessage)
+//        } else if let credentialMessage = message as? CredentialMessage {
+//            self.handleIncomingCredentialMessage(credentialMessage)
+//            
+//        } else {
+//            print("🎯 ContentView: ❓ Unknown message type: \(type(of: message))")
+//        }
+    }
+    
+    private func handleIncomingCredentialMessage(_ credentialMessage: CredentialMessage) {
+        let messageContent = credentialMessage.credentials()
+        let fromAddress = credentialMessage.fromIdentifier()
         
-        self.respondToVerificationRequest(verificationRequest: verificationRequest, status: .accepted, credentials: [])
+        print("🎯 ContentView: 💬 Credential message from \(fromAddress): '\(messageContent)'")
+        // Chat messages are informational, no specific action needed
+//        withAnimation(.easeInOut(duration: 0.5)) {
+//            currentScreen = .getCustomCredentialResult(success: true)
+//        }
     }
     
-    func respondToVerificationRequest(verificationRequest: VerificationRequest, status: ResponseStatus, credentials: [Credential]) {
-        print("respondToVerificationRequest: \(verificationRequest.id()) -> status: \(status)")
+    private func handleVerificationRequest(verificationRequest: VerificationRequest) {
+        let fromAddress = verificationRequest.fromIdentifier()
+        print("🎯 MainViewModel: 🎫 Verification request from \(fromAddress)")
+        currentVerificationRequest = verificationRequest
+        
+        // FIXME: Currently, we just assumed that the verification is document signing request
+        self.notifyAppScreen(screen: .docSignStart)
+    }
+
+    private func handleCredentialRequest(credentialRequest: CredentialRequest) {
+        let fromAddress = credentialRequest.fromIdentifier()
+        print("🎯 MainViewModel: 🎫 Credential request from \(fromAddress)")
+        currentCredentialRequest = credentialRequest
+        
+        let emailCredential = credentialRequest.details().first?.types().contains(CredentialType.Email) ?? false
+        let documentCredential = credentialRequest.details().first?.types().contains(CredentialType.Passport) ?? false
+        let customCredential = credentialRequest.details().first?.types().contains("CustomerCredential") ?? false
+        
+        if emailCredential {
+            self.notifyAppScreen(screen: .shareEmailStart)
+        } else if documentCredential {
+            self.notifyAppScreen(screen: .shareDocumentStart)
+        } else if customCredential {
+            self.notifyAppScreen(screen: .shareCredentialCustomStart)
+        }else {
+            self.notifyAppScreen(screen: .authStart)
+        }
+    }
+    
+    private func notifyAppScreen(screen: AppScreen) {
+        Task { @MainActor in
+            appScreen = screen
+        }
+    }
+    
+    func respondToVerificationRequest(verificationRequest: VerificationRequest?, status: ResponseStatus, credentials: [Credential] = [], completion: ((String, Error?) -> Void)? = nil) {
+        print("respondToVerificationRequest: \(verificationRequest?.id()) -> status: \(status)")
+        
+        var temp = verificationRequest
+        if temp == nil {
+            temp = currentVerificationRequest
+        }
+        
+        guard let verificationRequest = temp else {
+            print("📄 MainViewModel: ❌ Cannot send verification response - no stored verification request")
+            return
+        }
         
         let verificationResponse = VerificationResponse.Builder()
             .withRequestId(verificationRequest.id())
@@ -203,11 +314,12 @@ final class MainViewModel: ObservableObject {
             .withCredentials(credentials)
             .build()
 
-        Task(priority: .background, operation: {
-            try await self.account.send(message: verificationResponse, onAcknowledgement: {msgId, error in
-                print("sent verification response with id: \(msgId) error: \(error)")
-            })
-        })
+        self.sendKMPMessage(message: verificationResponse) { messageId, error in
+            print("sent verification response with id: \(messageId) error: \(error)")
+            Task { @MainActor in
+                completion?(messageId, error)
+            }
+        }
     }
     
     func lfcFlow() {
@@ -280,6 +392,9 @@ final class MainViewModel: ObservableObject {
             return
         }
         
+        print("serverAddress: \(serverAddress)")
+        print("withMessage: \(message)")
+        
         let chatMessage = ChatMessage.Builder()
             .toIdentifier(serverAddress)
             .fromIdentifier(account.generateAddress())
@@ -307,11 +422,15 @@ final class MainViewModel: ObservableObject {
         })
     }
     
-    func responseToCredentialRequest(credentialRequest: CredentialRequest?, responseStatus: ResponseStatus, completion: ((String, Error?) -> Void)? = nil) {
+    func responseToCredentialRequest(credentialRequest: CredentialRequest? = nil, responseStatus: ResponseStatus, completion: ((String, Error?) -> Void)? = nil) {
         print("responseToCredentialRequest: \(credentialRequest?.id())")
+        var temp = credentialRequest
+        if temp == nil {
+            temp = currentCredentialRequest
+        }
         
-        guard let credentialRequest = credentialRequest else {
-            print("🔐 ContentView: ❌ Cannot send credential response - no stored credential request")
+        guard let credentialRequest = temp else {
+            print("🔐 MainViewModel: ❌ Cannot send credential response - no stored credential request")
             return
         }
         
@@ -330,6 +449,29 @@ final class MainViewModel: ObservableObject {
                 completion?(messageId, error)
             }
         }
+    }
+    
+    func saveServerConnected(isConnected: Bool) {
+        // UserDefaults are app-sandboxed and automatically cleared on app uninstall
+        UserDefaults.standard.set(true, forKey: UserDefaultKeys.isServerConnected)
+    }
+    
+    func getServerConnected() -> Bool {
+        return UserDefaults.standard.bool(forKey: UserDefaultKeys.isServerConnected)
+    }
+    
+    func saveServerAddress(serverAddress: String) {
+        // UserDefaults are app-sandboxed and automatically cleared on app uninstall
+        UserDefaults.standard.set(serverAddress, forKey: UserDefaultKeys.connectedServerAddress)
+    }
+    
+    func getServerAddress() -> String? {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.connectedServerAddress)
+    }
+    
+    func resetUserDefaults() {
+        UserDefaults.standard.set(false, forKey: UserDefaultKeys.isServerConnected)
+        UserDefaults.standard.removeObject(forKey: UserDefaultKeys.connectedServerAddress)
     }
     
     // MARK: - Backup & Restore
