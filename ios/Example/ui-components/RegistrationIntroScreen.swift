@@ -6,14 +6,13 @@
 import SwiftUI
 
 public struct RegistrationIntroScreen: View {
-    @State private var showingRegistration = false
-    @State private var isProcessing = false
+    @Binding private var isProcessing: Bool
     @State private var errorMessage: String? = nil
     
     let onNext: () -> Void
     let onRestore: () -> Void
-    public init(isProcessing: Bool = false, errorMessage: String? = nil, onNext: @escaping () -> Void, onRestore: @escaping () -> Void) {
-        self.isProcessing = isProcessing
+    public init(isProcessing: Binding<Bool> = .constant(false), errorMessage: String? = nil, onNext: @escaping () -> Void, onRestore: @escaping () -> Void) {
+        self._isProcessing = isProcessing
         self.errorMessage = errorMessage
         self.onNext = onNext
         self.onRestore = onRestore
@@ -109,7 +108,7 @@ public struct RegistrationIntroScreen: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                     .scaleEffect(0.8)
-                                Text("Processing...")
+                                Text("Registering...")
                             } else {
                                 Text("Start Registration")
                             }
@@ -138,20 +137,6 @@ public struct RegistrationIntroScreen: View {
         }
 //        .ignoresSafeArea()
         .background(Color.white)
-        .onAppear {
-            checkRegistrationStatus()
-        }
-    }
-    
-    private func checkRegistrationStatus() {
-//        guard let account = account else { return }
-//        
-//        if account.registered() {
-//            print("🎬 RegistrationIntroScreen: Account already registered on appear, navigating to server connection")
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                onRegistrationComplete()
-//            }
-//        }
     }
     
     private func startRegistration() {
