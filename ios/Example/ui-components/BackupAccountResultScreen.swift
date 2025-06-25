@@ -26,7 +26,7 @@ public struct BackupAccountResultScreen: View {
                         Image(systemName: "arrow.left")
                             .foregroundStyle(Color.white)
                     }
-                    Text("DEBUG: BACKUP_ACCOUNT_INTRO")
+                    Text("DEBUG: BACKUP_ACCOUNT_RESULT")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                     Spacer()
@@ -65,10 +65,7 @@ public struct BackupAccountResultScreen: View {
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill",
-                                 iconColor: .green,
-                                 borderColor: .green,
-                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
+                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
                     }
                     
                     // What to Expect Section

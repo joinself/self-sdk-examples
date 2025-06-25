@@ -66,7 +66,11 @@ public struct BackupAccountStartScreen: View {
                                 .padding(.horizontal, 20)
                         }
                         
-                        CardView(icon: "info.circle.fill", iconColor: .green, borderColor: .green, title: "Backup Complete & Secured", titleColor: .green, description: "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.")
+                        
+                        CardView(icon: "info.circle.fill",
+                                 iconColor: .accentColor,
+                                 borderColor: .accentColor,
+                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
                     }
                     
                     // What to Expect Section
