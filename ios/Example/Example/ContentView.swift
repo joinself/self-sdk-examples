@@ -428,7 +428,7 @@ struct ContentView: View {
                     
                     // MARK: Backup & Restore
                 case .backupStart:
-                    BackupAccountStartScreen(isProcessing: isBackingUp) {
+                    BackupAccountStartScreen(isProcessing: $isBackingUp) {
                         self.isBackingUp = true
                         viewModel.backup { backupFile in
                             // open share extension to save file
@@ -1077,7 +1077,7 @@ struct ContentView: View {
     /// This method can be used for development/testing or explicit reset functionality.
     /// It only clears app-level state, not Self SDK internal state (keys, credentials).
     private func clearAllAppState() {
-        print("🧹 ContentView: Clearing all app-specific persistent state")        
+        print("🧹 ContentView: Clearing all app-specific persistent state")
         // Reset to initial screen
         currentScreen = .initialization
     }
