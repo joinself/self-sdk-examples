@@ -1,4 +1,4 @@
-package com.joinself.app.demo.ui
+package com.joinself.app.demo
 
 import android.content.Context
 import android.util.Log
@@ -69,6 +69,7 @@ sealed class SERVER_REQUESTS {
     }
 }
 
+// the main states of the app
 data class AppUiState(
     var isRegistered: Boolean = false,
     var initialization: InitializationState = InitializationState.Loading,
@@ -114,6 +115,7 @@ class MainViewModel(context: Context): ViewModel() {
             )
         }
 
+        // setup listeners which receive events from the server.
         account.setOnStatusListener { status ->
             Log.d(TAG, "initialize status $status")
 
@@ -161,6 +163,10 @@ class MainViewModel(context: Context): ViewModel() {
     fun isRegistered() : Boolean {
         return account.registered()
     }
+
+    /**
+     * register an account with a selfie and selfie's credentials
+     */
     suspend fun register(selfie: ByteArray, credentials: List<Credential>): Boolean {
         val success = account.register(selfieImage = selfie, credentials = credentials)
 
@@ -194,7 +200,10 @@ class MainViewModel(context: Context): ViewModel() {
     }
 
 
-    // send a chat message
+    /**
+     * Notifies the server about a request by sending a chat message.
+     * After server receive a chat message, it will check the content and send a request message.
+     */
     suspend fun notifyServerForRequest(message: String) {
         val chat = ChatMessage.Builder()
             .setToIdentifier(groupAddress)
@@ -224,7 +233,10 @@ class MainViewModel(context: Context): ViewModel() {
         requestTimeoutJob?.cancel()
     }
 
-    // send response for the received request
+    /**
+     * Sends a response to a credential request.
+     * This function constructs and sends a [CredentialResponse] based on the received [CredentialRequest].
+     */
     fun sendCredentialResponse(credentials: List<Credential>, status: ResponseStatus) {
         if (credentialRequest == null) return
 
@@ -244,6 +256,14 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
+    /**
+     * Looks up credentials based on the details of the credential request and sends a response.
+     * The credentials are store in the account after you verify email, document or get custom credentials.
+     *
+     * If there is no pending credential request, the function returns without doing anything.
+     *
+     * @param status The status of the response to be sent (e.g., accepted, rejected).
+     */
     fun shareCredential(status: ResponseStatus) {
         if (credentialRequest == null) return
 
@@ -260,11 +280,17 @@ class MainViewModel(context: Context): ViewModel() {
         sendCredentialResponse(storedCredentials, status)
     }
 
+    /**
+     * Stores the received custom credentials in the account.
+     */
     fun storeCredentials() {
         account.storeCredentials(receivedCredentials)
         receivedCredentials.clear()
     }
 
+    /**
+     * Sends a verification response to the server.
+     */
     fun sendDocSignResponse(status: ResponseStatus) {
         if (verificationRequest == null) return
 
@@ -282,6 +308,10 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
 
+    /**
+     * Backs up the account data.
+     * @return A [ByteArray] containing the backup data.
+     */
     suspend fun backup(): ByteArray {
         _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Processing) }
         val backupBytes = account.backup()
@@ -289,6 +319,12 @@ class MainViewModel(context: Context): ViewModel() {
         return backupBytes
     }
 
+
+    /**
+     * Restores the account from a backup. This function attempts to restore the user's account using the provided backup data and selfie image.
+     * @param backupBytes A ByteArray containing the account backup data.
+     * @param selfieBytes A ByteArray containing the user's selfie image for verification.
+     */
     suspend fun restore(backupBytes: ByteArray, selfieBytes: ByteArray) {
         try {
             _appUiState.update { it.copy(backupRestoreState = BackupRestoreState.Processing) }

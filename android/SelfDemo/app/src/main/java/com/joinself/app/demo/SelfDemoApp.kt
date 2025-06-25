@@ -1,4 +1,4 @@
-package com.joinself.app.demo.ui
+package com.joinself.app.demo
 
 import android.net.Uri
 import android.util.Log
@@ -108,14 +108,14 @@ fun SelfDemoApp(
     val navController = rememberNavController()
     val selfModifier = SelfModifier.sdk()
 
-    var credentialType by remember { mutableStateOf("") }
     val viewModel: MainViewModel = viewModel {
         MainViewModel(context)
     }
-
     val appState by viewModel.appStateFlow.collectAsState()
 
-    // save backup file to local storage
+    var credentialType by remember { mutableStateOf("") }
+
+    // picker to save backup file to local storage
     var backupByteArray by remember { mutableStateOf(byteArrayOf()) }
     val saveLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
@@ -127,7 +127,7 @@ fun SelfDemoApp(
         }
     }
 
-    // pick backup file from local storage
+    // picker to select backup file from local storage
     var isRestoreFlow by remember { mutableStateOf(false) }
     var selfieByteArray by remember { mutableStateOf(byteArrayOf()) }
     val pickerLauncher = rememberLauncherForActivityResult(
@@ -545,6 +545,7 @@ fun SelfDemoApp(
             }
         )
 
+        // add email flow into main navigation
         addEmailRoute(navController, route = MainRoute.EmailRoute, selfModifier = selfModifier,
             account = { viewModel.account },
             onFinish = { isSuccess, error ->

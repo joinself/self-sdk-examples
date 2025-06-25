@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.joinself.app.demo.ui.ServerRequestState
+import com.joinself.app.demo.ServerRequestState
 import com.joinself.common.CredentialType
 import com.joinself.sdk.models.ResponseStatus
 

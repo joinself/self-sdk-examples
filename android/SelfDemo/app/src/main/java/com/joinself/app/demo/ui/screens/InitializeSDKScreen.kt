@@ -10,7 +10,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.joinself.app.demo.ui.InitializationState
+import com.joinself.app.demo.InitializationState
 
 @Composable
 fun InitializeSDKScreen(

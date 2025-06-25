@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.joinself.app.demo.ui.BackupRestoreState
+import com.joinself.app.demo.BackupRestoreState
 import com.joinself.app.demo.ui.theme.AlertType
 import com.joinself.app.demo.ui.theme.AppColors
 import com.joinself.app.demo.ui.theme.AppFonts

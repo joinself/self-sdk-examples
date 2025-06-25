@@ -61,6 +61,12 @@ cd self-sdk-examples/java
 ./gradlew :self-demo:run
 ```
 
+Or run with docker image
+
+```bash
+docker run -it ghcr.io/joinself/self-sdk-demo:latest
+```
+
 ## Using the App
 
 This section guides you through the initial steps to get started with the Self Demo application.
