@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -57,6 +59,12 @@ android {
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
+    }
+    applicationVariants.all {
+        outputs.forEach { output ->
+            val apkName = "self-demo-${output.name}.apk"
+            (output as? BaseVariantOutputImpl)?.outputFileName = apkName
+        }
     }
 }
 

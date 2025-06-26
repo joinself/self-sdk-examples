@@ -46,7 +46,7 @@ cd self-sdk-examples/android/SelfDemo
 
 ./gradlew :app:assembleDebug
 
-adb -d install -r app/build/outputs/apk/debug/app-debug.apk
+adb -d install -r app/build/outputs/apk/debug/self-demo-debug.apk
 ```
 
 ## Setup Server
