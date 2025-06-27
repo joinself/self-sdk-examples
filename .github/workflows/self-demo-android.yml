@@ -19,7 +19,7 @@ jobs:
       - name: Publish
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN_TEST }}
+          GHA_TOKEN: ${{ secrets.GHA_TOKEN }}
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
 
