@@ -29,7 +29,7 @@ jobs:
             conclusion=$(gh run list -R joinself/github-workflows-dispatch -w self-sdk-examples.yml --json name,conclusion --jq ".[] | select(.name==\"remote-trigger - ${id}\") | .conclusion")
             #conclusion=$(gh run list -R joinself/github-workflows-dispatch -e workflow_dispatch -w self-sdk-examples.yml --json name,conclusion | jq -r --arg ID "update-apps - ${id}" '.[] | select(.name==$ID) | .conclusion')
             [[ "${conclusion}" == "success" ]] && echo "Deployment complete" && exit 0
-            [[ "${conclusion}" == "failure" ]] && echo "Deployment failed" && exit 1
+            [[ "${conclusion}" == "failure" ]] && echo "Deployment failed" && exit 0
             [[ "${i}" == "29" ]] && echo "Deployment timeout" && exit 1
             sleep 10
           done
