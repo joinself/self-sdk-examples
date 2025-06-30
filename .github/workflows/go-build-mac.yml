@@ -16,7 +16,10 @@ jobs:
           brew install joinself/tap/self-sdk
           brew install go@1.24
           go version
+          ls -lah /opt
           cd golang
+          export C_INCLUDE_PATH=/opt/homebrew/include/
+          export LIBRARY_PATH=$LIBRARY_PATH:/opt/homebrew/lib
           GOOS=darwin GOARCH=arm64 go build -o self-sdk-demo
           tar -czf self-sdk-demo_go_darwin_arm64.tar.gz self-sdk-demo
       - name: Upload artifacts
