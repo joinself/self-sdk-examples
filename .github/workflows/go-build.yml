@@ -15,12 +15,18 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
           cd golang
-          go build -o foobar
-          ls -lah
+          go build -o self-demo
+          tar -czvf self-demo_go_linux_amd64.tar.gz self-demo
+          GOOS=darwin GOARCH=amd64 go build -o self-demo
+          tar -czvf self-demo_go_darwin_amd64.tar.gz self-demo
+          GOOS=darwin GOARCH=arm64 go build -o self-demo
+          tar -czvf self-demo_go_darwin_arm64.tar.gz self-demo
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: golang/foobar
+          path: |
+            golang/self-demo_go_linux_amd64.tar.gz
+            golang/self-demo_go_darwin_amd64.tar.gz
+            golang/self-demo_go_darwin_arm64.tar.gz
