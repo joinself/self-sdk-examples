@@ -1,13 +1,11 @@
-name: _go-build
+name: _go-build-mac
 
 on:
   workflow_call:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/joinself/go-build:latest
+    runs-on: macos-latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
@@ -16,11 +14,11 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
           cd golang
-          go build -o self-sdk-demo
-          tar -czvf self-sdk-demo_go_linux_amd64.tar.gz self-sdk-demo
+          GOOS=darwin GOARCH=amd64 go build -o self-sdk-demo
+          tar -czf self-sdk-demo_go_darwin_amd64.tar.gz self-sdk-demo
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: build-mac-artifacts
           path: |
-            golang/self-sdk-demo_go_linux_amd64.tar.gz
+            golang/self-sdk-demo_go_darwin_amd64.tar.gz

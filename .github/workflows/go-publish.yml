@@ -9,10 +9,10 @@ jobs:
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
-      - name: Download build artifacts
+      - name: Download build-linux artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
+          name: build-linux-artifacts
       - name: Publish
         shell: bash
         env:
