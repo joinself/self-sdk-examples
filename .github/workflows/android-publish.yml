@@ -1,0 +1,34 @@
+name: _android-publish
+
+on:
+  workflow_call:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GHA_TOKEN }}
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          exit 0
+
+          id=$(date | md5sum | head -c 8)
+          gh workflow run remote-trigger -R joinself/github-workflows-dispatch -r main -f id=${id} -f foo=bar
+
+          for ((i = 0; i < 30; i++)); do
+            echo "Waiting for remote workflow..."
+            conclusion=$(gh run list -R joinself/github-workflows-dispatch -w self-sdk-examples.yml --json name,conclusion --jq ".[] | select(.name==\"remote-trigger - ${id}\") | .conclusion")
+            #conclusion=$(gh run list -R joinself/github-workflows-dispatch -e workflow_dispatch -w self-sdk-examples.yml --json name,conclusion | jq -r --arg ID "update-apps - ${id}" '.[] | select(.name==$ID) | .conclusion')
+            [[ "${conclusion}" == "success" ]] && echo "Deployment complete" && exit 0
+            [[ "${conclusion}" == "failure" ]] && echo "Deployment failed" && exit 0
+            [[ "${i}" == "29" ]] && echo "Deployment timeout" && exit 1
+            sleep 10
+          done
+
+          exit 0
