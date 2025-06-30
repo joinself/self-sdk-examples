@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/joinself/docker/android-build:latest
+      image: ghcr.io/joinself/android-build:latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
