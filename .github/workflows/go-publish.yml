@@ -6,8 +6,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/joinself/docker/tools:latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
@@ -21,4 +19,5 @@ jobs:
           . ${GITHUB_WORKSPACE}/.ci/env
 
           ls -lah
+          gh --help
           exit 0
