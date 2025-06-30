@@ -6,8 +6,6 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    container:
-      image: ghcr.io/joinself/go-build:latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
@@ -15,6 +13,8 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
+          brew
+          homebrew
           cd golang
           GOOS=darwin GOARCH=amd64 go build -o self-sdk-demo
           tar -czf self-sdk-demo_go_darwin_amd64.tar.gz self-sdk-demo
