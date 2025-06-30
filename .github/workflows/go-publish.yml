@@ -1,0 +1,24 @@
+name: _go-publish
+
+on:
+  workflow_call:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/joinself/docker/tools:latest
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+      - name: Publish
+        shell: bash
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          ls -lah
+          exit 0
