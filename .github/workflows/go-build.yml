@@ -15,7 +15,6 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
           cd golang
           go build -o self-demo
           tar -czvf self-demo_go_linux_amd64.tar.gz self-demo
