@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    container:
+      image: ghcr.io/joinself/go-build:latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
