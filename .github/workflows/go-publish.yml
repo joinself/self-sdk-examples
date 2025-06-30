@@ -22,5 +22,6 @@ jobs:
 
           sha256sum self-demo_go_linux_amd64.tar.gz | awk '{print $1}' > self-demo_go_linux_amd64.tar.gz.sha256
 
-          gh release delete "go-latest" -y --cleanup-tag || true
-          gh release create "go-latest" --latest=false --notes "" *.tar.gz *.sha256
+          gh release upload "latest" *.tar.gz *.sha256 --clobber
+          #gh release delete "go-latest" -y --cleanup-tag || true
+          #gh release create "go-latest" --latest=false --notes "" *.tar.gz *.sha256
