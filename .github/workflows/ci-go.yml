@@ -19,4 +19,4 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     uses: ./.github/workflows/go-publish.yml
     secrets: inherit
-    needs: build
+    needs: [build-linux, build-mac]
