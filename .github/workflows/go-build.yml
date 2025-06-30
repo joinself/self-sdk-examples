@@ -1,0 +1,25 @@
+name: _go-build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/joinself/docker/go-build:latest
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Build
+        shell: bash
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          go build
+          ls -lah
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: golang

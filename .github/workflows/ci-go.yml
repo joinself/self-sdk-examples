@@ -1,0 +1,18 @@
+name: CI - Go
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'golang/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/go-build.yml
+    secrets: inherit
+  publish:
+    uses: ./.github/workflows/go-publish.yml
+    secrets: inherit
+    needs: build
