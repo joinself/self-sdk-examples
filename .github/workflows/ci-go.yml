@@ -9,14 +9,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  # build-linux:
-  #   uses: ./.github/workflows/go-build-linux.yml
-  #   secrets: inherit
+  build-linux:
+    uses: ./.github/workflows/go-build-linux.yml
+    secrets: inherit
   build-mac:
     uses: ./.github/workflows/go-build-mac.yml
     secrets: inherit
-  # publish:
-  #   if: ${{ github.ref == 'refs/heads/main' }}
-  #   uses: ./.github/workflows/go-publish.yml
-  #   secrets: inherit
-  #   needs: build
+  publish:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/go-publish.yml
+    secrets: inherit
+    needs: build

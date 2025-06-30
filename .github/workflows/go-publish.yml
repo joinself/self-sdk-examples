@@ -13,6 +13,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-linux-artifacts
+      - name: Download build-mac artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-mac-artifacts
       - name: Publish
         shell: bash
         env:
@@ -20,4 +24,5 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
           sha256sum self-sdk-demo_go_linux_amd64.tar.gz | awk '{print $1}' > self-sdk-demo_go_linux_amd64.tar.gz.sha256
+          sha256sum self-sdk-demo_go_darwin_arm64.tar.gz | awk '{print $1}' > self-sdk-demo_go_darwin_arm64.tar.gz.sha256
           gh release upload "latest" *.tar.gz *.sha256 --clobber
