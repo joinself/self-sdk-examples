@@ -6,8 +6,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/joinself/docker/tools:latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
@@ -17,8 +15,9 @@ jobs:
           name: build-artifacts
       - name: Publish
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
-          ls -lah
-          exit 0
+          sha256sum self-demo_go_linux_amd64.tar.gz | awk '{print $1}' > self-demo_go_linux_amd64.tar.gz.sha256
+          gh release upload "latest" *.tar.gz *.sha256 --clobber

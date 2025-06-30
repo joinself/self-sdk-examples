@@ -15,11 +15,12 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
-          go build
-          ls -lah
+          cd golang
+          go build -o self-demo
+          tar -czvf self-demo_go_linux_amd64.tar.gz self-demo
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: golang
+          path: |
+            golang/self-demo_go_linux_amd64.tar.gz

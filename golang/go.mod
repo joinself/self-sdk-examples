@@ -1,4 +1,4 @@
-module github.com/reidjc/self_ai_demo/golang
+module github.com/joinself/self-sdk-examples/golang
 
 go 1.24.2
 
