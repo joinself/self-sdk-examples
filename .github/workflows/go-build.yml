@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/joinself/docker/go-build:latest
+      image: ghcr.io/joinself/go-build:latest
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
@@ -16,11 +16,11 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
           cd golang
-          go build -o self-demo
-          tar -czvf self-demo_go_linux_amd64.tar.gz self-demo
+          go build -o self-sdk-demo
+          tar -czvf self-sdk-demo_go_linux_amd64.tar.gz self-demo
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
-            golang/self-demo_go_linux_amd64.tar.gz
+            golang/self-sdk-demo_go_linux_amd64.tar.gz

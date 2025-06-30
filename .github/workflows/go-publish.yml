@@ -19,5 +19,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-          sha256sum self-demo_go_linux_amd64.tar.gz | awk '{print $1}' > self-demo_go_linux_amd64.tar.gz.sha256
+          sha256sum self-sdk-demo_go_linux_amd64.tar.gz | awk '{print $1}' > self-sdk-demo_go_linux_amd64.tar.gz.sha256
           gh release upload "latest" *.tar.gz *.sha256 --clobber

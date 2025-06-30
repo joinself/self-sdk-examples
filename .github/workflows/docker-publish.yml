@@ -1,22 +1,19 @@
-name: Publish - Self Demo (Docker)
+name: _docker-publish
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    container:
-      image: docker:24.0.6-git
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
       - name: Publish
-        shell: sh
+        shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
-          cd java
+          cd golang
           docker build -t ghcr.io/joinself/self-sdk-demo:latest .
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker push ghcr.io/joinself/self-sdk-demo:latest
