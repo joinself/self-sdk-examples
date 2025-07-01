@@ -20,6 +20,8 @@ jobs:
           id=$(date | md5sum | head -c 8)
           gh workflow run ${workflow} -R joinself/github-workflows-dispatch -r main -f id=${id} -f run-id=${CI_RUN_ID}
 
+          echo "CI_RUN_ID: ${CI_RUN_ID}"
+
           echo "Calling remote workflow: ${workflow} (${id})"
           for ((i = 0; i < 30; i++)); do
             echo "Waiting for workflow to complete..."
