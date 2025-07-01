@@ -16,10 +16,8 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
 
-          exit 0
-
           id=$(date | md5sum | head -c 8)
-          gh workflow run remote-trigger -R joinself/github-workflows-dispatch -r main -f id=${id} -f foo=bar
+          gh workflow run remote-trigger -R joinself/github-workflows-dispatch -r main -f id=${id} -f run-id=${CI_RUN_ID}
 
           for ((i = 0; i < 30; i++)); do
             echo "Waiting for remote workflow..."
