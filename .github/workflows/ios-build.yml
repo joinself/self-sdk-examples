@@ -1,0 +1,42 @@
+name: _ios-build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Build
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GHA_TOKEN }}
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          workflow="self-sdk-examples:ios-build"
+          id=$(date | md5sum | head -c 8)
+          gh workflow run ${workflow} -R joinself/github-workflows-dispatch -r main -f id=${id}
+
+          echo "Calling remote workflow: ${workflow} (${id})"
+          for ((i = 0; i < 30; i++)); do
+            echo "Waiting for workflow to complete..."
+            status=$(gh run list -R joinself/github-workflows-dispatch --json name,databaseId,conclusion --jq ".[] | select(.name==\"${workflow} - ${id}\") | .databaseId + ":" + .conclusion")
+            run_id="${status%:*}"
+            conclusion="${status#*:}"
+            echo "status: ${status}"
+            echo "run_id: ${run_id}"
+            echo "conclusion: ${conclusion}"
+            #conclusion=$(gh run list -R joinself/github-workflows-dispatch --json name,conclusion --jq ".[] | select(.name==\"${workflow} - ${id}\") | .conclusion")
+            [[ "${conclusion}" == "success" ]] && echo "Workflow complete" && exit 0
+            [[ "${conclusion}" == "failure" ]] && echo "Workflow failed" && exit 1
+            [[ "${i}" == "29" ]] && echo "Workflow timeout" && exit 1
+            sleep 10
+          done
+
+          echo "after status: ${status}"
+          echo "after run_id: ${run_id}"
+          echo "after conclusion: ${conclusion}"
+          # upload run_id to publish job
