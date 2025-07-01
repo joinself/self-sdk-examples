@@ -16,4 +16,3 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     uses: ./.github/workflows/android-publish.yml
     secrets: inherit
-    needs: build
