@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  # build:
-  #   uses: ./.github/workflows/android-build.yml
-  #   secrets: inherit
+  build:
+    uses: ./.github/workflows/android-build.yml
+    secrets: inherit
   publish:
     #if: ${{ github.ref == 'refs/heads/main' }}
     uses: ./.github/workflows/android-publish.yml
     secrets: inherit
-    #needs: build
+    needs: build
