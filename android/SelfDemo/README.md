@@ -49,6 +49,14 @@ cd self-sdk-examples/android/SelfDemo
 adb -d install -r app/build/outputs/apk/debug/self-demo-debug.apk
 ```
 
+### Build release
+
+```bash
+./gradlew :app:assembleRelease
+
+# output SelfDemo/app/build/outputs/apk/release/self-demo-release.apk
+```
+
 ## Setup Server
 
 For the Self Demo application to function fully (e.g., to connect for credential verification and sharing), a backend server component needs to be running. 
