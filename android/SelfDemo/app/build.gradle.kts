@@ -1,11 +1,18 @@
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("com.github.triplet.play") version "3.12.1"
 }
+val SELF_PLAY_UPLOAD_STORE_FILE = (rootProject.extra["SELF_PLAY_UPLOAD_STORE_FILE"] ?: System.getenv("SELF_PLAY_UPLOAD_STORE_FILE")).toString()
+val SELF_PLAY_UPLOAD_STORE_PASSWORD = (rootProject.extra["SELF_PLAY_UPLOAD_STORE_PASSWORD"] ?: System.getenv("SELF_PLAY_UPLOAD_STORE_PASSWORD")).toString()
+val SELF_PLAY_UPLOAD_KEY_ALIAS = (rootProject.extra["SELF_PLAY_UPLOAD_KEY_ALIAS"] ?: System.getenv("SELF_PLAY_UPLOAD_KEY_ALIAS")).toString()
+val SELF_PLAY_UPLOAD_KEY_PASSWORD = (rootProject.extra["SELF_PLAY_UPLOAD_KEY_PASSWORD"] ?: System.getenv("SELF_PLAY_UPLOAD_KEY_PASSWORD")).toString()
+val GOOGLE_PLAY_CREDS = (rootProject.extra["GOOGLE_PLAY_CREDS"] ?: System.getenv("GOOGLE_PLAY_CREDS")).toString()
 
 android {
     namespace = "com.joinself.app.demo"
@@ -24,7 +31,14 @@ android {
             abiFilters.add("arm64-v8a")
         }
     }
-
+    signingConfigs {
+        create("release") {
+            storeFile = file(SELF_PLAY_UPLOAD_STORE_FILE)
+            storePassword = SELF_PLAY_UPLOAD_STORE_PASSWORD
+            keyAlias = SELF_PLAY_UPLOAD_KEY_ALIAS
+            keyPassword = SELF_PLAY_UPLOAD_KEY_PASSWORD
+        }
+    }
     buildTypes {
         debug {
 
@@ -32,6 +46,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -87,4 +102,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+play {
+    serviceAccountCredentials.set(file(GOOGLE_PLAY_CREDS))
+    releaseStatus.set(ReleaseStatus.DRAFT)
 }
