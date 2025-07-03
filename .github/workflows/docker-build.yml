@@ -13,5 +13,7 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-          cd golang
-          docker build -t ghcr.io/joinself/self-sdk-demo:latest .
+          cd ${CI_WORKDIR}/golang
+          docker build -t ghcr.io/joinself/self-sdk-demo:go .
+          cd ${CI_WORKDIR}/java
+          docker build -t ghcr.io/joinself/self-sdk-demo:java .
