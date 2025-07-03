@@ -49,12 +49,20 @@ cd self-sdk-examples/android/SelfDemo
 adb -d install -r app/build/outputs/apk/debug/self-demo-debug.apk
 ```
 
-### Build release
+__Build release__
 
 ```bash
 ./gradlew :app:assembleRelease
 
 # output SelfDemo/app/build/outputs/apk/release/self-demo-release.apk
+```
+
+__Bundle aab file__
+
+```bash
+./gradlew :app:bundleRelease
+
+# output SelfDemo/app/build/outputs/bundle/release/self-demo-release.aab
 ```
 
 ## Setup Server

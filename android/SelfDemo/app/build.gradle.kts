@@ -30,6 +30,7 @@ android {
             abiFilters.clear()
             abiFilters.add("arm64-v8a")
         }
+        setProperty("archivesBaseName", "self-demo")
     }
     signingConfigs {
         create("release") {
