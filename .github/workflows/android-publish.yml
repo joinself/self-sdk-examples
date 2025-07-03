@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Setup job
         uses: joinself/github-actions-public/setup-job@main
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: .ci
       - name: Publish
         shell: bash
         env:
@@ -16,15 +21,18 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
 
+          dispatch_run_id=$(cat ${CI_WORKDIR}/.ci/dispatch-run-id)
+
           workflow="self-sdk-examples:android-publish"
           id=$(date | md5sum | head -c 8)
-          gh workflow run ${workflow} -R joinself/github-workflows-dispatch -r main -f id=${id} -f run-id=${CI_RUN_ID}
+          gh workflow run ${workflow} -R joinself/github-workflows-dispatch -r main -f id=${id} -f dispatch-run-id=${dispatch_run_id}
+          #gh workflow run ${workflow} -R joinself/github-workflows-dispatch -r main -f id=${id} -f git-ref=${CI_REF_NAME} -f dispatch-run-id=${dispatch_run_id}
 
           echo "Calling remote workflow: ${workflow} (${id})"
           for ((i = 0; i < 30; i++)); do
             echo "Waiting for workflow to complete..."
             conclusion=$(gh run list -R joinself/github-workflows-dispatch --json name,conclusion --jq ".[] | select(.name==\"${workflow} - ${id}\") | .conclusion")
-            [[ "${conclusion}" == "success" ]] && echo "Workflow complete" && exit 0
+            [[ "${conclusion}" == "success" ]] && echo "Workflow complete" && break
             [[ "${conclusion}" == "failure" ]] && echo "Workflow failed" && exit 1
             [[ "${i}" == "29" ]] && echo "Workflow timeout" && exit 1
             sleep 10
