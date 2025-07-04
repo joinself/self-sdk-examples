@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>method</key>
-	<string>release-testing</string>
+	<string>app-store-connect</string>
 	<key>teamID</key>
 	<string>B233VZ3W3Z</string>
 	<key>uploadBitcode</key>
@@ -19,7 +19,7 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.joinself.app.demo</key>
-		<string>ExampleApp_Adhoc</string>
+		<string>ExampleApp_AppStore</string>
 	</dict>
 </dict>
 </plist>
