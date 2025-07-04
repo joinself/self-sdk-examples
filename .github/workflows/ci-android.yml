@@ -31,7 +31,6 @@ jobs:
           for ((i = 0; i < 120; i++)); do
             echo "Waiting for workflow to complete..."
             conclusion=$(gh run list -R joinself/self-sdk-examples-gha --json name,conclusion --jq ".[] | select(.name==\"${workflow} (${id})\") | .conclusion")
-            echo "conclusion: ${conclusion}"
             [[ "${conclusion}" == "success" ]] && echo "Workflow complete" && break
             [[ "${conclusion}" == "failure" ]] && echo "Workflow failed" && exit 1
             [[ "${i}" == "119" ]] && echo "Workflow timeout" && exit 1
