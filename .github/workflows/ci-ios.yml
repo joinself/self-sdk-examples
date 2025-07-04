@@ -27,10 +27,7 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
 
-          echo "WORKFLOW_ID: ${WORKFLOW_ID}"
-
           workflow="CI - iOS"
-          #id=$(date | md5sum | head -c 8)
           gh workflow run "${workflow}" -R joinself/self-sdk-examples-gha -r main -f id=${WORKFLOW_ID} -f git-ref=${CI_REF_NAME}
 
           echo "Calling remote workflow: ${workflow} (${WORKFLOW_ID})"
