@@ -23,9 +23,7 @@ jobs:
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
 
-          echo "CI_REF_NAME: ${CI_REF_NAME}"
-
-          workflow="CI - Android"
+          workflow="ci-android"
           id=$(date | md5sum | head -c 8)
           gh workflow run "${workflow}" -R joinself/self-sdk-examples-gha -r main -f id=${id} -f git-ref=${CI_REF_NAME}
 
