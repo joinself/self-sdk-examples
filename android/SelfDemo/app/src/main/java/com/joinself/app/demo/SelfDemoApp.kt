@@ -36,6 +36,7 @@ import com.joinself.app.demo.ui.screens.RestoreResultScreen
 import com.joinself.app.demo.ui.screens.RestoreStartScreen
 import com.joinself.app.demo.ui.screens.SelectActionScreen
 import com.joinself.app.demo.ui.screens.ServerConnectResultScreen
+import com.joinself.app.demo.ui.screens.ServerConnectSelectionScreen
 import com.joinself.app.demo.ui.screens.ServerConnectStartScreen
 import com.joinself.app.demo.ui.screens.ShareCredentialApprovalScreen
 import com.joinself.app.demo.ui.screens.ShareCredentialResultScreen
@@ -47,7 +48,9 @@ import com.joinself.app.demo.ui.screens.VerifyEmailStartScreen
 import com.joinself.app.demo.ui.screens.VerifySelectionScreen
 import com.joinself.common.CredentialType
 import com.joinself.common.exception.InvalidCredentialException
+import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ResponseStatus
+import com.joinself.sdk.ui.adQRCodeRoute
 import com.joinself.sdk.ui.addDocumentVerificationRoute
 import com.joinself.sdk.ui.addEmailRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
@@ -66,7 +69,8 @@ private const val TAG = "SelfDemoApp"
 sealed class MainRoute {
     @Serializable object Initializing
     @Serializable object Registration
-    @Serializable object ConnectToServer
+    @Serializable object ConnectToServerSelection
+    @Serializable object ConnectToServerAddress
     @Serializable object ConnectingToServer
     @Serializable object ServerConnectionReady
     @Serializable object AuthRequestStart
@@ -174,7 +178,7 @@ fun SelfDemoApp(
             LaunchedEffect(appState.initialization) {
                 when (val status = appState.initialization) {
                     is InitializationState.Success -> {
-                        val route = if (viewModel.isRegistered()) MainRoute.ConnectToServer else MainRoute.Registration
+                        val route = if (viewModel.isRegistered()) MainRoute.ConnectToServerSelection else MainRoute.Registration
                         navController.navigate(route)
                     }
                     is InitializationState.Error -> {
@@ -198,8 +202,17 @@ fun SelfDemoApp(
                 onOpenSettings = onOpenSettings
             )
         }
-
-        composable<MainRoute.ConnectToServer> {
+        composable<MainRoute.ConnectToServerSelection> {
+            ServerConnectSelectionScreen(
+                onAddress = {
+                    navController.navigate(MainRoute.ConnectToServerAddress)
+                },
+                onQRCode = {
+                    navController.navigate(MainRoute.QRCodeRoute)
+                }
+            )
+        }
+        composable<MainRoute.ConnectToServerAddress> {
             ServerConnectStartScreen(
                 onContinue = { address ->
                     coroutineScope.launch(Dispatchers.IO) {
@@ -242,6 +255,9 @@ fun SelfDemoApp(
                 },
                 onBackup = {
                     navController.navigate(MainRoute.BackupStart)
+                },
+                onConnectToServer = {
+                    navController.navigate(MainRoute.ConnectToServerSelection)
                 }
             )
             LaunchedEffect(Unit) {
@@ -506,7 +522,7 @@ fun SelfDemoApp(
                 restoreState = appState.backupRestoreState,
                 onContinue = {
                     isRestoreFlow = false
-                    navController.navigate(MainRoute.ConnectToServer)
+                    navController.navigate(MainRoute.ConnectToServerAddress)
                 },
                 onRetry = {
                     navController.popBackStack()
@@ -529,7 +545,7 @@ fun SelfDemoApp(
                                 val success = viewModel.register(selfie = selfie, credentials = credentials)
                                 if (success) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        navController.navigate(MainRoute.ConnectToServer)
+                                        navController.navigate(MainRoute.ConnectToServerAddress)
                                     }
                                 }
                             }
@@ -565,6 +581,34 @@ fun SelfDemoApp(
                     coroutineScope.launch(Dispatchers.Main) {
                         navController.navigate(MainRoute.VerifyDocumentResult)
                     }
+                }
+            }
+        )
+
+        // integrate qr code flow
+        adQRCodeRoute(navController, MainRoute.QRCodeRoute, selfModifier = selfModifier,
+            onFinish = { qrCodeBytes, _ ->
+                coroutineScope.launch(Dispatchers.IO) {
+                    // parse qrcode first and check the correct environment
+                    val discoveryData = Account.qrCode(qrCodeBytes)
+                    if (discoveryData == null || !discoveryData.sandbox) {
+                        return@launch
+                    }
+
+                    // then connect with the connection in the qrcode
+                    viewModel.connect(inboxAddress = discoveryData.address, qrCode = qrCodeBytes)
+
+                    coroutineScope.launch(Dispatchers.Main) {
+                        navController.popBackStack(MainRoute.QRCodeRoute, true)
+                        if (appState.serverState is ServerState.Success) {
+                            navController.navigate(MainRoute.ServerConnectionReady)
+                        }
+                    }
+                }
+            },
+            onExit = {
+                coroutineScope.launch(Dispatchers.Main) {
+                    navController.popBackStack(MainRoute.QRCodeRoute, true)
                 }
             }
         )

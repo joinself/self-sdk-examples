@@ -1,22 +1,35 @@
 package com.joinself.app.demo.ui.screens
-import com.joinself.app.demo.ui.theme.*
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backup
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.CloudQueue
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.joinself.app.demo.ui.theme.AppColors
+import com.joinself.app.demo.ui.theme.AppFonts
+import com.joinself.app.demo.ui.theme.AppSpacing
+import com.joinself.app.demo.ui.theme.HeroSection
 
 @Composable
 fun SelectActionScreen(
@@ -25,6 +38,7 @@ fun SelectActionScreen(
     onProvideCredentials: () -> Unit,
     onSignDocuments: () -> Unit,
     onBackup: () -> Unit,
+    onConnectToServer: () -> Unit,
     modifier: Modifier = Modifier,
     isAuthenticating: Boolean = false
 ) {
@@ -43,8 +57,8 @@ fun SelectActionScreen(
                 // Hero Section
                 HeroSection(
                     icon = Icons.Filled.VerifiedUser,
-                    title = "Server Connection Ready",
-                    subtitle = "Your Self account is connected to the server and ready to use. Choose an action below to get started with secure authentication and verification."
+                    title = "Server Connected",
+                    subtitle = "Your Self account is connected to the server and ready to use. Choose an action below to get started."
                 )
             }
 
@@ -53,15 +67,8 @@ fun SelectActionScreen(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
                 ) {
-                    androidx.compose.material3.Text(
-                        text = "Available Actions",
-                        style = AppFonts.heading,
-                        color = AppColors.textPrimary
-                    )
-
-                    // Action cards
                     ActionCard(
-                        icon = Icons.Filled.Security,
+                        icon = Icons.Filled.Fingerprint,
                         title = "Authenticate",
                         description = "Use your biometric credentials to securely log in to services",
                         onClick = onAuthenticate
@@ -95,6 +102,13 @@ fun SelectActionScreen(
                         onClick = onBackup
                     )
 
+                    ActionCard(
+                        icon = Icons.Filled.CloudQueue,
+                        title = "Connect to Server",
+                        description = "Connect to another Self server to receive and send data",
+                        onClick = onConnectToServer
+                    )
+
                     Spacer(modifier = Modifier.height(AppSpacing.componentSpacing))
                 }
             }
@@ -118,8 +132,22 @@ fun SelectActionScreen(
     }
 }
 
+@Preview
 @Composable
-private fun ActionCard(
+fun SelectActionScreenPreview() {
+    SelectActionScreen(
+        onAuthenticate = {},
+        onVerifyCredentials = {},
+        onProvideCredentials = {},
+        onSignDocuments = {},
+        onBackup = {},
+        onConnectToServer = {},
+        isAuthenticating = false
+    )
+}
+
+@Composable
+fun ActionCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     description: String,
