@@ -48,7 +48,7 @@ fun ServerConnectStartScreen(
                 // Hero Section
                 HeroSection(
                     icon = Icons.Filled.PrivateConnectivity,
-                    title = "Connect to Server",
+                    title = "Connect by Address",
                     subtitle = "Enter the server address to connect your Self account to authentication servers."
                 )
             }
@@ -75,7 +75,7 @@ fun ServerConnectStartScreen(
                     )
                     
                     Text(
-                        text = "Enter the 66-character hexadecimal server address/ID provided by your administrator or service provider.",
+                        text = "Enter the 66-character hexadecimal server address/ID.",
                         style = AppFonts.body,
                         color = AppColors.textSecondary
                     )

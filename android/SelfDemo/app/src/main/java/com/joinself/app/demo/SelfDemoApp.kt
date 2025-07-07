@@ -255,6 +255,9 @@ fun SelfDemoApp(
                 },
                 onBackup = {
                     navController.navigate(MainRoute.BackupStart)
+                },
+                onConnectToServer = {
+                    navController.navigate(MainRoute.ConnectToServerSelection)
                 }
             )
             LaunchedEffect(Unit) {
