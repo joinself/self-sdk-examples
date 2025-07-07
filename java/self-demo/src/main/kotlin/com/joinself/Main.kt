@@ -9,11 +9,15 @@ import com.joinself.selfsdk.kmp.credential.CredentialBuilder
 import com.joinself.selfsdk.kmp.credential.PresentationBuilder
 import com.joinself.selfsdk.kmp.error.SelfStatus
 import com.joinself.selfsdk.kmp.error.SelfStatusName
+import com.joinself.selfsdk.kmp.event.AnonymousMessage
 import com.joinself.selfsdk.kmp.event.Commit
+import com.joinself.selfsdk.kmp.event.Flag
+import com.joinself.selfsdk.kmp.event.FlagSet
 import com.joinself.selfsdk.kmp.event.Integrity
 import com.joinself.selfsdk.kmp.event.KeyPackage
 import com.joinself.selfsdk.kmp.event.Message
 import com.joinself.selfsdk.kmp.event.Proposal
+import com.joinself.selfsdk.kmp.event.QrEncoding
 import com.joinself.selfsdk.kmp.event.Reference
 import com.joinself.selfsdk.kmp.event.Welcome
 import com.joinself.selfsdk.kmp.keypair.signing.PublicKey
@@ -25,6 +29,7 @@ import com.joinself.selfsdk.kmp.message.CredentialPresentationRequestBuilder
 import com.joinself.selfsdk.kmp.message.CredentialPresentationResponse
 import com.joinself.selfsdk.kmp.message.CredentialVerificationRequestBuilder
 import com.joinself.selfsdk.kmp.message.CredentialVerificationResponse
+import com.joinself.selfsdk.kmp.message.DiscoveryRequestBuilder
 import com.joinself.selfsdk.kmp.message.DiscoveryResponse
 import com.joinself.selfsdk.kmp.message.Receipt
 import com.joinself.selfsdk.kmp.platform.Attestation
@@ -332,7 +337,21 @@ fun main() {
     }
     println("\n\n")
     println("server address: ${inboxAddress.encodeHex()}")
-    println("clients should use this address to connect to this server")
+    println("clients should use this address or scan the qrcode to connect to this server")
+
+    val expires = Timestamp.now() + 3600
+    val keyPackage = account.connectionNegotiateOutOfBand(inboxAddress, expires)
+    val discoveryRequest = DiscoveryRequestBuilder()
+        .keyPackage(keyPackage)
+        .expires(expires)
+        .finish()
+    val anonymousMessage = AnonymousMessage.fromContent(discoveryRequest)
+    if (sandbox) {
+        anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
+    }
+    val qrCodeBytes = anonymousMessage.encodeQR(QrEncoding.UNICODE)
+    val qrCodeString = qrCodeBytes.decodeToString()
+    println(qrCodeString)
 
     println("\n\n")
     println("Press enter to exit")

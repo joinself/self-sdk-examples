@@ -12,10 +12,12 @@ import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -61,7 +63,7 @@ fun SelectActionScreen(
 
                     // Action cards
                     ActionCard(
-                        icon = Icons.Filled.Security,
+                        icon = Icons.Filled.Fingerprint,
                         title = "Authenticate",
                         description = "Use your biometric credentials to securely log in to services",
                         onClick = onAuthenticate
@@ -118,8 +120,21 @@ fun SelectActionScreen(
     }
 }
 
+@Preview
 @Composable
-private fun ActionCard(
+fun SelectActionScreenPreview() {
+    SelectActionScreen(
+        onAuthenticate = {},
+        onVerifyCredentials = {},
+        onProvideCredentials = {},
+        onSignDocuments = {},
+        onBackup = {},
+        isAuthenticating = false
+    )
+}
+
+@Composable
+fun ActionCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     description: String,

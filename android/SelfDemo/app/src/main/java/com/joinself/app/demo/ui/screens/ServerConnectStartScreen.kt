@@ -8,7 +8,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudQueue
+import androidx.compose.material.icons.filled.PrivateConnectivity
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.ShieldMoon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -17,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -43,7 +47,7 @@ fun ServerConnectStartScreen(
             item {
                 // Hero Section
                 HeroSection(
-                    icon = Icons.Filled.CloudQueue,
+                    icon = Icons.Filled.PrivateConnectivity,
                     title = "Connect to Server",
                     subtitle = "Enter the server address to connect your Self account to authentication servers."
                 )
@@ -130,4 +134,10 @@ fun ServerConnectStartScreen(
 
 private fun isValidHexAddress(address: String): Boolean {
     return address.length == 66 && address.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' }
-} 
+}
+
+@Preview
+@Composable
+fun ServerConnectStartScreenPreview() {
+    ServerConnectStartScreen(onContinue = {})
+}
