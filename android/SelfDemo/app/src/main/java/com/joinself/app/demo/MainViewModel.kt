@@ -193,11 +193,14 @@ class MainViewModel(context: Context): ViewModel() {
 
     suspend fun connect(inboxAddress: String, qrCode: ByteArray) {
         try {
-            account.connectWith(qrCode)
+            groupAddress = account.connectWith(qrCode)
             serverInboxAddress = inboxAddress
-            groupAddress = inboxAddress
 
-            _appUiState.update { it.copy(serverState = ServerState.Success) }
+            if (groupAddress.isNotEmpty()) {
+                _appUiState.update { it.copy(serverState = ServerState.Success) }
+            } else {
+                _appUiState.update { it.copy(serverState = ServerState.Error("failed to connect to server")) }
+            }
         } catch (ex: Exception) {
             Log.e(TAG, ex.message, ex)
             _appUiState.update { it.copy(serverState = ServerState.Error(ex.message ?: "failed to connect to server")) }

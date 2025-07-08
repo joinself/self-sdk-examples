@@ -3,6 +3,7 @@ package com.joinself.app.demo
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
@@ -55,6 +56,7 @@ import com.joinself.sdk.ui.addDocumentVerificationRoute
 import com.joinself.sdk.ui.addEmailRoute
 import com.joinself.sdk.ui.addLivenessCheckRoute
 import com.joinself.sdk.utils.popAllBackStacks
+import com.joinself.ui.component.LoadingDialog
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -264,6 +266,8 @@ fun SelfDemoApp(
                 delay(500)
                 viewModel.resetState(ServerRequestState.None)
             }
+
+            BackHandler {}
         }
 
         composable<MainRoute.AuthRequestStart> {
@@ -516,13 +520,17 @@ fun SelfDemoApp(
                     navController.navigate(MainRoute.LivenessRoute)
                 }
             )
+            if (appState.backupRestoreState is BackupRestoreState.Processing) {
+                LoadingDialog(selfModifier)
+            }
         }
         composable<MainRoute.RestoreResult> {
             RestoreResultScreen(
                 restoreState = appState.backupRestoreState,
                 onContinue = {
                     isRestoreFlow = false
-                    navController.navigate(MainRoute.ConnectToServerAddress)
+                    navController.popAllBackStacks()
+                    navController.navigate(MainRoute.ConnectToServerSelection)
                 },
                 onRetry = {
                     navController.popBackStack()
@@ -545,7 +553,8 @@ fun SelfDemoApp(
                                 val success = viewModel.register(selfie = selfie, credentials = credentials)
                                 if (success) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        navController.navigate(MainRoute.ConnectToServerAddress)
+                                        navController.popBackStack()
+                                        navController.navigate(MainRoute.ConnectToServerSelection)
                                     }
                                 }
                             }
