@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ServerRequestState
 
@@ -39,8 +40,8 @@ fun DocSignStartScreen(
                 // Hero Section
                 HeroSection(
                     icon = Icons.Filled.PictureAsPdf,
-                    title = "PDF Document Signing",
-                    subtitle = if(requestState != ServerRequestState.RequestReceived) { "Waiting for a request from server..."} else {"The server has requested you to sign a PDF document. Review the details below and choose whether to sign or reject."}
+                    title = "Document Signing",
+                    subtitle = if(requestState != ServerRequestState.RequestReceived) { "Waiting for a request from server..."} else {"The server has requested you sign a document. Review the details below and choose whether to sign or reject."}
                 )
             }
 
@@ -48,36 +49,36 @@ fun DocSignStartScreen(
                 // Information about the document
                 InfoCard(
                     icon = Icons.Filled.PictureAsPdf,
-                    title = "PDF Agreement Document",
-                    message = "You are being asked to sign a PDF document. This creates a verifiable digital signature using your cryptographic credentials.",
+                    title = "Server Request",
+                    message = "You are being asked to sign a document. This creates a verifiable digital signature using your cryptographic credentials.",
                     type = AlertType.Info
                 )
             }
 
-            item {
-                // Security information
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                ) {
-                    Text(
-                        text = "Security & Legal Notice",
-                        style = AppFonts.heading,
-                        color = AppColors.textPrimary
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Filled.Security,
-                        title = "Cryptographic Authentication",
-                        description = "Your signature is created using secure cryptographic keys unique to you"
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Filled.CheckCircle,
-                        title = "Non-Repudiation",
-                        description = "The signature provides legal proof of your agreement to the terms of the document."
-                    )
-                }
-            }
+//            item {
+//                // Security information
+//                Column(
+//                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                ) {
+//                    Text(
+//                        text = "Security & Legal Notice",
+//                        style = AppFonts.heading,
+//                        color = AppColors.textPrimary
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.Security,
+//                        title = "Cryptographic Authentication",
+//                        description = "Your signature is created using secure cryptographic keys unique to you"
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.CheckCircle,
+//                        title = "Non-Repudiation",
+//                        description = "The signature provides legal proof of your agreement to the terms of the document."
+//                    )
+//                }
+//            }
         }
 
         // Fixed Action Buttons at Bottom
@@ -88,7 +89,7 @@ fun DocSignStartScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
         ) {
             PrimaryButton(
-                title = "Sign Document",
+                title = "Approve",
                 isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onSign
             )
@@ -102,3 +103,32 @@ fun DocSignStartScreen(
     }
 }
 
+@Preview(showBackground = true, name = "Doc Sign Start Screen - Ready")
+@Composable
+fun DocSignStartScreenReadyPreview() {
+    DocSignStartScreen(
+        requestState = ServerRequestState.RequestReceived,
+        onSign = {},
+        onReject = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Doc Sign Start Screen - Waiting")
+@Composable
+fun DocSignStartScreenWaitingPreview() {
+    DocSignStartScreen(
+        requestState = ServerRequestState.RequestSent,
+        onSign = {},
+        onReject = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Doc Sign Start Screen - Error")
+@Composable
+fun DocSignStartScreenErrorPreview() {
+    DocSignStartScreen(
+        requestState = ServerRequestState.RequestError("Request timed out"),
+        onSign = {},
+        onReject = {}
+    )
+}

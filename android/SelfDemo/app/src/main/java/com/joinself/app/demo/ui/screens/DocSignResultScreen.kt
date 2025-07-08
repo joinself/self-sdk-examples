@@ -15,8 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ServerRequestState
+import com.joinself.sdk.models.ResponseStatus
 
 @Composable
 fun DocSignResultScreen(
@@ -42,13 +44,13 @@ fun DocSignResultScreen(
                 if (isSuccess) {
                     HeroSection(
                         icon = Icons.Filled.CheckCircle,
-                        title = "Document Signed Successfully",
+                        title = "Document Signing Success",
                         subtitle = "Your digital signature has been added to the document."
                     )
                 } else {
                     HeroSection(
                         icon = Icons.Filled.Error,
-                        title = "Document Signing Rejected",
+                        title = "Document Signing Failure",
                         subtitle = "You rejected the document signing request."
                     )
                 }
@@ -60,35 +62,35 @@ fun DocSignResultScreen(
                     InfoCard(
                         icon = Icons.Filled.Verified,
                         title = "Signature Complete",
-                        message = "Your cryptographic signature has been successfully applied to the document. The document is now legally enforceable and cannot be modified.",
+                        message = "Your cryptographic signature has been successfully applied to the document. The signed document has been returned to the server.",
                         type = AlertType.Success
                     )
                 }
             }
 
-            if (isSuccess) {
-
-                item {
-                    // Security confirmation
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Security Verification",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Security,
-                            title = "Tamper-Proof Signature",
-                            description = "Your signature is cryptographically secure and cannot be forged"
-                        )
-                    }
-                }
-
-
-            }
+//            if (isSuccess) {
+//
+//                item {
+//                    // Security confirmation
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "Security Verification",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Security,
+//                            title = "Tamper-Proof Signature",
+//                            description = "Your signature is cryptographically secure and cannot be forged"
+//                        )
+//                    }
+//                }
+//
+//
+//            }
         }
 
         // Fixed Primary Button at Bottom
@@ -103,4 +105,31 @@ fun DocSignResultScreen(
             )
         }
     }
+}
+
+@Preview(showBackground = true, name = "Doc Sign Result - Success")
+@Composable
+fun DocSignResultScreenSuccessPreview() {
+    DocSignResultScreen(
+        requestState = ServerRequestState.ResponseSent(ResponseStatus.accepted),
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Doc Sign Result - Rejected")
+@Composable
+fun DocSignResultScreenRejectedPreview() {
+    DocSignResultScreen(
+        requestState = ServerRequestState.ResponseSent(ResponseStatus.rejected),
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Doc Sign Result - Failed")
+@Composable
+fun DocSignResultScreenFailedPreview() {
+    DocSignResultScreen(
+        requestState = ServerRequestState.RequestError("Signing failed"),
+        onContinue = {}
+    )
 }

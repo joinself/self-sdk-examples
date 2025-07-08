@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.RememberMe
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,45 +67,45 @@ fun RegistrationIntroScreen(
                 HeroSection(
                     icon = Icons.Filled.AccountCircle,
                     title = "Register Your Account",
-                    subtitle = "Complete a quick liveness check to securely register your Self account"
+                    subtitle = "Complete a quick liveness check to securely register your Self account."
                 )
             }
 
-            item {
-                // Process Steps Section
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    Text(
-                        text = "What to Expect",
-                        style = AppFonts.heading,
-                        color = AppColors.textPrimary
-                    )
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        ProcessStep(
-                            number = 1,
-                            title = "Camera Access",
-                            description = "We'll ask for camera permission when you start"
-                        )
-
-                        ProcessStep(
-                            number = 2,
-                            title = "Position Your Face",
-                            description = "Look directly at the camera and follow on-screen instructions"
-                        )
-                    }
-                }
-            }
+//            item {
+//                // Process Steps Section
+//                Column(
+//                    verticalArrangement = Arrangement.spacedBy(20.dp)
+//                ) {
+//                    Text(
+//                        text = "What to Expect",
+//                        style = AppFonts.heading,
+//                        color = AppColors.textPrimary
+//                    )
+//
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        ProcessStep(
+//                            number = 1,
+//                            title = "Camera Access",
+//                            description = "We'll ask for camera permission when you start"
+//                        )
+//
+//                        ProcessStep(
+//                            number = 2,
+//                            title = "Position Your Face",
+//                            description = "Look directly at the camera and follow on-screen instructions"
+//                        )
+//                    }
+//                }
+//            }
 
             item {
                 // Privacy & Security Info
                 InfoCard(
-                    icon = Icons.Filled.Lock,
-                    title = "Your Privacy is Protected",
-                    message = "All biometric data is processed securely and never stored permanently. Your face data is used only for account registration and then discarded.",
+                    icon = Icons.Filled.RememberMe,
+                    title = "Liveness Check Required",
+                    message = "You will be asked for camera permission when you start. Look directly at the camera and follow the on-screen instructions.",
                     type = AlertType.Info
                 )
             }
@@ -146,7 +147,7 @@ fun RegistrationIntroScreen(
                 .padding(AppSpacing.screenPadding)
         ) {
             PrimaryButton(
-                title = "Start Registration",
+                title = "Start",
                 onClick = {
                     isRequestingPermission = true
                     onStartRegistration()

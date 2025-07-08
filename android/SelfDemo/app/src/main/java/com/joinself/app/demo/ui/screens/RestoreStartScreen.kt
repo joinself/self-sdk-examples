@@ -79,12 +79,6 @@ fun RestoreStartScreen(
 
                     ProcessStep(
                         number = 2,
-                        title = "Selfie Verification",
-                        description = "Take a selfie. We'll compare it with the selfie from your backup to verify your identity."
-                    )
-
-                    ProcessStep(
-                        number = 3,
                         title = "Automatic Data Recovery",
                         description = "After successful verification, your encrypted account data will be securely restored by the Self system."
                     )

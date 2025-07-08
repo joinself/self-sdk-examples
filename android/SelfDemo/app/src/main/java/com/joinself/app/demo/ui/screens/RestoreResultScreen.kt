@@ -71,9 +71,9 @@ fun RestoreResultScreen(
 
     val cardMessage = when (restoreState) {
         is BackupRestoreState.Success -> "You can now access your account with all your previous information. Welcome back!"
-        is BackupRestoreState.VerificationFailed -> "The liveness check or selfie verification could not be completed successfully. You can try the verification process again."
-        is BackupRestoreState.DataRecoveryFailed -> "Please try again in a few moments. If the problem persists, you may need to contact support or try setting up a new account if no critical data was in the backup."
-        is BackupRestoreState.Error -> "Please check your internet connection and try again. If the problem continues, please contact our support team."
+        is BackupRestoreState.VerificationFailed -> "The liveness check could not be completed successfully. You can try the verification process again."
+        is BackupRestoreState.DataRecoveryFailed -> "Please try again in a few moments."
+        is BackupRestoreState.Error -> "Please check your internet connection and try again."
         else -> ""
     }
 
@@ -118,32 +118,32 @@ fun RestoreResultScreen(
             }
 
             // Optional: Further details or steps based on the outcome
-            if (!isSuccess) {
-                item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        Text(
-                            text = "Next Steps",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-                        if (restoreState == BackupRestoreState.VerificationFailed && onRetry != null) {
-                            ProcessStep(
-                                number = 1,
-                                title = "Retry Identity Verification",
-                                description = "You can attempt the liveness and selfie check again."
-                            )
-                        }
-                        ProcessStep(
-                            number = 2,
-                            title = "Check Connection",
-                            description = "Ensure you have a stable internet connection."
-                        )
-                        // Add more troubleshooting or guidance steps here
-                    }
-                }
-            }
+//            if (!isSuccess) {
+//                item {
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        Text(
+//                            text = "Next Steps",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//                        if (restoreState == BackupRestoreState.VerificationFailed && onRetry != null) {
+//                            ProcessStep(
+//                                number = 1,
+//                                title = "Retry Identity Verification",
+//                                description = "You can attempt the liveness and selfie check again."
+//                            )
+//                        }
+//                        ProcessStep(
+//                            number = 2,
+//                            title = "Check Connection",
+//                            description = "Ensure you have a stable internet connection."
+//                        )
+//                        // Add more troubleshooting or guidance steps here
+//                    }
+//                }
+//            }
         }
 
         // Fixed Buttons at Bottom
@@ -158,12 +158,12 @@ fun RestoreResultScreen(
                 title = "Continue",
                 onClick = onContinue
             )
-            if (restoreState == BackupRestoreState.VerificationFailed && onRetry != null) {
-                SecondaryButton(
-                    title = "Retry Restore",
-                    onClick = onRetry
-                )
-            }
+//            if (restoreState == BackupRestoreState.VerificationFailed && onRetry != null) {
+//                SecondaryButton(
+//                    title = "Retry Restore",
+//                    onClick = onRetry
+//                )
+//            }
             // Add other buttons like "Contact Support" if applicable for certain errors
         }
     }

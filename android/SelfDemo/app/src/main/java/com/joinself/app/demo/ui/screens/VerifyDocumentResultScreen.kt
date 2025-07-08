@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -37,11 +38,11 @@ fun VerifyDocumentResultScreen(
                 // Hero Section with Success/Error State
                 HeroSection(
                     icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                    title = if (isSuccess) "Document Verified Successfully!" else "Verification Failed",
+                    title = if (isSuccess) "Verification Success" else "Verification Failure",
                     subtitle = if (isSuccess) 
                         "Your identity document has been successfully verified and a secure credential has been created on your device."
                     else 
-                        "We were unable to verify your identity document. This could be due to poor image quality, unsupported document type, or document authenticity issues."
+                        "Your identity document could not be verified. Please try again."
                 )
             }
 
@@ -56,36 +57,36 @@ fun VerifyDocumentResultScreen(
                     )
                 }
 
-                item {
-                    // What happens next
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "What You Can Do Now",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Security,
-                            title = "Share Your Credentials",
-                            description = "Use your verified credentials to authenticate with services"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Badge,
-                            title = "Prove Your Identity",
-                            description = "Your verified document can be used as proof of identity"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.CheckCircle,
-                            title = "Access Protected Services",
-                            description = "Many services accept verified credentials for enhanced security"
-                        )
-                    }
-                }
+//                item {
+//                    // What happens next
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "What You Can Do Now",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Security,
+//                            title = "Share Your Credentials",
+//                            description = "Use your verified credentials to authenticate with services"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Badge,
+//                            title = "Prove Your Identity",
+//                            description = "Your verified document can be used as proof of identity"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.CheckCircle,
+//                            title = "Access Protected Services",
+//                            description = "Many services accept verified credentials for enhanced security"
+//                        )
+//                    }
+//                }
             } else {
                 item {
                     // Error information
@@ -97,51 +98,51 @@ fun VerifyDocumentResultScreen(
                     )
                 }
 
-                item {
-                    // Troubleshooting tips
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Troubleshooting Tips",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.CheckCircle,
-                            title = "Check Image Quality",
-                            description = "Ensure photos are clear, well-lit, and all text is readable"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Badge,
-                            title = "Verify Document Type",
-                            description = "Make sure your document type is supported by the verification system"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Security,
-                            title = "Document Condition",
-                            description = "Ensure your document is not damaged, expired, or tampered with"
-                        )
-                    }
-                }
+//                item {
+//                    // Troubleshooting tips
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "Troubleshooting Tips",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.CheckCircle,
+//                            title = "Check Image Quality",
+//                            description = "Ensure photos are clear, well-lit, and all text is readable"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Badge,
+//                            title = "Verify Document Type",
+//                            description = "Make sure your document type is supported by the verification system"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Security,
+//                            title = "Document Condition",
+//                            description = "Ensure your document is not damaged, expired, or tampered with"
+//                        )
+//                    }
+//                }
             }
 
-            item {
-                // Additional information
-                StatusCard(
-                    title = "Document Verification",
-                    status = if (isSuccess) "Completed Successfully" else "Failed",
-                    statusColor = if (isSuccess) AppColors.success else AppColors.error,
-                    subtitle = if (isSuccess) 
-                        "Your credential is now available for use"
-                    else 
-                        "You can try the verification process again",
-                    icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error
-                )
-            }
+//            item {
+//                // Additional information
+//                StatusCard(
+//                    title = "Document Verification",
+//                    status = if (isSuccess) "Completed Successfully" else "Failed",
+//                    statusColor = if (isSuccess) AppColors.success else AppColors.error,
+//                    subtitle = if (isSuccess)
+//                        "Your credential is now available for use"
+//                    else
+//                        "You can try the verification process again",
+//                    icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error
+//                )
+//            }
         }
 
         // Fixed Primary Button at Bottom
@@ -151,9 +152,27 @@ fun VerifyDocumentResultScreen(
                 .padding(AppSpacing.screenPadding)
         ) {
             PrimaryButton(
-                title = if (isSuccess) "Continue to Actions" else "Try Again",
+                title = if (isSuccess) "Continue" else "Continue",
                 onClick = onContinue
             )
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Verify Document Result - Success")
+@Composable
+fun VerifyDocumentResultScreenSuccessPreview() {
+    VerifyDocumentResultScreen(
+        isSuccess = true,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Verify Document Result - Failure")
+@Composable
+fun VerifyDocumentResultScreenFailurePreview() {
+    VerifyDocumentResultScreen(
+        isSuccess = false,
+        onContinue = {}
+    )
+}

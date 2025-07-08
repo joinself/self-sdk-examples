@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import com.joinself.app.demo.ServerRequestState
 
 
@@ -47,67 +48,67 @@ fun AuthRequestStartScreen(
                 // Information about the process
                 InfoCard(
                     icon = Icons.Filled.FaceRetouchingNatural,
-                    title = "Biometric Verification Required",
-                    message = "You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.",
+                    title = "Liveness Check Required",
+                    message = "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.",
                     type = AlertType.Info
                 )
             }
 
-            item {
-                // Process steps
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                ) {
-                    androidx.compose.material3.Text(
-                        text = "Authentication Process",
-                        style = AppFonts.heading,
-                        color = AppColors.textPrimary
-                    )
+//            item {
+//                // Process steps
+//                Column(
+//                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                ) {
+//                    androidx.compose.material3.Text(
+//                        text = "Authentication Process",
+//                        style = AppFonts.heading,
+//                        color = AppColors.textPrimary
+//                    )
+//
+//                    ProcessStep(
+//                        number = 1,
+//                        title = "Camera Access",
+//                        description = "Grant camera permission for biometric capture"
+//                    )
+//
+//                    ProcessStep(
+//                        number = 2,
+//                        title = "Liveness Check",
+//                        description = "Follow on-screen instructions for facial verification"
+//                    )
+//
+//                    ProcessStep(
+//                        number = 3,
+//                        title = "Credential Generation",
+//                        description = "Secure credentials will be generated and sent to the server"
+//                    )
+//                }
+//            }
 
-                    ProcessStep(
-                        number = 1,
-                        title = "Camera Access",
-                        description = "Grant camera permission for biometric capture"
-                    )
-
-                    ProcessStep(
-                        number = 2,
-                        title = "Liveness Check",
-                        description = "Follow on-screen instructions for facial verification"
-                    )
-
-                    ProcessStep(
-                        number = 3,
-                        title = "Credential Generation",
-                        description = "Secure credentials will be generated and sent to the server"
-                    )
-                }
-            }
-
-            item {
-                // Security information
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                ) {
-                    androidx.compose.material3.Text(
-                        text = "Security & Privacy",
-                        style = AppFonts.heading,
-                        color = AppColors.textPrimary
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Filled.Security,
-                        title = "Zero-Knowledge Verification",
-                        description = "Your biometric data never leaves your device"
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Filled.CheckCircle,
-                        title = "Encrypted Communication",
-                        description = "All data is encrypted end-to-end during transmission"
-                    )
-                }
-            }
+//            item {
+//                // Security information
+//                Column(
+//                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                ) {
+//                    androidx.compose.material3.Text(
+//                        text = "Security & Privacy",
+//                        style = AppFonts.heading,
+//                        color = AppColors.textPrimary
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.Security,
+//                        title = "Zero-Knowledge Verification",
+//                        description = "Your biometric data never leaves your device"
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.CheckCircle,
+//                        title = "Encrypted Communication",
+//                        description = "All data is encrypted end-to-end during transmission"
+//                    )
+//                }
+//            }
         }
 
         // Fixed Primary Button at Bottom
@@ -117,10 +118,37 @@ fun AuthRequestStartScreen(
                 .padding(AppSpacing.screenPadding)
         ) {
             PrimaryButton(
-                title = "Start Authentication",
+                title = "Start",
                 isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onStartAuthentication
             )
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Auth Request Start - Waiting")
+@Composable
+fun AuthRequestStartScreenWaitingPreview() {
+    AuthRequestStartScreen(
+        requestState = ServerRequestState.RequestSent,
+        onStartAuthentication = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Auth Request Start - Ready")
+@Composable
+fun AuthRequestStartScreenReadyPreview() {
+    AuthRequestStartScreen(
+        requestState = ServerRequestState.RequestReceived,
+        onStartAuthentication = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Auth Request Start - Error")
+@Composable
+fun AuthRequestStartScreenErrorPreview() {
+    AuthRequestStartScreen(
+        requestState = ServerRequestState.RequestError("Sample error message"),
+        onStartAuthentication = {}
+    )
+}
