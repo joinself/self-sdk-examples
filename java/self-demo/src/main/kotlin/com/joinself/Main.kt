@@ -354,6 +354,11 @@ fun main() {
     println(qrCodeString)
 
     println("\n\n")
-    println("Press enter to exit")
-    readln()
+    println("Type quit or Ctrl-C to exit")
+    while (true) {
+        val q = readln()
+        if (q == "quit") {
+            break
+        }
+    }
 }

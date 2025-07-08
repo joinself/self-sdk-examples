@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation("com.joinself:sdk-jvm:1.0.0")
+    implementation("com.joinself:sdk-jvm:1.0.1")
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.serialization)

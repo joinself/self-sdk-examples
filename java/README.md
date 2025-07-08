@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-  implementation("com.joinself:sdk-jvm:1.0.0")
+  implementation("com.joinself:sdk-jvm:1.0.1")
 }
 ```
 
@@ -71,7 +71,7 @@ Requirements:
 - Docker
 
 ```bash
-docker run -it ghcr.io/joinself/self-sdk-demo:latest
+docker run --pull=always --rm -it ghcr.io/joinself/self-sdk-demo:java
 ```
 
 ### Source

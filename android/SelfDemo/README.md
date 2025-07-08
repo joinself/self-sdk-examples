@@ -80,7 +80,7 @@ cd self-sdk-examples/java
 Or run with docker image
 
 ```bash
-docker run -it ghcr.io/joinself/self-sdk-demo:latest
+docker run --pull=always --rm -it ghcr.io/joinself/self-sdk-demo:java
 ```
 
 ## Using the App
