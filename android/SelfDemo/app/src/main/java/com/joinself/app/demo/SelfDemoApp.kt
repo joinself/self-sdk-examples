@@ -3,6 +3,7 @@ package com.joinself.app.demo
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
@@ -264,6 +265,8 @@ fun SelfDemoApp(
                 delay(500)
                 viewModel.resetState(ServerRequestState.None)
             }
+
+            BackHandler {}
         }
 
         composable<MainRoute.AuthRequestStart> {
@@ -522,7 +525,7 @@ fun SelfDemoApp(
                 restoreState = appState.backupRestoreState,
                 onContinue = {
                     isRestoreFlow = false
-                    navController.navigate(MainRoute.ConnectToServerAddress)
+                    navController.navigate(MainRoute.ConnectToServerSelection)
                 },
                 onRetry = {
                     navController.popBackStack()
@@ -545,7 +548,7 @@ fun SelfDemoApp(
                                 val success = viewModel.register(selfie = selfie, credentials = credentials)
                                 if (success) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        navController.navigate(MainRoute.ConnectToServerAddress)
+                                        navController.navigate(MainRoute.ConnectToServerSelection)
                                     }
                                 }
                             }
