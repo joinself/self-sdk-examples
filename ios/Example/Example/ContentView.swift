@@ -16,10 +16,12 @@
 import SwiftUI
 import ui_components
 import self_ios_sdk
+import SelfUI
 
 enum AppScreen: Equatable {
     case initialization
     case registrationIntro
+    case serverConnectionSelection
     case serverConnection
     case serverConnectionProcessing(serverAddress: String)
     case actionSelection
@@ -79,6 +81,9 @@ struct ContentView: View {
     @State private var fileToShareURLs: [URL] = []
     @State private var showShareSheet = false
     
+    @State private var showQRScanner = false
+    @State private var isCodeValid = false
+    
     @State private var isRestoring = false
     @State private var isRegistering = false
     
@@ -103,7 +108,7 @@ struct ContentView: View {
                             viewModel.accountRegistered = success
                             self.isRegistering = success
                             withAnimation(.easeInOut(duration: 0.5)) {
-                                currentScreen = .serverConnection
+                                currentScreen = .serverConnectionSelection
                             }
                         }
                     } onRestore: {
@@ -111,6 +116,34 @@ struct ContentView: View {
                             currentScreen = .restoreStart
                         }
                     }
+                    
+                case .serverConnectionSelection:
+                    ServerConnectionSelectionScreen { connectionActionType in
+                        if connectionActionType == .manuallyConnect {
+                            self.setCurrentAppScreen(screen: .serverConnection)
+                        } else if connectionActionType == .scanQrCodeConnect {
+                            // MARK: QRCode Connection
+                            self.showQRScanner = true
+                        }
+                    } onBack: {
+                        
+                    }
+                    .fullScreenCover(isPresented: $showQRScanner, onDismiss: {
+                        
+                    }, content: {
+                        QRReaderView(isCodeValid: $isCodeValid, onCode: { code in
+                            print("QRCode: \(code)")
+                        }) { codeData in
+                            print("QRCode: \(codeData)")
+                            viewModel.handleAuthData(data: codeData) { error in
+                                if error == nil {
+                                    showQRScanner = false
+                                    self.setCurrentAppScreen(screen: .actionSelection)
+                                }
+                            }
+                        }
+                    })
+
                     
                 case .serverConnection:
                     ServerConnectionScreen(
@@ -154,7 +187,7 @@ struct ContentView: View {
                         onGoBack: {
                             // Reset connection state and go back to server connection screen
                             self.viewModel.resetUserDefaults()
-                            self.setCurrentAppScreen(screen: .serverConnection)
+                            self.setCurrentAppScreen(screen: .serverConnectionSelection)
                         }
                     )
                 case .actionSelection:
@@ -167,7 +200,7 @@ struct ContentView: View {
                             handleActionSelection(actionType)
                         }, onBack: {
                             self.viewModel.resetUserDefaults()
-                            self.setCurrentAppScreen(screen: .serverConnection)
+                            self.setCurrentAppScreen(screen: .serverConnectionSelection)
                         }
                     )
                     
@@ -508,7 +541,7 @@ struct ContentView: View {
                 case .restoreResult(let success):
                     RestoreAccountResultScreen(success: success) {
                         withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .serverConnection
+                            currentScreen = .serverConnectionSelection
                         }
                     } onBack: {
                         
@@ -587,7 +620,7 @@ struct ContentView: View {
                 currentScreen = .actionSelection
             } else if isRegistered {
                 print("🎯 ContentView: Account registered but not connected to server, navigating to SERVER_CONNECTION")
-                currentScreen = .serverConnection
+                currentScreen = .serverConnectionSelection
             } else {
                 print("🎯 ContentView: Account not registered, navigating to REGISTRATION_INTRO")
                 currentScreen = .registrationIntro
