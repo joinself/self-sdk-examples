@@ -4,7 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -18,8 +21,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ui.theme.AlertCard
@@ -32,18 +43,32 @@ import com.joinself.app.demo.ui.theme.InfoCard
 import com.joinself.app.demo.ui.theme.PrimaryButton
 import com.joinself.app.demo.ui.theme.ProcessStep
 import com.joinself.app.demo.ui.theme.StatusCard
+import com.joinself.ui.Constants
+import com.joinself.ui.component.ButtonStyle
+import com.joinself.ui.component.ColorButton
+import com.joinself.ui.component.PoweredBy
+import com.joinself.ui.component.PoweredByStyle
+import com.joinself.ui.component.Switch
+import com.joinself.ui.component.getString
+import com.joinself.ui.resources.Res
+import com.joinself.ui.resources.self_button_join_self
+import com.joinself.ui.resources.self_onboarding_thank_you_agree
+import com.joinself.ui.resources.self_onboarding_thank_you_subtitle_1
+import com.joinself.ui.resources.self_onboarding_thank_you_subtitle_2
+import com.joinself.ui.resources.self_onboarding_thank_you_subtitle_3
+import com.joinself.ui.theme.LocalSelfState
+import com.joinself.ui.theme.SelfModifier
 
 @Composable
 fun RegistrationIntroScreen(
+    selfModifier: SelfModifier,
     onStartRegistration: () -> Unit,
     onStartRestore: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isRequestingPermission by remember { mutableStateOf(false) }
-    var showPermissionError by remember { mutableStateOf(false) }
-    var cameraPermissionStatus by remember { mutableStateOf("Camera access will be requested") }
-    var hasPermissionIssue by remember { mutableStateOf(false) }
+    val checked = remember { mutableStateOf(false) }
+    val textStyle = selfModifier.textStyle()
 
     Column(
         modifier = modifier
@@ -109,52 +134,60 @@ fun RegistrationIntroScreen(
                     type = AlertType.Info
                 )
             }
-
-            // Camera Permission Status (only show if there's an issue)
-            if (hasPermissionIssue) {
-                item {
-                    StatusCard(
-                        title = "Camera Permission",
-                        status = cameraPermissionStatus,
-                        statusColor = AppColors.warning,
-                        subtitle = "You can update this in Settings or try again below",
-                        icon = Icons.Filled.Camera
-                    )
-                }
-            }
-
-            // Error Display
-            if (showPermissionError) {
-                item {
-                    AlertCard(
-                        title = "Camera Access Required",
-                        message = "Camera access is required for account registration. Please enable camera permission in Settings to continue.",
-                        type = AlertType.Warning,
-                        action = {
-                            onOpenSettings()
-                            showPermissionError = false
-                        },
-                        actionTitle = "Open Settings"
-                    )
-                }
-            }
         }
 
         // Fixed Primary Button at Bottom
         Column(
             modifier = Modifier
                 .background(Color.White)
-                .padding(AppSpacing.screenPadding)
+                .padding(AppSpacing.screenPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val annotatedString = buildAnnotatedString {
+                withStyle(style = SpanStyle(color = selfModifier.color.textPrimary)) {
+                    append("To use Self, please agree to our")
+                }
+                append("\n ")
+                withLink(LinkAnnotation.Url("https://docs.joinself.com/agreements/consumer_terms_and_conditions/", TextLinkStyles(SpanStyle(color = selfModifier.color.info, textDecoration = TextDecoration.Underline)))) {
+                    append("terms & conditions")
+                }
+                withStyle(style = SpanStyle(color = selfModifier.color.textPrimary)) {
+                    append(" & ")
+                }
+                withLink(LinkAnnotation.Url("https://docs.joinself.com/agreements/app_privacy_notice/", TextLinkStyles(SpanStyle(color = selfModifier.color.info, textDecoration = TextDecoration.Underline)))) {
+                    append("privacy policy.")
+                }
+            }
+
+            Text(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = selfModifier.dimension.padding.normal),
+                text = annotatedString, style = textStyle.body1
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(bottom = selfModifier.dimension.padding.normal).height(20.dp)
+            ) {
+                Switch(selfModifier = selfModifier, enabled = true, checked = checked.value) {
+                    checked.value = it
+                }
+                Text(
+                    modifier = Modifier.padding(start = selfModifier.dimension.padding.normal),
+                    text = "I agree",
+                    style = textStyle.body1,
+                    color = selfModifier.color.textPrimary
+                )
+            }
+
             PrimaryButton(
                 title = "Start",
                 onClick = {
-                    isRequestingPermission = true
                     onStartRegistration()
-                    isRequestingPermission = false
                 },
-                isLoading = isRequestingPermission,
-                isDisabled = isRequestingPermission
+                isDisabled = !checked.value
             )
         }
     }
@@ -164,6 +197,7 @@ fun RegistrationIntroScreen(
 @Composable
 fun RegistrationIntroScreenPreview() {
     RegistrationIntroScreen(
+        selfModifier = SelfModifier.sdk(),
         onStartRegistration = {},
         onStartRestore = {},
         onOpenSettings = {}

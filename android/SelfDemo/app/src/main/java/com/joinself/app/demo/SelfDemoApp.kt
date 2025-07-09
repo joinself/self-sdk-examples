@@ -194,7 +194,7 @@ fun SelfDemoApp(
         }
 
         composable<MainRoute.Registration> {
-            RegistrationIntroScreen(
+            RegistrationIntroScreen( selfModifier = selfModifier,
                 onStartRegistration = {
                     navController.navigate(MainRoute.LivenessRoute)
                 },
