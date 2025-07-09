@@ -24,21 +24,17 @@ public struct ServerConnectionSelectionScreen: View {
             VStack(spacing: 0) {
                 // DEBUG Header
                 HStack {
-                    Text("DEBUG: SERVER_CONNECTION_START")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
                     Spacer()
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color.blue)
                 .frame(maxWidth: .infinity)
                 
                 VStack(spacing: 40) {
                     // Cloud Icon and Title Section
                     VStack(spacing: 24) {
                         // Cloud Icon
-                        Image(systemName: "cloud")
+                        Image(systemName: ResourceNames.ICON_CLOUD)
                             .font(.system(size: 80))
                             .foregroundColor(.blue)
                             .padding(.top, 40)

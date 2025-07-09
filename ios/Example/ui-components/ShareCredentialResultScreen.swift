@@ -22,14 +22,10 @@ public struct ShareCredentialResultScreen: View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {
-                Text("DEBUG: SHARE_CUSTOM_RESULT")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
                 Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.blue)
             .frame(maxWidth: .infinity)
             
             // Scrollable content
