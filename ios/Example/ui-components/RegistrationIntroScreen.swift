@@ -8,6 +8,7 @@ import SwiftUI
 public struct RegistrationIntroScreen: View {
     @Binding private var isProcessing: Bool
     @State private var errorMessage: String? = nil
+    @State private var isOn = false
     
     let onNext: () -> Void
     let onRestore: () -> Void
@@ -36,21 +37,10 @@ public struct RegistrationIntroScreen: View {
             
             VStack(spacing: 40) {
                 // User Icon and Title Section
-                VStack(spacing: 24) {
+                VStack(spacing: 40) {
                     // User Icon
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 80, height: 80)
-                        Image(systemName: "plus")
-                            .font(.system(size: 40))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                        Image(systemName: "person")
-                            .font(.system(size: 40))
-                            .foregroundColor(.white)
-                    }
-                    .frame(width: 100, height: 100, alignment: .topLeading)
+                    Image("person_add", bundle: ResourceNames.bundle)
+                        .padding()
                     
                     // Title and Subtitle
                     VStack(spacing: 12) {
@@ -71,10 +61,28 @@ public struct RegistrationIntroScreen: View {
                 CardView(icon: ResourceNames.ICON_LIVENESS, title: "Liveness Check Required", description: "You will be asked for camera permission when you start. Look directly at the camera and follow the on-screen instructions.")
                 
                 Spacer()
+                VStack (spacing: 0){
+                    Text(self.cal())
+                        .foregroundStyle(.black)
+                        .tint(.blue) // link color
+                        .multilineTextAlignment(.center)
+                }
+                
+                HStack (alignment: .center) {
+                    Toggle("", isOn: $isOn)
+                        .toggleStyle(CustomToggleStyle(onColor: Color(red: 0, green: 0.64, blue: 0.43), offColor: Color(red: 0.24, green: 0.24, blue: 0.24), thumbColor: .white))
+                        .frame(maxWidth: 40)
+                        .padding()
+                    Text("I agree")
+                        .foregroundStyle(Color.black)
+                        .onTapGesture {
+                            isOn.toggle()
+                        }
+                }
                 
                 // Start Registration Button
                 Button(action: {
-                    startRegistration()
+                    onNext()
                 }) {
                     HStack {
                         if isProcessing {
@@ -84,16 +92,17 @@ public struct RegistrationIntroScreen: View {
                             Text("Registering...")
                         } else {
                             Text("Start")
+                                .foregroundStyle(Color(red: 0.31, green: 0.31, blue: 0.31))
                         }
                     }
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
+                    .background(!isOn ? Color(red: 0.95, green: 0.95, blue: 0.95) : Color.blue)
                     .cornerRadius(12)
                 }
-                .disabled(isProcessing)
+                .disabled(!isOn)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
                 
@@ -110,8 +119,49 @@ public struct RegistrationIntroScreen: View {
         .background(Color.white)
     }
     
-    private func startRegistration() {
-        onNext()
+    private func cal() -> AttributedString {
+        let str = "To use Self, please agree to our\n[terms & conditions](https://docs.joinself.com/agreements/consumer_terms_and_conditions) & [privacy policy](https://docs.joinself.com/agreements/app_privacy_notice)."
+        var markdownText = try! AttributedString(markdown: str, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+        let termAndConditionLink = markdownText.range(of: "terms & conditions")!
+        markdownText[termAndConditionLink].underlineStyle = .single
+        
+        let privacyPolicyLink = markdownText.range(of: "privacy policy")!
+        markdownText[privacyPolicyLink].underlineStyle = .single
+        
+        return markdownText
+    }
+}
+
+struct CustomToggleStyle: ToggleStyle {
+    var onColor: Color
+    var offColor: Color
+    var thumbColor: Color
+    
+    public init(onColor: Color, offColor: Color, thumbColor: Color) {
+        self.onColor = onColor
+        self.offColor = offColor
+        self.thumbColor = thumbColor
+    }
+    
+    public func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            configuration.label
+            Spacer()
+            Button(action: {
+                configuration.isOn.toggle()
+            }) {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(configuration.isOn ? onColor : offColor)
+                    .frame(width: 50, height: 30)
+                    .overlay(
+                        Circle()
+                            .fill(thumbColor)
+                            .padding(3)
+                            .offset(x: configuration.isOn ? 10 : -10)
+                    )
+                    .animation(.easeInOut, value: configuration.isOn)
+            }
+        }
     }
 }
 
