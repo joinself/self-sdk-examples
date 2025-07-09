@@ -19,14 +19,10 @@ public struct AuthResultScreen: View {
             VStack(spacing: 0) {
                 // DEBUG Header
                 HStack {
-                    Text("DEBUG: AUTH_RESULT")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
                     Spacer()
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color.blue)
                 .frame(maxWidth: .infinity)
                 
                 // Scrollable content
@@ -48,7 +44,7 @@ public struct AuthResultScreen: View {
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Authentication Successful")
+                                Text("Authentication Success")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
@@ -68,14 +64,14 @@ public struct AuthResultScreen: View {
                                     .font(.system(size: 24))
                                     .foregroundColor(.green)
                                 
-                                Text("Identity Verified")
+                                Text("Verification Complete")
                                     .font(.system(size: 18, weight: .semibold))
                                     .foregroundColor(.black)
                                 
                                 Spacer()
                             }
                             
-                            Text("Your liveness check was completed successfully and your credentials have been validated by the server. You can now continue with other actions.")
+                            Text("You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
                                 .font(.system(size: 14))
                                 .foregroundColor(.gray)
                                 .lineLimit(nil)

@@ -18,14 +18,10 @@ public struct ShareEmailCredentialResultScreen: View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {
-                Text("DEBUG: DOC_SIGN_RESULT")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
                 Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.blue)
             .frame(maxWidth: .infinity)
             
             // Scrollable content

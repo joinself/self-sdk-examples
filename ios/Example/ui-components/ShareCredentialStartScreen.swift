@@ -27,18 +27,13 @@ public struct ShareCredentialStartScreen: View {
                         Button {
                             onBack()
                         } label: {
-                            Image(systemName: "arrow.left")
-                                .foregroundStyle(Color.white)
+                            Image(systemName: ResourceNames.ICON_BACK)
+                                .foregroundStyle(Color.gray)
                         }
-
-                        Text("DEBUG: ACTION_SELECTION")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
                         Spacer()
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Color.blue)
                     .frame(maxWidth: .infinity)
                     
                     VStack(spacing: 40) {

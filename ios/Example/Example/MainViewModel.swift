@@ -197,6 +197,7 @@ final class MainViewModel: ObservableObject {
             do {
                 let discoveryData = try await Account.qrCode(data: data)
                 print("Discovery Data: \(discoveryData)")
+                self.serverAddress = discoveryData?.address
                 try await account.connectWith(qrCode: data)
                 Task { @MainActor in
                     completion?(nil)

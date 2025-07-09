@@ -67,14 +67,10 @@ public struct InitializeSDKScreen: View {
             VStack(spacing: 0) {
                 // DEBUG Header
                 HStack {
-                    Text("DEBUG: SDK_INITIALIZATION")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
                     Spacer()
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color.blue)
                 .frame(maxWidth: .infinity)
                 
                 VStack(spacing: 32) {

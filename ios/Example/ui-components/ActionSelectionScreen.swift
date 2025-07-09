@@ -34,18 +34,13 @@ public struct ActionSelectionScreen: View {
                         Button {
                             onBack?()
                         } label: {
-                            Image(systemName: "arrow.left")
-                                .foregroundStyle(Color.white)
+                            Image(systemName: ResourceNames.ICON_BACK)
+                                .foregroundStyle(Color.blue)
                         }
-                        
-                        Text("DEBUG: ACTION_SELECTION")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
                         Spacer()
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Color.blue)
                     .frame(maxWidth: .infinity)
                     
                     VStack(spacing: 40) {
@@ -53,24 +48,20 @@ public struct ActionSelectionScreen: View {
                         VStack(spacing: 24) {
                             // Shield with Checkmark Icon
                             ZStack {
-                                Image(systemName: "shield.fill")
+                                Image(systemName: "lock.shield.fill")
                                     .font(.system(size: 80))
                                     .foregroundColor(.blue)
-                                
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.white)
                             }
                             .padding(.top, 40)
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Server Connection Ready")
+                                Text("Server Connected")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                 
-                                Text("Your Self account is connected to the server and ready to use. Choose an action below to get started with secure authentication and verification.")
+                                Text("Your Self account is connected to the server and ready to use. Choose an action below to get started.")
                                     .font(.system(size: 16))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -80,12 +71,6 @@ public struct ActionSelectionScreen: View {
                         
                         // Available Actions Section
                         VStack(alignment: .leading, spacing: 24) {
-                            HStack {
-                                Text("Available Actions")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(.black)
-                                Spacer()
-                            }
                             
                             VStack(spacing: 16) {
                                 ActionCardView(
@@ -100,7 +85,7 @@ public struct ActionSelectionScreen: View {
                                 ActionCardView(
                                     icon: "checkmark.shield.fill",
                                     title: "Verify Credentials",
-                                    description: "Verify information about you such as email and government issued ID",
+                                    description: "Verify information about you such as email and government-issued ID.",
                                     action: {
                                         onActionSelected(.verifyCredentials)
                                     }
@@ -108,7 +93,7 @@ public struct ActionSelectionScreen: View {
                                 
                                 ActionCardView(
                                     icon: "square.and.arrow.up",
-                                    title: "Provide Credentials",
+                                    title: "Share Credentials",
                                     description: "Securely share verified information about you",
                                     action: {
                                         onActionSelected(.provideCredentials)
@@ -117,8 +102,8 @@ public struct ActionSelectionScreen: View {
                                 
                                 ActionCardView(
                                     icon: "pencil",
-                                    title: "Sign Documents",
-                                    description: "Securely review, sign, and share documents",
+                                    title: "Digital Signatures",
+                                    description: "Sign a document with your digital signature.",
                                     action: {
                                         onActionSelected(.signDocuments)
                                     }

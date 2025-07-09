@@ -16,14 +16,10 @@ public struct AuthStartScreen: View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {
-                Text("DEBUG: AUTH_START")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
                 Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.blue)
             .frame(maxWidth: .infinity)
             
             // Scrollable content
@@ -32,9 +28,7 @@ public struct AuthStartScreen: View {
                     // Shield Icon and Title Section
                     VStack(spacing: 24) {
                         // Shield Icon
-                        Image(systemName: "shield.fill")
-                            .font(.system(size: 48))
-                            .foregroundColor(.blue)
+                        Image("ic_login", bundle: ResourceNames.bundle)
                             .padding(.top, 40)
                         
                         // Title and Subtitle
@@ -53,31 +47,7 @@ public struct AuthStartScreen: View {
                     }
                     
                     // Biometric Verification Info Box
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "faceid")
-                                .font(.system(size: 24))
-                                .foregroundColor(.blue)
-                            
-                            Text("Biometric Verification Required")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.black)
-                            
-                            Spacer()
-                        }
-                        
-                        Text("You will be asked to take a selfie to verify your liveness and identity. This process is secure and your biometric data stays on your device.")
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray)
-                            .lineLimit(nil)
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                            .background(Color.blue.opacity(0.05))
-                    )
-                    .padding(.horizontal, 20)
+                    CardView(icon: ResourceNames.ICON_LIVENESS, title: "Liveness Check Required", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
                 }
                 .padding(.bottom, 20) // Space above button
             }
