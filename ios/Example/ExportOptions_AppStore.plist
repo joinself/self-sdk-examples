@@ -7,7 +7,7 @@
 	<key>teamID</key>
 	<string>B233VZ3W3Z</string>
 	<key>uploadBitcode</key>
-	<true/>
+	<false/>
 	<key>compileBitcode</key>
 	<true/>
 	<key>uploadSymbols</key>
@@ -19,7 +19,7 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.joinself.app.demo</key>
-		<string>ExampleApp_AppStore</string>
+		<string>ExampleApp_Appstore1</string>
 	</dict>
 </dict>
 </plist>
