@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.joinself.app.demo.ServerRequestState
 import com.joinself.common.CredentialType
@@ -26,18 +27,18 @@ fun ShareCredentialApprovalScreen(
 ) {
     val (title, description, icon) = when (credentialType) {
         CredentialType.Email -> Triple(
-            "Share Email Credential?",
-            "The server is requesting proof of your verified email address. Your actual email address will not be shared - only cryptographic proof that you own a verified email.",
+            "Share Email?",
+            "The server is requesting your verified email address.",
             Icons.Filled.Security
         )
         CredentialType.Document -> Triple(
-            "Share ID Number?", 
-            "The server is requesting proof of your verified ID number. Your personal information will not be shared - only cryptographic proof that you have a verified ID number.",
+            "Share ID Number?",
+            "The server is requesting your verified identity document number.",
             Icons.Filled.Security
         )
         else -> Triple(
-            "Share Credential?",
-            "The server is requesting access to one of your verified credentials.",
+            "Share Custom Credential?",
+            "The server is requesting your custom credential.",
             Icons.Filled.Share
         )
     }
@@ -63,7 +64,7 @@ fun ShareCredentialApprovalScreen(
             }
 
             val infoTitle = if (requestState is ServerRequestState.RequestSent) "Waiting for a request from server..."
-            else if (requestState is ServerRequestState.RequestReceived) "The server has requested access to your verified ${credentialType} credential. This is a secure, privacy-preserving request that doesn't expose your personal information."
+            else if (requestState is ServerRequestState.RequestReceived) "The server has requested access to your verified ${credentialType}."
             else if (requestState is ServerRequestState.RequestError) "The request timed out. Please go back, check the server and try again."
             else "Credential Request"
             item {
@@ -76,46 +77,46 @@ fun ShareCredentialApprovalScreen(
                 )
             }
 
-            item {
-                // What will be shared section
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                ) {
-                    androidx.compose.material3.Text(
-                        text = "What Will Be Shared",
-                        style = AppFonts.heading,
-                        color = AppColors.textPrimary
-                    )
+//            item {
+//                // What will be shared section
+//                Column(
+//                    verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                ) {
+//                    androidx.compose.material3.Text(
+//                        text = "What Will Be Shared",
+//                        style = AppFonts.heading,
+//                        color = AppColors.textPrimary
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.CheckCircle,
+//                        title = "Verification Status",
+//                        description = "Proof that you have a verified ${credentialType} credential"
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.Security,
+//                        title = "Cryptographic Proof",
+//                        description = "Zero-knowledge proof of credential ownership"
+//                    )
+//
+//                    FeatureRow(
+//                        icon = Icons.Filled.Error,
+//                        title = "Personal Data",
+//                        description = "❌ Your actual ${if (credentialType == "email") "email address" else "ID number"} will NOT be shared"
+//                    )
+//                }
+//            }
 
-                    FeatureRow(
-                        icon = Icons.Filled.CheckCircle,
-                        title = "Verification Status",
-                        description = "Proof that you have a verified ${credentialType} credential"
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Filled.Security,
-                        title = "Cryptographic Proof",
-                        description = "Zero-knowledge proof of credential ownership"
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Filled.Error,
-                        title = "Personal Data",
-                        description = "❌ Your actual ${if (credentialType == "email") "email address" else "ID number"} will NOT be shared"
-                    )
-                }
-            }
-
-            item {
-                // Privacy note
-                InfoCard(
-                    icon = Icons.Filled.Security,
-                    title = "Privacy Protected",
-                    message = "This credential sharing uses advanced cryptography to prove you have verified information without revealing the actual data. The server only learns that you have a valid ${credentialType} credential.",
-                    type = AlertType.Success
-                )
-            }
+//            item {
+//                // Privacy note
+//                InfoCard(
+//                    icon = Icons.Filled.Security,
+//                    title = "Privacy Protected",
+//                    message = "This credential sharing uses advanced cryptography to prove you have verified information without revealing the actual data. The server only learns that you have a valid ${credentialType} credential.",
+//                    type = AlertType.Success
+//                )
+//            }
         }
 
         // Fixed action buttons at bottom
@@ -126,16 +127,60 @@ fun ShareCredentialApprovalScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
         ) {
             PrimaryButton(
-                title = "Approve & Share Credential",
+                title = "Approve",
                 isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onApprove
             )
             
             SecondaryButton(
-                title = "Deny Request",
+                title = "Reject",
                 isDisabled = requestState != ServerRequestState.RequestReceived,
                 onClick = onDeny
             )
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Share Email Credential Approval - Ready")
+@Composable
+fun ShareEmailCredentialApprovalScreenReadyPreview() {
+    ShareCredentialApprovalScreen(
+        credentialType = CredentialType.Email,
+        requestState = ServerRequestState.RequestReceived,
+        onApprove = {},
+        onDeny = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Share Document Credential Approval - Ready")
+@Composable
+fun ShareDocumentCredentialApprovalScreenReadyPreview() {
+    ShareCredentialApprovalScreen(
+        credentialType = CredentialType.Document,
+        requestState = ServerRequestState.RequestReceived,
+        onApprove = {},
+        onDeny = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Share Credential Approval - Waiting")
+@Composable
+fun ShareCredentialApprovalScreenWaitingPreview() {
+    ShareCredentialApprovalScreen(
+        credentialType = CredentialType.Email,
+        requestState = ServerRequestState.RequestSent,
+        onApprove = {},
+        onDeny = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Share Credential Approval - Error")
+@Composable
+fun ShareCredentialApprovalScreenErrorPreview() {
+    ShareCredentialApprovalScreen(
+        credentialType = CredentialType.Email,
+        requestState = ServerRequestState.RequestError("Request timed out"),
+        onApprove = {},
+        onDeny = {}
+    )
+}

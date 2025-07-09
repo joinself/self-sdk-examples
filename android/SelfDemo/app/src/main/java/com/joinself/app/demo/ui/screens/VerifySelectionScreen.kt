@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -59,8 +60,8 @@ fun VerifySelectionScreen(
                 // Hero Section
                 HeroSection(
                     icon = Icons.Filled.Security,
-                    title = "Verify Credentials",
-                    subtitle = "Choose the type of credential you want to verify. These verifications help establish trust and prove aspects of your identity."
+                    title = "Get Credentials",
+                    subtitle = "Choose the credential you want to get. These credentials help you establish trust and prove aspects of your identity."
                 )
             }
 
@@ -79,7 +80,7 @@ fun VerifySelectionScreen(
                     VerificationCard(
                         icon = Icons.Filled.Email,
                         title = "Verify Email Address",
-                        description = "Verify ownership of your email address",
+                        description = "Verify ownership of your email address.",
                         isEnabled = true,
                         onClick = onVerifyEmail
                     )
@@ -87,7 +88,7 @@ fun VerifySelectionScreen(
                     VerificationCard(
                         icon = Icons.Filled.Badge,
                         title = "Verify Identity Document",
-                        description = "Verify your government-issued identity documents",
+                        description = "Verify your government-issued identity documents.",
                         isEnabled = true,
                         onClick = onVerifyIdentityDocument
                     )
@@ -95,7 +96,7 @@ fun VerifySelectionScreen(
                     VerificationCard(
                         icon = Icons.Filled.AssignmentInd,
                         title = "Get Custom Credential",
-                        description = "Get credentials that created and verified by your server",
+                        description = "Get a credential created by the server you are connected to.",
                         isEnabled = true,
                         onClick = onGetCredentials
                     )
@@ -170,4 +171,15 @@ private fun VerificationCard(
             }
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Verify Selection Screen")
+@Composable
+fun VerifySelectionScreenPreview() {
+    VerifySelectionScreen(
+        onVerifyIdentityDocument = {},
+        onVerifyEmail = {},
+        onGetCredentials = {},
+        onBack = {}
+    )
+}

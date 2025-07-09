@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -37,11 +38,11 @@ fun VerifyEmailResultScreen(
                 // Hero Section with Success/Error State
                 HeroSection(
                     icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                    title = if (isSuccess) "Email Verified Successfully!" else "Verification Failed",
+                    title = if (isSuccess) "Verification Success" else "Verification Failure",
                     subtitle = if (isSuccess) 
                         "Your email address has been successfully verified and a secure credential has been created on your device."
                     else 
-                        "We were unable to verify your email address. This could be due to an invalid email, network issues, or if the verification link was not clicked."
+                        "Your email address could not be verified. Please try again."
                 )
             }
 
@@ -68,36 +69,36 @@ fun VerifyEmailResultScreen(
                     )
                 }
 
-                item {
-                    // Troubleshooting tips
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Troubleshooting Tips",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.CheckCircle,
-                            title = "Check Email Address",
-                            description = "Ensure you entered a valid, accessible email address"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Email,
-                            title = "Check Your Inbox",
-                            description = "Look in spam/junk folders for the verification email"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Security,
-                            title = "Network Connection",
-                            description = "Ensure you have a stable internet connection during verification"
-                        )
-                    }
-                }
+//                item {
+//                    // Troubleshooting tips
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "Troubleshooting Tips",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.CheckCircle,
+//                            title = "Check Email Address",
+//                            description = "Ensure you entered a valid, accessible email address"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Email,
+//                            title = "Check Your Inbox",
+//                            description = "Look in spam/junk folders for the verification email"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Security,
+//                            title = "Network Connection",
+//                            description = "Ensure you have a stable internet connection during verification"
+//                        )
+//                    }
+//                }
             }
 
 
@@ -115,4 +116,22 @@ fun VerifyEmailResultScreen(
             )
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Verify Email Result - Success")
+@Composable
+fun VerifyEmailResultScreenSuccessPreview() {
+    VerifyEmailResultScreen(
+        isSuccess = true,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Verify Email Result - Failure")
+@Composable
+fun VerifyEmailResultScreenFailurePreview() {
+    VerifyEmailResultScreen(
+        isSuccess = false,
+        onContinue = {}
+    )
+}

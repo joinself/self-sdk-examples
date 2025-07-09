@@ -67,14 +67,14 @@ fun BackupResultScreen(
                 if (backupState is BackupRestoreState.Success) {
                     InfoCard(
                         icon = Icons.Filled.CheckCircle,
-                        title = "Backup Complete & Secured",
-                        message = "Your information is now safely stored and managed by the Self system. You can restore your account through identity verification if needed.",
+                        title = "Backup Complete",
+                        message = "Your data has been backed up in an encrypted file. You can restore the data using your biometrics.",
                         type = AlertType.Success
                     )
                 } else {
                     AlertCard(
-                        title = "Error Details",
-                        message = "The backup process could not be completed. Please check your internet connection and try again. If the problem persists, contact support.",
+                        title = "Backup Failed",
+                        message = "The backup process could not be completed. Please check your internet connection and try again.",
                         type = AlertType.Error
                     )
                 }
@@ -82,58 +82,58 @@ fun BackupResultScreen(
 
             // Optional: Add more sections if needed
             if (backupState is BackupRestoreState.Success) {
-                item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Backup Details",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-                        ProcessStep(
-                            number = 1,
-                            title = "System-Managed Recovery",
-                            description = "The Self system has secured your backup. Account recovery will involve identity verification."
-                        )
-                        ProcessStep(
-                            number = 2, // You can keep numbering for other steps if desired
-                            title = "Data Encrypted",
-                            description = "Your account data was encrypted for security."
-                        )
-                        ProcessStep(
-                            number = 3,
-                            title = "Secure Upload",
-                            description = "Encrypted data was uploaded and stored securely."
-                        )
-                    }
-                }
+//                item {
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "Backup Details",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//                        ProcessStep(
+//                            number = 1,
+//                            title = "System-Managed Recovery",
+//                            description = "The Self system has secured your backup. Account recovery will involve identity verification."
+//                        )
+//                        ProcessStep(
+//                            number = 2, // You can keep numbering for other steps if desired
+//                            title = "Data Encrypted",
+//                            description = "Your account data was encrypted for security."
+//                        )
+//                        ProcessStep(
+//                            number = 3,
+//                            title = "Secure Upload",
+//                            description = "Encrypted data was uploaded and stored securely."
+//                        )
+//                    }
+//                }
             } else {
                 // Troubleshooting for failed backup
-                item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Troubleshooting",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-                        ProcessStep(
-                            number = 1,
-                            title = "Check Network",
-                            description = "Ensure you have a stable internet connection."
-                        )
-                        // Add other relevant troubleshooting steps
-                        if (onRetry != null) {
-                            ProcessStep(
-                                number = 2,
-                                title = "Try Again",
-                                description = "Attempt the backup process once more."
-                            )
-                        }
-                    }
-                }
+//                item {
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "Troubleshooting",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//                        ProcessStep(
+//                            number = 1,
+//                            title = "Check Network",
+//                            description = "Ensure you have a stable internet connection."
+//                        )
+//                        // Add other relevant troubleshooting steps
+//                        if (onRetry != null) {
+//                            ProcessStep(
+//                                number = 2,
+//                                title = "Try Again",
+//                                description = "Attempt the backup process once more."
+//                            )
+//                        }
+//                    }
+//                }
             }
         }
 
@@ -146,15 +146,15 @@ fun BackupResultScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
         ) {
             PrimaryButton(
-                title = if (backupState is BackupRestoreState.Success) "Done" else "Continue",
+                title = if (backupState is BackupRestoreState.Success) "Continue" else "Continue",
                 onClick = onContinue
             )
-            if (backupState is BackupRestoreState.Error && onRetry != null) {
-                SecondaryButton(
-                    title = "Retry Backup",
-                    onClick = onRetry
-                )
-            }
+//            if (backupState is BackupRestoreState.Error && onRetry != null) {
+//                SecondaryButton(
+//                    title = "Retry Backup",
+//                    onClick = onRetry
+//                )
+//            }
         }
     }
 }

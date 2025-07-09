@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import com.joinself.app.demo.ServerRequestState
 import com.joinself.common.CredentialType
 import com.joinself.sdk.models.ResponseStatus
@@ -77,41 +78,41 @@ fun ShareCredentialResultScreen(
                     InfoCard(
                         icon = Icons.Filled.Verified,
                         title = "Credential $statusName Successfully",
-                        message = "Your ${credentialType} credential has been securely ${statusName.lowercase()} with the server using zero-knowledge cryptographic proofs. Your privacy has been protected throughout the process.",
+                        message = "Your ${credentialType} credential has been securely ${statusName.lowercase()} with the server.",
                         type = AlertType.Success
                     )
                 }
 
-                item {
-                    // What was shared
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "What Was Shared",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Security,
-                            title = "Verification Proof",
-                            description = "Cryptographic proof that you have a verified ${credentialType}"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Share,
-                            title = "Privacy Protected", 
-                            description = "Zero-knowledge proof - no personal data was exposed"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.CheckCircle,
-                            title = "Server Confirmation",
-                            description = "The server has confirmed receipt of your credential proof"
-                        )
-                    }
-                }
+//                item {
+//                    // What was shared
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "What Was Shared",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Security,
+//                            title = "Verification Proof",
+//                            description = "Cryptographic proof that you have a verified ${credentialType}"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Share,
+//                            title = "Privacy Protected",
+//                            description = "Zero-knowledge proof - no personal data was exposed"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.CheckCircle,
+//                            title = "Server Confirmation",
+//                            description = "The server has confirmed receipt of your credential proof"
+//                        )
+//                    }
+//                }
             } else {
                 item {
                     // Error information
@@ -123,51 +124,51 @@ fun ShareCredentialResultScreen(
                     )
                 }
 
-                item {
-                    // Troubleshooting tips
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Troubleshooting Tips",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.CheckCircle,
-                            title = "Check Credentials",
-                            description = "Ensure you have verified ${credentialType} credentials on your device"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Share,
-                            title = "Network Connection",
-                            description = "Verify you have a stable internet connection"
-                        )
-
-                        FeatureRow(
-                            icon = Icons.Filled.Security,
-                            title = "Server Connection",
-                            description = "Make sure you're still connected to the server"
-                        )
-                    }
-                }
+//                item {
+//                    // Troubleshooting tips
+//                    Column(
+//                        verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "Troubleshooting Tips",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.CheckCircle,
+//                            title = "Check Credentials",
+//                            description = "Ensure you have verified ${credentialType} credentials on your device"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Share,
+//                            title = "Network Connection",
+//                            description = "Verify you have a stable internet connection"
+//                        )
+//
+//                        FeatureRow(
+//                            icon = Icons.Filled.Security,
+//                            title = "Server Connection",
+//                            description = "Make sure you're still connected to the server"
+//                        )
+//                    }
+//                }
             }
 
-            item {
-                // Status summary
-                StatusCard(
-                    title = "Credential Sharing",
-                    status = if (isSuccess) "Completed Successfully" else "Failed",
-                    statusColor = if (isSuccess) AppColors.success else AppColors.error,
-                    subtitle = if (isSuccess) 
-                        "Your ${credentialType} credential proof has been delivered"
-                    else 
-                        "You can try sharing your credentials again",
-                    icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error
-                )
-            }
+//            item {
+//                // Status summary
+//                StatusCard(
+//                    title = "Credential Sharing",
+//                    status = if (isSuccess) "Completed Successfully" else "Failed",
+//                    statusColor = if (isSuccess) AppColors.success else AppColors.error,
+//                    subtitle = if (isSuccess)
+//                        "Your ${credentialType} credential proof has been delivered"
+//                    else
+//                        "You can try sharing your credentials again",
+//                    icon = if (isSuccess) Icons.Filled.CheckCircle else Icons.Filled.Error
+//                )
+//            }
         }
 
         // Fixed Primary Button at Bottom
@@ -177,7 +178,7 @@ fun ShareCredentialResultScreen(
                 .padding(AppSpacing.screenPadding)
         ) {
             PrimaryButton(
-                title = if (isSuccess) "Continue to Actions" else "Try Again",
+                title = if (isSuccess) "Continue" else "Continue",
                 onClick = onContinue
             )
         }
@@ -185,4 +186,44 @@ fun ShareCredentialResultScreen(
 }
 
 // Helper data class for multiple return values
-private data class Tuple4<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D) 
+private data class Tuple4<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@Preview(showBackground = true, name = "Share Email Credential Result - Accepted")
+@Composable
+fun ShareEmailCredentialResultAcceptedPreview() {
+    ShareCredentialResultScreen(
+        requestState = ServerRequestState.ResponseSent(ResponseStatus.accepted),
+        credentialType = CredentialType.Email,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Share Email Credential Result - Rejected")
+@Composable
+fun ShareEmailCredentialResultRejectedPreview() {
+    ShareCredentialResultScreen(
+        requestState = ServerRequestState.ResponseSent(ResponseStatus.rejected),
+        credentialType = CredentialType.Email,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Share Document Credential Result - Accepted")
+@Composable
+fun ShareDocumentCredentialResultAcceptedPreview() {
+    ShareCredentialResultScreen(
+        requestState = ServerRequestState.ResponseSent(ResponseStatus.accepted),
+        credentialType = CredentialType.Document,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Share Credential Result - Failed")
+@Composable
+fun ShareCredentialResultFailedPreview() {
+    ShareCredentialResultScreen(
+        requestState = ServerRequestState.RequestError("Sharing failed"),
+        credentialType = CredentialType.Email,
+        onContinue = {}
+    )
+}

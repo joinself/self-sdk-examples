@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -49,52 +50,52 @@ fun GetCredentialStartScreen(
                 // Hero Section
                 HeroSection(
                     icon = Icons.Filled.AssignmentInd, // Or Icons.Filled.Verified
-                    title = "Receive Your $credentialName",
-                    subtitle = "A new $credentialName will be generated and securely signed by our server, then delivered to your device."
+                    title = "Get $credentialName",
+                    subtitle = "A new $credentialName will be delivered to your device."
                 )
             }
 
             item {
                 // Information about the process
                 InfoCard(
-                    icon = Icons.Filled.CloudDone, // Icon implying server interaction
-                    title = "Server-Generated Credentials",
-                    message = "For your security and convenience, your $credentialName is created and digitally signed by our trusted server. This ensures its authenticity and integrity.",
+                    icon = Icons.Filled.Settings, // Icon implying server interaction
+                    title = "Credential Generation",
+                    message = "The server will generate and securely sign a new $credentialName for you, then deliver it to your device.",
                     type = AlertType.Info
                 )
             }
 
-            item {
-                // More details about what will happen or benefits
-                // This is similar to the "Email Verification Required" InfoCard in VerifyEmailStartScreen
-                // but adapted for credentials
-                InfoCard(
-                    icon = Icons.Filled.Security,
-                    title = "What to Expect",
-                    message = "The process is quick and secure. Once initiated, the server will prepare your $credentialName. No complex steps are required from your side during generation.",
-                    type = AlertType.Info // Or AlertType.Success if it's more of a benefit
-                )
-            }
+//            item {
+//                // More details about what will happen or benefits
+//                // This is similar to the "Email Verification Required" InfoCard in VerifyEmailStartScreen
+//                // but adapted for credentials
+//                InfoCard(
+//                    icon = Icons.Filled.Security,
+//                    title = "What to Expect",
+//                    message = "The process is quick and secure. Once initiated, the server will prepare your $credentialName. No complex steps are required from your side during generation.",
+//                    type = AlertType.Info // Or AlertType.Success if it's more of a benefit
+//                )
+//            }
 
-             item {
-                 Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)) {
-                     Text(
-                         text = "Benefits",
-                         style = AppFonts.heading,
-                         color = AppColors.textPrimary
-                     )
-                     FeatureRow(
-                         icon = Icons.Filled.Verified,
-                         title = "Authentic & Verified",
-                         description = "Receive a credential that is verifiably authentic."
-                     )
-                     FeatureRow(
-                         icon = Icons.Filled.Security,
-                         title = "Securely Delivered",
-                         description = "Your credential is created and delivered through a secure channel."
-                     )
-                 }
-             }
+//             item {
+//                 Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)) {
+//                     Text(
+//                         text = "Benefits",
+//                         style = AppFonts.heading,
+//                         color = AppColors.textPrimary
+//                     )
+//                     FeatureRow(
+//                         icon = Icons.Filled.Verified,
+//                         title = "Authentic & Verified",
+//                         description = "Receive a credential that is verifiably authentic."
+//                     )
+//                     FeatureRow(
+//                         icon = Icons.Filled.Security,
+//                         title = "Securely Delivered",
+//                         description = "Your credential is created and delivered through a secure channel."
+//                     )
+//                 }
+//             }
         }
 
         // Fixed Primary Button at Bottom
@@ -105,7 +106,7 @@ fun GetCredentialStartScreen(
                 .fillMaxWidth()
         ) {
             PrimaryButton(
-                title = "Get My $credentialName",
+                title = "Start",
                 onClick = onStartGettingCredentials
             )
         }

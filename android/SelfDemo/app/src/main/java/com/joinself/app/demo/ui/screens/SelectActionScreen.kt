@@ -70,35 +70,35 @@ fun SelectActionScreen(
                     ActionCard(
                         icon = Icons.Filled.Fingerprint,
                         title = "Authenticate",
-                        description = "Use your biometric credentials to securely log in to services",
+                        description = "Use your biometric credentials to securely log in to services.",
                         onClick = onAuthenticate
                     )
 
                     ActionCard(
                         icon = Icons.Filled.VerifiedUser,
-                        title = "Verify Credentials",
-                        description = "Verify information about you such as email and government issued ID",
+                        title = "Get Credentials",
+                        description = "Get credentials about you such as email and government ID.",
                         onClick = onVerifyCredentials
                     )
 
                     ActionCard(
                         icon = Icons.Filled.Share,
-                        title = "Provide Credentials",
-                        description = "Securely share verified information about you",
+                        title = "Share Credentials",
+                        description = "Securely share credentials about you.",
                         onClick = onProvideCredentials
                     )
 
                     ActionCard(
                         icon = Icons.Filled.Edit,
-                        title = "Sign Documents",
-                        description = "Securely review, sign, and share documents",
+                        title = "Digital Signatures",
+                        description = "Sign a document with your digital signature.",
                         onClick = onSignDocuments
                     )
 
                     ActionCard(
                         icon = Icons.Filled.Backup,
                         title = "Backup",
-                        description = "Create an encrypted backup of your account data",
+                        description = "Create an encrypted backup of your account data.",
                         onClick = onBackup
                     )
 

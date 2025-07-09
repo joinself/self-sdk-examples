@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import com.joinself.app.demo.InitializationState
 
 @Composable
@@ -85,7 +86,7 @@ fun InitializeSDKScreen(
                     InfoCard(
                         icon = Icons.Filled.CloudSync,
                         title = "Self SDK",
-                        message = "Self provides secure, decentralized identity verification. Your biometric data stays on your device while enabling powerful authentication capabilities.",
+                        message = "Self provides secure, decentralized identity verification.",
                         type = AlertType.Info
                     )
                 }
@@ -140,10 +141,28 @@ fun InitializeSDKScreen(
                     .padding(AppSpacing.screenPadding)
             ) {
                 PrimaryButton(
-                    title = "Retry Initialization",
+                    title = "Retry",
                     onClick = onRetry
                 )
             }
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Initialize SDK Screen - Loading")
+@Composable
+fun InitializeSDKScreenLoadingPreview() {
+    InitializeSDKScreen(
+        initialization = InitializationState.Loading,
+        onRetry = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Initialize SDK Screen - Error")
+@Composable
+fun InitializeSDKScreenErrorPreview() {
+    InitializeSDKScreen(
+        initialization = InitializationState.Error("Sample error message"),
+        onRetry = {}
+    )
+}

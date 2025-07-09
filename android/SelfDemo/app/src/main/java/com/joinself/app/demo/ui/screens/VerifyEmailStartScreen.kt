@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -34,7 +35,7 @@ fun VerifyEmailStartScreen(
                 // Hero Section
                 HeroSection(
                     icon = Icons.Filled.Email,
-                    title = "Email Address Verification",
+                    title = "Email Verification",
                     subtitle = "Verify ownership of your email address to create a trusted credential."
                 )
             }
@@ -44,7 +45,7 @@ fun VerifyEmailStartScreen(
                 InfoCard(
                     icon = Icons.Filled.Verified,
                     title = "Email Verification Required",
-                    message = "You will need to enter your email address and confirm it by clicking a verification link sent to your inbox. Keep your email app handy during this process.",
+                    message = "You will need to provide your email address and confirm it by entering a verification code sent to your inbox. Keep your email app handy during this process.",
                     type = AlertType.Info
                 )
             }
@@ -61,9 +62,17 @@ fun VerifyEmailStartScreen(
                 .padding(AppSpacing.screenPadding)
         ) {
             PrimaryButton(
-                title = "Start Email Verification",
+                title = "Start",
                 onClick = onStartVerification
             )
         }
     }
-} 
+}
+
+@Preview(showBackground = true, name = "Verify Email Start Screen")
+@Composable
+fun VerifyEmailStartScreenPreview() {
+    VerifyEmailStartScreen(
+        onStartVerification = {}
+    )
+}

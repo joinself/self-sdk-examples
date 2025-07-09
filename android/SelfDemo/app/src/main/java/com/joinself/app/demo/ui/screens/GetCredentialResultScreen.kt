@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Text
@@ -37,15 +38,15 @@ fun GetCredentialResultScreen(
     onRetry: (() -> Unit)? = null, // Optional: To retry the credential issuance
     modifier: Modifier = Modifier
 ) {
-    val heroIcon = if (isSuccess) Icons.Filled.AssignmentTurnedIn else Icons.Filled.ErrorOutline
-    val heroTitle = if (isSuccess) "$credentialName Issued!" else "$credentialName Issuance Failed"
-    val successMessage = "Your $credentialName has been successfully issued and added to your wallet."
-    val failureMessage = "There was an issue issuing your $credentialName. Please try again or contact support."
+    val heroIcon = if (isSuccess) Icons.Filled.AssignmentTurnedIn else Icons.Filled.Error
+    val heroTitle = if (isSuccess) "Get $credentialName Success" else "Get $credentialName Failure"
+    val successMessage = "Your $credentialName has been delivered and stored on your device."
+    val failureMessage = "Your $credentialName has not been delivered. Please try again."
     val heroSubtitle = if (isSuccess) successMessage else failureMessage
 
-    val cardTitle = if (isSuccess) "Credential Ready" else "Error Details"
+    val cardTitle = if (isSuccess) "Credential Delivered" else "Credential Not Delivered"
     val cardMessage = if (isSuccess) {
-        "You can now use your $credentialName. It has been securely signed by our server and is ready for use."
+        "Your $credentialName has been generated and signed by the server, and securely stored on your device. You can now use this credential to prove your information about yourself."
     } else {
         "We couldn't generate and sign your $credentialName at this time. Please check your connection or try again."
     }
@@ -80,7 +81,7 @@ fun GetCredentialResultScreen(
                     )
                 } else {
                     AlertCard( // Assuming AlertCard for errors
-                        // icon = Icons.Filled.CloudOff, // Optional: if AlertCard supports icon
+//                        icon = Icons.Filled.Error, // Optional: if AlertCard supports icon
                         title = cardTitle,
                         message = cardMessage,
                         type = cardAlertType
@@ -89,44 +90,44 @@ fun GetCredentialResultScreen(
             }
 
             // Optional: Further details or actions
-            if (isSuccess) {
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)) {
-                        Text(
-                            text = "Next Steps",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-                        ProcessStep( // Assuming ProcessStep is a reusable Composable
-                            number = 1,
-                            title = "View Your Credential",
-                            description = "You can find your new $credentialName in your digital wallet or credentials list."
-                        )
-                    }
-                }
-            } else { // Failure Case
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)) {
-                        Text(
-                            text = "Troubleshooting",
-                            style = AppFonts.heading,
-                            color = AppColors.textPrimary
-                        )
-                        ProcessStep(
-                            number = 1,
-                            title = "Check Network",
-                            description = "Ensure you have a stable internet connection."
-                        )
-                        if (onRetry != null) {
-                            ProcessStep(
-                                number = 2,
-                                title = "Try Again",
-                                description = "You can attempt to get your $credentialName again."
-                            )
-                        }
-                    }
-                }
-            }
+//            if (isSuccess) {
+//                item {
+//                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)) {
+//                        Text(
+//                            text = "Next Steps",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//                        ProcessStep( // Assuming ProcessStep is a reusable Composable
+//                            number = 1,
+//                            title = "View Your Credential",
+//                            description = "You can find your new $credentialName in your digital wallet or credentials list."
+//                        )
+//                    }
+//                }
+//            } else { // Failure Case
+//                item {
+//                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)) {
+//                        Text(
+//                            text = "Troubleshooting",
+//                            style = AppFonts.heading,
+//                            color = AppColors.textPrimary
+//                        )
+//                        ProcessStep(
+//                            number = 1,
+//                            title = "Check Network",
+//                            description = "Ensure you have a stable internet connection."
+//                        )
+//                        if (onRetry != null) {
+//                            ProcessStep(
+//                                number = 2,
+//                                title = "Try Again",
+//                                description = "You can attempt to get your $credentialName again."
+//                            )
+//                        }
+//                    }
+//                }
+//            }
         }
 
         // Fixed Buttons at Bottom
@@ -138,15 +139,15 @@ fun GetCredentialResultScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.componentSpacing)
         ) {
             PrimaryButton(
-                title = if (isSuccess) "Done" else "Continue", // Or "View Wallet", "Close"
+                title = if (isSuccess) "Continue" else "Continue", // Or "View Wallet", "Close"
                 onClick = onContinue
             )
-            if (!isSuccess && onRetry != null) {
-                SecondaryButton( // Assuming SecondaryButton or equivalent
-                    title = "Retry Getting $credentialName",
-                    onClick = onRetry
-                )
-            }
+//            if (!isSuccess && onRetry != null) {
+//                SecondaryButton( // Assuming SecondaryButton or equivalent
+//                    title = "Retry Getting $credentialName",
+//                    onClick = onRetry
+//                )
+//            }
         }
     }
 }
@@ -157,7 +158,7 @@ fun GetCredentialResultScreenSuccessPreview() {
     // YourAppTheme {
     GetCredentialResultScreen(
         isSuccess = true,
-        credentialName = "Custom Credentials",
+        credentialName = "Custom Credential",
         onContinue = {}
     )
     // }
