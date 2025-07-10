@@ -34,7 +34,7 @@ public struct ActionSelectionScreen: View {
                         Button {
                             onBack?()
                         } label: {
-                            Image(systemName: ResourceNames.ICON_BACK)
+                            Image(systemName: ResourceHelper.ICON_BACK)
                                 .foregroundStyle(Color.blue)
                         }
                         Spacer()
@@ -74,7 +74,7 @@ public struct ActionSelectionScreen: View {
                             
                             VStack(spacing: 16) {
                                 ActionCardView(
-                                    iconImage: Image("ic_fingerprint", bundle: ResourceNames.bundle),
+                                    iconImage: Image("ic_fingerprint", bundle: ResourceHelper.bundle),
                                     title: "Authenticate",
                                     description: "Use your biometric credentials to securely log in to services",
                                     action: {
@@ -92,7 +92,7 @@ public struct ActionSelectionScreen: View {
                                 )
                                 
                                 ActionCardView(
-                                    iconImage: Image("ic_share", bundle: ResourceNames.bundle),
+                                    iconImage: Image("ic_share", bundle: ResourceHelper.bundle),
                                     title: "Share Credentials",
                                     description: "Securely share verified information about you",
                                     action: {
@@ -101,7 +101,7 @@ public struct ActionSelectionScreen: View {
                                 )
                                 
                                 ActionCardView(
-                                    iconImage: Image("edit_document", bundle: ResourceNames.bundle),
+                                    iconImage: Image("edit_document", bundle: ResourceHelper.bundle),
                                     title: "Digital Signatures",
                                     description: "Sign a document with your digital signature.",
                                     action: {
@@ -110,7 +110,7 @@ public struct ActionSelectionScreen: View {
                                 )
                                 
                                 ActionCardView(
-                                    iconImage: Image("ic_backup", bundle: ResourceNames.bundle),
+                                    iconImage: Image("ic_backup", bundle: ResourceHelper.bundle),
                                     title: "Backup",
                                     description: "Create an encrypted backup of your account data",
                                     action: {

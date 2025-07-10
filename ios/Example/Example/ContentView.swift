@@ -40,7 +40,7 @@ enum AppScreen: Equatable {
     case shareCredentialCustomStart
     case shareCredentialCustomResult(success: Bool)
     case authStart
-    case authResult
+    case authResult(success: Bool)
     case docSignStart
     case docSignResult(success: Bool)
     case backupStart
@@ -426,8 +426,8 @@ struct ContentView: View {
                             }
                         }
                     )
-                case .authResult:
-                    AuthResultScreen(
+                case .authResult(let success):
+                    AuthResultScreen(success: success,
                         onContinue: {
                             // Return to action selection (don't show connection success toast)
                             showConnectionSuccessToast = false
@@ -791,10 +791,11 @@ struct ContentView: View {
                     
                     // Send credential response back to server
 //                    sendCredentialResponse(account: account, credentials: credentials)
-                    viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
-                    
-                    // Navigate to result screen
-                    self.setCurrentAppScreen(screen: .authResult)
+                    viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted) { messsageId, error in
+                        let success = error == nil
+                        // Navigate to result screen
+                        self.setCurrentAppScreen(screen: .authResult(success: success))
+                    }
                 }
             }
         }

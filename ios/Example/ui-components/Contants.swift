@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ResourceNames {
+struct ResourceHelper {
     static let ICON_BACK = "chevron.left"
     static let ICON_LIVENESS = "person.fill.viewfinder"
     static let ICON_CLOUD = "cloud"
@@ -35,4 +35,5 @@ extension Color {
     }
     
     static let primaryBlue: Color = .init(hex: "#007AFF")
+    static let primaryError: Color = .init(hex: "#FF3B30")
 }

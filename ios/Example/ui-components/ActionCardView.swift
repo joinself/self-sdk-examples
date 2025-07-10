@@ -103,7 +103,7 @@ public struct ActionCardView: View {
         
         ActionCardView(
             icon: "",
-            iconImage: Image("private_connectivity", bundle: ResourceNames.bundle),
+            iconImage: Image("private_connectivity", bundle: ResourceHelper.bundle),
             title: "Authenticate",
             description: "Use your biometric credentials to securely log in to services",
             action: {

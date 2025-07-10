@@ -30,7 +30,7 @@ public struct AuthStartScreen: View {
                     // Shield Icon and Title Section
                     VStack(spacing: 24) {
                         // Shield Icon
-                        Image("ic_login", bundle: ResourceNames.bundle)
+                        Image("ic_login", bundle: ResourceHelper.bundle)
                             .padding(.top, 40)
                         
                         // Title and Subtitle
@@ -49,7 +49,7 @@ public struct AuthStartScreen: View {
                     }
                     
                     // Biometric Verification Info Box
-                    CardView(icon: ResourceNames.ICON_LIVENESS, title: "Liveness Check Required", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
+                    CardView(icon: ResourceHelper.ICON_LIVENESS, title: "Liveness Check Required", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
                 }
                 .padding(.bottom, 20) // Space above button
             }

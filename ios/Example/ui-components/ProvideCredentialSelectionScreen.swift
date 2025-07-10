@@ -26,7 +26,7 @@ public struct ProvideCredentialSelectionScreen: View {
                         Button {
                             onBack()
                         } label: {
-                            Image(systemName: ResourceNames.ICON_BACK)
+                            Image(systemName: ResourceHelper.ICON_BACK)
                                 .foregroundStyle(Color.gray)
                         }
                         Spacer()

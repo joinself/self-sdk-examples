@@ -35,7 +35,7 @@ public struct ServerConnectionScreen: View {
                     Button {
                         onBack?()
                     } label: {
-                        Image(systemName: ResourceNames.ICON_BACK)
+                        Image(systemName: ResourceHelper.ICON_BACK)
                             .foregroundStyle(Color.primaryBlue)
                     }
                     Spacer()
@@ -48,7 +48,7 @@ public struct ServerConnectionScreen: View {
                     // Cloud Icon and Title Section
                     VStack(spacing: 24) {
                         // Cloud Icon
-                        Image("private_connectivity", bundle: ResourceNames.bundle)
+                        Image("private_connectivity", bundle: ResourceHelper.bundle)
                             .padding(.top, 40)
                         
                         // Title and Subtitle
