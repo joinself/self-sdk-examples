@@ -9,13 +9,15 @@ import SwiftUI
 
 public struct ActionCardView: View {
     let icon: String
+    let iconImage: Image?
     let title: String
     let description: String
     let action: () -> Void
     @State private var isPressed = false
     
-    public init(icon: String, title: String, description: String, action: @escaping () -> Void, isPressed: Bool = false) {
+    public init(icon: String = "", iconImage: Image? = nil, title: String, description: String, action: @escaping () -> Void, isPressed: Bool = false) {
         self.icon = icon
+        self.iconImage = iconImage
         self.title = title
         self.description = description
         self.action = action
@@ -26,10 +28,14 @@ public struct ActionCardView: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 // Icon
-                Image(systemName: icon)
-                    .font(.system(size: 28))
-                    .foregroundColor(.blue)
-                    .frame(width: 40, height: 40)
+                if let iconImage = iconImage {
+                    iconImage
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 28))
+                        .foregroundColor(.blue)
+                        .frame(width: 40, height: 40)
+                }
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
@@ -89,6 +95,15 @@ public struct ActionCardView: View {
     VStack {
         ActionCardView(
             icon: "shield",
+            title: "Authenticate",
+            description: "Use your biometric credentials to securely log in to services",
+            action: {
+            }
+        )
+        
+        ActionCardView(
+            icon: "",
+            iconImage: Image("private_connectivity", bundle: ResourceNames.bundle),
             title: "Authenticate",
             description: "Use your biometric credentials to securely log in to services",
             action: {

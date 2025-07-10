@@ -416,6 +416,14 @@ struct ContentView: View {
                     AuthStartScreen(
                         onStartAuthentication: {
                             startAuthenticationLivenessCheck()
+                        }, onRejectAuthentication: {
+                            // reject authentication
+                            viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected) { messageId, error in
+                                if error == nil {
+                                    self.setCurrentAppScreen(screen: .actionSelection)
+                                    showToastMessage("Authentication rejected!")
+                                }
+                            }
                         }
                     )
                 case .authResult:
