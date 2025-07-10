@@ -22,7 +22,7 @@ public struct RestoreAccountResultScreen: View {
                     onBack()
                 } label: {
                     Image(systemName: ResourceNames.ICON_BACK)
-                        .foregroundStyle(Color.gray)
+                        .foregroundStyle(.blue)
                 }
                 Spacer()
             }
