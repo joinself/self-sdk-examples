@@ -9,6 +9,7 @@ import SwiftUI
 
 public struct CardView: View {
     let icon: String
+    let iconImage: Image?
     let iconColor: Color
     let borderColor: Color
     let title: String
@@ -16,8 +17,9 @@ public struct CardView: View {
     let description: String
     let descriptionColor: Color
     
-    public init(icon: String, iconColor: Color = .accentColor, borderColor: Color = .accentColor, title: String,  titleColor: Color = .black, description: String,  descriptionColor: Color = .gray) {
+    public init(icon: String = "", iconImage: Image? = nil, iconColor: Color = .accentColor, borderColor: Color = .accentColor, title: String,  titleColor: Color = .black, description: String,  descriptionColor: Color = .gray) {
         self.icon = icon
+        self.iconImage = iconImage
         self.iconColor = iconColor
         self.borderColor = borderColor
         self.titleColor = titleColor
@@ -29,13 +31,17 @@ public struct CardView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .renderingMode(.template)
-                    .foregroundStyle(iconColor)
-                    .accentColor(iconColor)
-                    .font(.system(size: 24))
-                    .foregroundColor(.blue)
-                
+                if let iconImage = iconImage {
+                    iconImage
+                } else {
+                    Image(systemName: icon)
+                        .renderingMode(.template)
+                        .foregroundStyle(iconColor)
+                        .accentColor(iconColor)
+                        .font(.system(size: 24))
+                        .foregroundColor(.blue)
+                    
+                }
                 Text(title)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(titleColor)

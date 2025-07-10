@@ -6,10 +6,12 @@
 import SwiftUI
 
 public struct VerifyEmailResultScreen: View {
+    let success: Bool
     let onContinue: () -> Void
     let onBack: () -> Void
     
-    public init(onContinue: @escaping () -> Void, onBack: @escaping () -> Void) {
+    public init(success: Bool, onContinue: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.success = success
         self.onContinue = onContinue
         self.onBack = onBack
     }
@@ -36,14 +38,9 @@ public struct VerifyEmailResultScreen: View {
                 VStack(spacing: 24) {
                     // Shield with Checkmark Icon
                     ZStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
-                        
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
-                    }
+                        Image(systemName: success ? "checkmark.circle.fill" : "exclamationmark.circle")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(.primaryBlue)                    }
                     .padding(.top, 40)
                     
                     // Title and Subtitle
@@ -85,9 +82,17 @@ public struct VerifyEmailResultScreen: View {
 }
 
 #Preview {
-    VerifyEmailResultScreen {
+    VStack {
+        VerifyEmailResultScreen(success: true) {
+            
+        } onBack: {
+            
+        }
         
-    } onBack: {
-        
+        VerifyEmailResultScreen(success: false) {
+            
+        } onBack: {
+            
+        }
     }
 }

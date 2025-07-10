@@ -1,0 +1,146 @@
+//
+//  FlowResultScreen.swift
+//  ios-client
+//
+
+import SwiftUI
+
+public struct FlowResultScreen: View {
+    @State private var showSuccessToast = true
+    let success: Bool
+    let title: String
+    let subtitle: String
+    
+    let message: String
+    let description: String
+    let onContinue: () -> Void
+    
+    public init(showSuccessToast: Bool = true, success: Bool, title: String, subtitle: String, message: String, description: String, onContinue: @escaping () -> Void) {
+        self.showSuccessToast = showSuccessToast
+        self.success = success
+        self.title = title
+        self.subtitle = subtitle
+        self.message = message
+        self.description = description
+        self.onContinue = onContinue
+    }
+    
+    public var body: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                // DEBUG Header
+                HStack {
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                
+                // Scrollable content
+                ScrollView {
+                    VStack(spacing: 40) {
+                        // Checkmark Icon and Title Section
+                        VStack(spacing: 24) {
+                            // Blue Checkmark Circle
+                            ZStack {
+                                Image(systemName: success ? "checkmark.circle.fill" : "exclamationmark.circle")
+                                    .font(.system(size: 48, weight: .bold))
+                                    .foregroundColor(.primaryBlue)
+                            }
+                            .padding(.top, 40)
+                            
+                            // Title and Subtitle
+                            VStack(spacing: 12) {
+                                Text(title)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text(subtitle)
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.gray)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 20)
+                            }
+                        }
+                        
+                        // Identity Verified Info Box
+                        if success {
+                            CardView(icon: "checkmark.circle.fill", iconColor: .green, borderColor: .green, title: message, description: description)
+                        } else {
+                            CardView(icon: "exclamationmark.circle", iconColor: .primaryError, borderColor: .primaryError, title: message, description: description)
+                        }
+                    }
+                    .padding(.bottom, 20) // Space above button
+                }
+                
+                // Fixed button at bottom
+                Button(action: {
+                    onContinue()
+                }) {
+                    Text("Continue")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+                .background(Color.white)
+            }
+            .background(Color.white)
+            
+            // Success Toast Notification
+            if showSuccessToast {
+                VStack {
+                    Spacer()
+                    
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.green)
+                        
+                        Text("Authentication response sent!")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                    .background(Color.black.opacity(0.8))
+                    .cornerRadius(12)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 80) // Position above Continue button
+                }
+                .onAppear {
+                    // Auto-hide success toast after 4 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            showSuccessToast = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+#Preview {
+    VStack {
+//        FlowResultScreen(success: true, title: "Title", subtitle: "subtitle", message: "Message", description: "Description") {
+//            
+//        }
+        FlowResultScreen(success: false, title: "Title", subtitle: "subtitle", message: "Message", description: "Description") {
+            
+        }
+        
+//        FlowResultScreen(showSuccessToast: false, success: false) {
+//            
+//        }
+    }
+}
