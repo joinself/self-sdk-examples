@@ -8,20 +8,29 @@ import SwiftUI
 public struct FlowResultScreen: View {
     @State private var showSuccessToast = true
     let success: Bool
-    let title: String
-    let subtitle: String
     
-    let message: String
-    let description: String
+    let headline: String
+    let subheadline: String
+    let headlineFailure: String
+    let subheadlineFailure: String
+    
+    let messageSuccess: String
+    let descriptionSuccess: String
+    let messageFailure: String
+    let descriptionFailure: String
     let onContinue: () -> Void
     
-    public init(showSuccessToast: Bool = true, success: Bool, title: String, subtitle: String, message: String, description: String, onContinue: @escaping () -> Void) {
+    public init(showSuccessToast: Bool = false, success: Bool, headline: String, subheadline: String, headlineFailure: String = "Verification Failure", subheadlineFailure: String = "Verification Failure description", messageSuccess: String, descriptionSuccess: String, messageFailure: String, descriptionFailure: String, onContinue: @escaping () -> Void) {
         self.showSuccessToast = showSuccessToast
         self.success = success
-        self.title = title
-        self.subtitle = subtitle
-        self.message = message
-        self.description = description
+        self.headline = headline
+        self.subheadline = subheadline
+        self.headlineFailure = headlineFailure
+        self.subheadlineFailure = subheadlineFailure
+        self.messageSuccess = messageSuccess
+        self.descriptionSuccess = descriptionSuccess
+        self.messageFailure = messageFailure
+        self.descriptionFailure = descriptionFailure
         self.onContinue = onContinue
     }
     
@@ -51,12 +60,12 @@ public struct FlowResultScreen: View {
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text(title)
+                                Text(success ? headline : headlineFailure)
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                 
-                                Text(subtitle)
+                                Text(success ? subheadline : subheadlineFailure)
                                     .font(.system(size: 16))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -66,9 +75,9 @@ public struct FlowResultScreen: View {
                         
                         // Identity Verified Info Box
                         if success {
-                            CardView(icon: "checkmark.circle.fill", iconColor: .green, borderColor: .green, title: message, description: description)
+                            CardView(icon: "checkmark.circle.fill", iconColor: .green, borderColor: .green, title: messageSuccess, description: descriptionSuccess)
                         } else {
-                            CardView(icon: "exclamationmark.circle", iconColor: .primaryError, borderColor: .primaryError, title: message, description: description)
+                            CardView(icon: "exclamationmark.circle", iconColor: .primaryError, borderColor: .primaryError, title: messageFailure, description: descriptionFailure)
                         }
                     }
                     .padding(.bottom, 20) // Space above button
@@ -131,16 +140,13 @@ public struct FlowResultScreen: View {
 
 
 #Preview {
-    VStack {
-//        FlowResultScreen(success: true, title: "Title", subtitle: "subtitle", message: "Message", description: "Description") {
-//            
-//        }
-        FlowResultScreen(success: false, title: "Title", subtitle: "subtitle", message: "Message", description: "Description") {
+    ScrollView {
+        FlowResultScreen(success: true, headline: "Headline", subheadline: "Subheadline", messageSuccess: "messageSuccess", descriptionSuccess: "descriptionSuccess", messageFailure: "messageFailure", descriptionFailure: "messageFailure", onContinue: {
             
-        }
+        })
         
-//        FlowResultScreen(showSuccessToast: false, success: false) {
-//            
-//        }
+        FlowResultScreen(success: false, headline: "Headline", subheadline: "Subheadline", messageSuccess: "messageSuccess", descriptionSuccess: "descriptionSuccess", messageFailure: "messageFailure", descriptionFailure: "messageFailure", onContinue: {
+
+        })
     }
 }

@@ -27,7 +27,7 @@ enum AppScreen: Equatable {
     case actionSelection
     case verifyCredential
     case verifyEmailStart
-    case verifyEmailResult
+    case verifyEmailResult(success: Bool)
     case verifyDocumentStart
     case verifyDocumentResult
     case getCustomCredentialStart
@@ -242,27 +242,15 @@ struct ContentView: View {
                         EmailFlow(account: viewModel.account, autoDismiss: false, onResult: { success in
                             print("Verify email finished = \(success)")
                             self.showVerifyEmail = false
-                            if success {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .verifyEmailResult
-                                }
-                            } else {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .actionSelection
-                                }
-                            }
+                            self.setCurrentAppScreen(screen: .verifyEmailResult(success: success))
                         })
                     })
                     
-                case .verifyEmailResult:
-                    VerifyEmailResultScreen {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
+                case .verifyEmailResult (let success):
+                    VerifyEmailResultScreen(success: success) {
+                        setCurrentAppScreen(screen: .actionSelection)
                     } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
+                        setCurrentAppScreen(screen: .actionSelection)
                     }
 
                 case .verifyDocumentStart:
