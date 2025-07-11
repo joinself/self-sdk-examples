@@ -19,8 +19,9 @@ public struct FlowResultScreen: View {
     let messageFailure: String
     let descriptionFailure: String
     let onContinue: () -> Void
+    let onBack: (() -> Void)?
     
-    public init(showSuccessToast: Bool = false, success: Bool, headline: String, subheadline: String, headlineFailure: String = "Verification Failure", subheadlineFailure: String = "Verification Failure description", messageSuccess: String, descriptionSuccess: String, messageFailure: String, descriptionFailure: String, onContinue: @escaping () -> Void) {
+    public init(showSuccessToast: Bool = false, success: Bool, headline: String, subheadline: String, headlineFailure: String = "Verification Failure", subheadlineFailure: String = "Verification Failure description", messageSuccess: String, descriptionSuccess: String, messageFailure: String, descriptionFailure: String, onContinue: @escaping () -> Void, onBack: (() -> Void)? = nil) {
         self.showSuccessToast = showSuccessToast
         self.success = success
         self.headline = headline
@@ -32,6 +33,7 @@ public struct FlowResultScreen: View {
         self.messageFailure = messageFailure
         self.descriptionFailure = descriptionFailure
         self.onContinue = onContinue
+        self.onBack = onBack
     }
     
     public var body: some View {
@@ -39,6 +41,12 @@ public struct FlowResultScreen: View {
             VStack(spacing: 0) {
                 // DEBUG Header
                 HStack {
+                    Button {
+                        onBack?()
+                    } label: {
+                        Image(systemName: ResourceHelper.ICON_BACK)
+                            .foregroundStyle(Color.primaryBlue)
+                    }
                     Spacer()
                 }
                 .padding(.horizontal, 16)

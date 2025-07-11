@@ -14,8 +14,9 @@ public struct FlowStartScreen: View {
     let cardIcon: Image
     let onOK: () -> Void
     let onCancel: () -> Void
+    let onBack: (() -> Void)?
     
-    public init(headlineIcon: Image, title: String, subtitle: String, cardTitle: String, cardSubtitle: String, cardIcon: Image, onOK: @escaping () -> Void, onCancel: @escaping () -> Void) {
+    public init(headlineIcon: Image, title: String, subtitle: String, cardTitle: String, cardSubtitle: String, cardIcon: Image, onOK: @escaping () -> Void, onCancel: @escaping () -> Void, onBack: (() -> Void)? = nil) {
         self.headlineIcon = headlineIcon
         self.title = title
         self.subtitle = subtitle
@@ -24,12 +25,19 @@ public struct FlowStartScreen: View {
         self.cardIcon = cardIcon
         self.onOK = onOK
         self.onCancel = onCancel
+        self.onBack = onBack
     }
     
     public var body: some View {
         VStack(spacing: 0) {
             // DEBUG Header
             HStack {
+                Button {
+                    onBack?()
+                } label: {
+                    Image(systemName: ResourceHelper.ICON_BACK)
+                        .foregroundStyle(Color.primaryBlue)
+                }
                 Spacer()
             }
             .padding(.horizontal, 16)
@@ -71,7 +79,7 @@ public struct FlowStartScreen: View {
                 Button(action: {
                     onOK()
                 }) {
-                    Text("Continue")
+                    Text("Start")
                         .modifier(ButtonOKModifier())
                 }
             }
