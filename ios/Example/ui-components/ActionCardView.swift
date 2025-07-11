@@ -30,6 +30,8 @@ public struct ActionCardView: View {
                 // Icon
                 if let iconImage = iconImage {
                     iconImage
+                        .resizable()
+                        .frame(width: 40, height: 40)
                 } else {
                     Image(systemName: icon)
                         .font(.system(size: 28))

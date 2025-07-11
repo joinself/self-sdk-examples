@@ -19,7 +19,7 @@ public struct RestoreAccountStartScreen: View {
     
     public var body: some View {
         ZStack {
-            FlowStartScreen(headlineIcon: Image("ic_backup_up", bundle: ResourceHelper.bundle), title: "Account Restore", subtitle: "Restore your account from backup.", cardTitle: "Biometric Restore", cardSubtitle: "Your backup data is encrypted. To restore it you will need to complete a liveness check.", cardIcon: Image("ic_encrypted", bundle: ResourceHelper.bundle)) {
+            FlowStartScreen(headlineIcon: Image("ic_cloud_up", bundle: ResourceHelper.bundle), title: "Account Restore", subtitle: "Restore your account from backup.", cardTitle: "Biometric Restore", cardSubtitle: "Your backup data is encrypted. To restore it you will need to complete a liveness check.", cardIcon: Image("ic_encrypted", bundle: ResourceHelper.bundle)) {
                 onNext()
             } onCancel: {
                 
