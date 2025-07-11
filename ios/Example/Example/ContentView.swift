@@ -29,7 +29,7 @@ enum AppScreen: Equatable {
     case verifyEmailStart
     case verifyEmailResult(success: Bool)
     case verifyDocumentStart
-    case verifyDocumentResult
+    case verifyDocumentResult(success: Bool)
     case getCustomCredentialStart
     case getCustomCredentialResult(success: Bool)
     case shareCredential
@@ -268,20 +268,12 @@ struct ContentView: View {
                         DocumentFlow(account: viewModel.account, devMode: true, autoCaptureImage: false, onResult:  { success in
                             print("Verify document finished: \(success)")
                             showVerifyDocument = false
-                            if success {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .verifyDocumentResult
-                                }
-                            } else {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .actionSelection
-                                }
-                            }
+                            setCurrentAppScreen(screen: .verifyDocumentResult(success: success))
                         })
                     })
                     
-                case .verifyDocumentResult:
-                    VerifyDocumentResultScreen {
+                case .verifyDocumentResult(let success):
+                    VerifyDocumentResultScreen(success: success) {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
                         }
@@ -376,7 +368,7 @@ struct ContentView: View {
                     }
                     
                 case .shareCredentialCustomStart:
-                    ShareCredentialStartScreen(credentialName: "Custom Credential") {
+                    ShareCredentialStartScreen {
                         viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted) { messageId, error in
                             if error == nil {
                                 withAnimation(.easeInOut(duration: 0.5)) {

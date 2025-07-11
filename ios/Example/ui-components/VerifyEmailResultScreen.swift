@@ -19,10 +19,10 @@ public struct VerifyEmailResultScreen: View {
     }
 
     public var body: some View {
-        ZStack {
-            FlowResultScreen(success: success, headline: "Verification Success", subheadline: "Your email address has been successfully verified and a secure credential has been created on your device.", headlineFailure: "Verification Failure", subheadlineFailure: "Your email address could not be verified. Please try again.", messageSuccess: "Verification Complete", descriptionSuccess: "Your email address has been verified and a secure credential has been created on your device.",messageFailure: "Verification Failed", descriptionFailure: "Your email has not been verified. Error: \(errorMessage)", onContinue: {
-                onContinue()
-            })
+        FlowResultScreen(success: success, headline: "Verification Success", subheadline: "Your email address has been successfully verified and a secure credential has been created on your device.", headlineFailure: "Verification Failure", subheadlineFailure: "Your email address could not be verified. Please try again.", messageSuccess: "Verification Complete", descriptionSuccess: "Your email address has been verified and a secure credential has been created on your device.",messageFailure: "Verification Failed", descriptionFailure: "Your email has not been verified. Error: \(errorMessage)", onContinue: {
+            onContinue()
+        }) {
+            onBack()
         }
     }
 }

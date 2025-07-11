@@ -40,7 +40,9 @@ public struct ShareCredentialBaseResultScreen: View {
         ZStack {
             FlowResultScreen(success: success, headline: headline, subheadline: subheadline, headlineFailure: headlineFailure, subheadlineFailure: subheadlineFailure, messageSuccess: messageSuccess, descriptionSuccess: descriptionSuccess ,messageFailure: messageFailure, descriptionFailure: descriptionFailure, onContinue: {
                 onContinue()
-            })
+            }) {
+                onBack()
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ public struct ShareDocumentCredentialResultScreen: View {
     
     public var body: some View {
         ShareCredentialBaseResultScreen(success: success, errorMessage: errorMessage, headline: "Sharing Success", subheadline: "You identity document credential has been shared with the server.", headlineFailure: "Sharing Failure", subheadlineFailure: "Your identity document credential was not shared with the server. Please try again.", messageSuccess: "Credential Sharing Complete", descriptionSuccess: "You have provided your verified government-issued identity document number credential to the server.", messageFailure: "Credential Sharing Failed", descriptionFailure: "Your identity credential has not been shared. Error: \(errorMessage)") {
-            
+            onContinue()
         } onBack: {
             onBack?()
         }

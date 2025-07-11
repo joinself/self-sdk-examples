@@ -20,7 +20,7 @@ public struct ShareEmailCredentialResultScreen: View {
     
     public var body: some View {
         ShareCredentialBaseResultScreen(success: success, errorMessage: errorMessage, headline: "Sharing Success", subheadline: "You email credential has been shared with the server.", headlineFailure: "Sharing Failure", subheadlineFailure: "Your email credential was not shared with the server. Please try again.", messageSuccess: "Credential Sharing Complete", descriptionSuccess: "Your cryptographic signature has been successfully applied to the document. The signed document has been returned to the server.", messageFailure: "Credential Sharing Failed", descriptionFailure: "Your email credential has not been shared. Error: \(errorMessage)") {
-            
+            onContinue()
         } onBack: {
             onBack?()
         }
