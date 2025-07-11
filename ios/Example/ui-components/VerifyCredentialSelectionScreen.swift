@@ -27,7 +27,7 @@ public struct VerifyCredentialSelectionScreen: View {
                             onBack()
                         } label: {
                             Image(systemName: ResourceHelper.ICON_BACK)
-                                .foregroundStyle(Color.gray)
+                                .foregroundStyle(Color.primaryBlue)
                         }
                         Spacer()
                     }

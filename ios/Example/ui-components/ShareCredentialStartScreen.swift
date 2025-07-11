@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// share custom fact
 public struct ShareCredentialStartScreen: View {
     let credentialName: String
     let onApprove: () -> Void

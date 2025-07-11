@@ -354,22 +354,25 @@ struct ContentView: View {
                     }
                 
                 case .shareDocumentStart:
-                    ShareDocumentCredentialStartScreen(credentialName: "") {
-                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted)
-                    } onDeny: {
-                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected)
-                    } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
+                    ShareDocumentCredentialStartScreen {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted) { messageId, error in
+
+                            let success = error == nil
+                            setCurrentAppScreen(screen: .shareDocumentResult(success: success))
                         }
+                    } onDeny: {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected) { messageId, error in
+                            self.setCurrentAppScreen(screen: .actionSelection)
+                            self.showToastMessage("Share document rejected!")
+                        }
+                    } onBack: {
+                        setCurrentAppScreen(screen: .actionSelection)
                     }
 
                     
                 case .shareDocumentResult(let success):
                     ShareDocumentCredentialResultScreen(success: success) {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
+                        setCurrentAppScreen(screen: .actionSelection)
                     }
                     
                 case .shareCredentialCustomStart:
