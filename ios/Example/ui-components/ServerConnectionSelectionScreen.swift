@@ -34,7 +34,7 @@ public struct ServerConnectionSelectionScreen: View {
                     // Cloud Icon and Title Section
                     VStack(spacing: 24) {
                         // Cloud Icon
-                        Image(systemName: ResourceNames.ICON_CLOUD)
+                        Image(systemName: ResourceHelper.ICON_CLOUD)
                             .font(.system(size: 80))
                             .foregroundColor(.blue)
                             .padding(.top, 40)

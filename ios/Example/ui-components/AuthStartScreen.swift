@@ -7,9 +7,11 @@ import SwiftUI
 
 public struct AuthStartScreen: View {
     let onStartAuthentication: () -> Void
+    let onRejectAuthentication: () -> Void
     
-    public init(onStartAuthentication: @escaping () -> Void) {
+    public init(onStartAuthentication: @escaping () -> Void, onRejectAuthentication: @escaping () -> Void) {
         self.onStartAuthentication = onStartAuthentication
+        self.onRejectAuthentication = onRejectAuthentication
     }
     
     public var body: some View {
@@ -28,7 +30,7 @@ public struct AuthStartScreen: View {
                     // Shield Icon and Title Section
                     VStack(spacing: 24) {
                         // Shield Icon
-                        Image("ic_login", bundle: ResourceNames.bundle)
+                        Image("ic_login", bundle: ResourceHelper.bundle)
                             .padding(.top, 40)
                         
                         // Title and Subtitle
@@ -38,7 +40,7 @@ public struct AuthStartScreen: View {
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("The server has requested you to authenticate using your biometric credentials. Complete the liveness check to verify your identity.")
+                            Text("The server has requested you authenticate using your biometric credentials. Complete the liveness check to verify your identity.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
@@ -47,22 +49,25 @@ public struct AuthStartScreen: View {
                     }
                     
                     // Biometric Verification Info Box
-                    CardView(icon: ResourceNames.ICON_LIVENESS, title: "Liveness Check Required", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
+                    CardView(icon: ResourceHelper.ICON_LIVENESS, title: "Liveness Check Required", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
                 }
                 .padding(.bottom, 20) // Space above button
             }
             
             // Fixed button at bottom
-            Button(action: {
-                onStartAuthentication()
-            }) {
-                Text("Start Authentication")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.blue)
-                    .cornerRadius(12)
+            VStack {
+                Button(action: {
+                    onStartAuthentication()
+                }) {
+                    Text("Approve")
+                        .modifier(ButtonOKModifier())
+                }
+                Button(action: {
+                    onRejectAuthentication()
+                }) {
+                    Text("Reject")
+                        .modifier(ButtonCancelModifier())
+                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 20)
@@ -78,6 +83,8 @@ public struct AuthStartScreen: View {
     AuthStartScreen(
         onStartAuthentication: {
             print("Preview: Start Authentication")
+        }, onRejectAuthentication: {
+            
         }
     )
 } 

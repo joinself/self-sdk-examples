@@ -27,9 +27,9 @@ enum AppScreen: Equatable {
     case actionSelection
     case verifyCredential
     case verifyEmailStart
-    case verifyEmailResult
+    case verifyEmailResult(success: Bool)
     case verifyDocumentStart
-    case verifyDocumentResult
+    case verifyDocumentResult(success: Bool)
     case getCustomCredentialStart
     case getCustomCredentialResult(success: Bool)
     case shareCredential
@@ -40,7 +40,7 @@ enum AppScreen: Equatable {
     case shareCredentialCustomStart
     case shareCredentialCustomResult(success: Bool)
     case authStart
-    case authResult
+    case authResult(success: Bool)
     case docSignStart
     case docSignResult(success: Bool)
     case backupStart
@@ -242,27 +242,15 @@ struct ContentView: View {
                         EmailFlow(account: viewModel.account, autoDismiss: false, onResult: { success in
                             print("Verify email finished = \(success)")
                             self.showVerifyEmail = false
-                            if success {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .verifyEmailResult
-                                }
-                            } else {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .actionSelection
-                                }
-                            }
+                            self.setCurrentAppScreen(screen: .verifyEmailResult(success: success))
                         })
                     })
                     
-                case .verifyEmailResult:
-                    VerifyEmailResultScreen {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
+                case .verifyEmailResult (let success):
+                    VerifyEmailResultScreen(success: success) {
+                        setCurrentAppScreen(screen: .actionSelection)
                     } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
+                        setCurrentAppScreen(screen: .actionSelection)
                     }
 
                 case .verifyDocumentStart:
@@ -280,20 +268,12 @@ struct ContentView: View {
                         DocumentFlow(account: viewModel.account, devMode: true, autoCaptureImage: false, onResult:  { success in
                             print("Verify document finished: \(success)")
                             showVerifyDocument = false
-                            if success {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .verifyDocumentResult
-                                }
-                            } else {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    currentScreen = .actionSelection
-                                }
-                            }
+                            setCurrentAppScreen(screen: .verifyDocumentResult(success: success))
                         })
                     })
                     
-                case .verifyDocumentResult:
-                    VerifyDocumentResultScreen {
+                case .verifyDocumentResult(let success):
+                    VerifyDocumentResultScreen(success: success) {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             currentScreen = .actionSelection
                         }
@@ -343,18 +323,19 @@ struct ContentView: View {
                         }
                     }
                 case .shareEmailStart:
-                    ShareEmailCredentialScreen(credentialName: "Email") {
-                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
-                        
-                        self.setCurrentAppScreen(screen: .shareEmailResult(success: true))
-                        
-                    } onDeny: {
-                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected)
-                        self.setCurrentAppScreen(screen: .shareEmailResult(success: false))
-                    } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
+                    ShareEmailCredentialStartScreen {
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted) { messageId, error in
+                            let success = error == nil
+                            self.setCurrentAppScreen(screen: .shareEmailResult(success: success))
                         }
+                    } onCancel: {
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected) { messageId, error in
+                            let success = error == nil
+                            self.setCurrentAppScreen(screen: .actionSelection)
+                            self.showToastMessage("Share credential rejected!")
+                        }
+                    } onBack: {
+                        self.setCurrentAppScreen(screen: .actionSelection)
                     }
 
                 case .shareEmailResult(let success):
@@ -365,26 +346,29 @@ struct ContentView: View {
                     }
                 
                 case .shareDocumentStart:
-                    ShareDocumentCredentialStartScreen(credentialName: "") {
-                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted)
-                    } onDeny: {
-                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected)
-                    } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
+                    ShareDocumentCredentialStartScreen {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted) { messageId, error in
+
+                            let success = error == nil
+                            setCurrentAppScreen(screen: .shareDocumentResult(success: success))
                         }
+                    } onDeny: {
+                        viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .rejected) { messageId, error in
+                            self.setCurrentAppScreen(screen: .actionSelection)
+                            self.showToastMessage("Share document rejected!")
+                        }
+                    } onBack: {
+                        setCurrentAppScreen(screen: .actionSelection)
                     }
 
                     
                 case .shareDocumentResult(let success):
                     ShareDocumentCredentialResultScreen(success: success) {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
-                        }
+                        setCurrentAppScreen(screen: .actionSelection)
                     }
                     
                 case .shareCredentialCustomStart:
-                    ShareCredentialStartScreen(credentialName: "Custom Credential") {
+                    ShareCredentialStartScreen {
                         viewModel.responseToCredentialRequest(credentialRequest: currentCredentialRequest, responseStatus: .accepted) { messageId, error in
                             if error == nil {
                                 withAnimation(.easeInOut(duration: 0.5)) {
@@ -416,10 +400,18 @@ struct ContentView: View {
                     AuthStartScreen(
                         onStartAuthentication: {
                             startAuthenticationLivenessCheck()
+                        }, onRejectAuthentication: {
+                            // reject authentication
+                            viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected) { messageId, error in
+                                if error == nil {
+                                    self.setCurrentAppScreen(screen: .actionSelection)
+                                    showToastMessage("Authentication rejected!")
+                                }
+                            }
                         }
                     )
-                case .authResult:
-                    AuthResultScreen(
+                case .authResult(let success):
+                    AuthResultScreen(success: success,
                         onContinue: {
                             // Return to action selection (don't show connection success toast)
                             showConnectionSuccessToast = false
@@ -783,10 +775,11 @@ struct ContentView: View {
                     
                     // Send credential response back to server
 //                    sendCredentialResponse(account: account, credentials: credentials)
-                    viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
-                    
-                    // Navigate to result screen
-                    self.setCurrentAppScreen(screen: .authResult)
+                    viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted) { messsageId, error in
+                        let success = error == nil
+                        // Navigate to result screen
+                        self.setCurrentAppScreen(screen: .authResult(success: success))
+                    }
                 }
             }
         }

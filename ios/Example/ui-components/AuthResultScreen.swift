@@ -7,10 +7,12 @@ import SwiftUI
 
 public struct AuthResultScreen: View {
     @State private var showSuccessToast = true
+    let success: Bool
     let onContinue: () -> Void
     
-    public init(showSuccessToast: Bool = true, onContinue: @escaping () -> Void) {
+    public init(showSuccessToast: Bool = true, success: Bool, onContinue: @escaping () -> Void) {
         self.showSuccessToast = showSuccessToast
+        self.success = success
         self.onContinue = onContinue
     }
     
@@ -32,24 +34,20 @@ public struct AuthResultScreen: View {
                         VStack(spacing: 24) {
                             // Blue Checkmark Circle
                             ZStack {
-                                Circle()
-                                    .fill(Color.blue)
-                                    .frame(width: 48, height: 48)
-                                
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(.white)
+                                Image(systemName: success ? "checkmark.circle.fill" : "exclamationmark.circle")
+                                    .font(.system(size: 48, weight: .bold))
+                                    .foregroundColor(.primaryBlue)
                             }
                             .padding(.top, 40)
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Authentication Success")
+                                Text(success ? "Authentication Success" : "Authentication Failure")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                 
-                                Text("Your identity has been verified successfully. Your biometric credentials were validated by the server.")
+                                Text(success ? "Your identity has been verified successfully. Your biometric credentials were validated by the server." : "Your identity could not be verified. Please try again.")
                                     .font(.system(size: 16))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -58,31 +56,11 @@ public struct AuthResultScreen: View {
                         }
                         
                         // Identity Verified Info Box
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.green)
-                                
-                                Text("Verification Complete")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.black)
-                                
-                                Spacer()
-                            }
-                            
-                            Text("You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
-                                .font(.system(size: 14))
-                                .foregroundColor(.gray)
-                                .lineLimit(nil)
+                        if success {
+                            CardView(icon: "checkmark.circle.fill", iconColor: .green, borderColor: .green, title: "Verification Complete", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
+                        } else {
+                            CardView(icon: "exclamationmark.circle", iconColor: .primaryError, borderColor: .primaryError, title: "Verification Complete", description: "You will authenticate to the server using your biometric credentials. Look directly at the camera and follow the on-screen instructions.")
                         }
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
-                                .background(Color.green.opacity(0.05))
-                        )
-                        .padding(.horizontal, 20)
                     }
                     .padding(.bottom, 20) // Space above button
                 }
@@ -144,9 +122,13 @@ public struct AuthResultScreen: View {
 
 
 #Preview {
-    AuthResultScreen(
-        onContinue: {
-            print("Preview: Continue pressed")
+    VStack {
+        AuthResultScreen(showSuccessToast: true, success: true) {
+            
         }
-    )
-} 
+        
+        AuthResultScreen(showSuccessToast: false, success: false) {
+            
+        }
+    }
+}

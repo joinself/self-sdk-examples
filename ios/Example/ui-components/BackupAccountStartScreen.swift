@@ -17,115 +17,15 @@ public struct BackupAccountStartScreen: View {
     }
     
     public var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // DEBUG Header
-                HStack {
-                    Button {
-                        onBack()
-                    } label: {
-                        Image(systemName: ResourceNames.ICON_BACK)
-                            .foregroundStyle(Color.gray)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
+        ZStack {
+            FlowStartScreen(headlineIcon: Image("ic_cloud_up", bundle: ResourceHelper.bundle), title: "Account Backup", subtitle: "Securely backup your account.", cardTitle: "Encrypted Backup", cardSubtitle: "Your account data will be encrypted and backed up. You can restore it using your biometrics.", cardIcon: Image("ic_encrypted", bundle: ResourceHelper.bundle)) {
+                onNext()
+            } onCancel: {
                 
-                VStack(spacing: 40) {
-                    // User Icon and Title Section
-                    VStack(spacing: 24) {
-                        // User Icon
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 80, height: 80)
-                            
-                            Image(systemName: "icloud.and.arrow.up")
-                                .font(.system(size: 40))
-                                .foregroundColor(.white)
-                        }
-                        .padding(.top, 40)
-                        
-                        // Title and Subtitle
-                        VStack(spacing: 12) {
-                            Text("Secure Your Account")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.black)
-                                .multilineTextAlignment(.center)
-                            
-                            Text("Created an encrypted backup of your account data, manage by the Self system, to prevent data loss and enable easy recovery.")
-                                .font(.system(size: 16))
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 20)
-                        }
-                        
-                        
-                        CardView(icon: "info.circle.fill",
-                                 iconColor: .accentColor,
-                                 borderColor: .accentColor,
-                                 title: "What is Account Backup?", description: "Backup up your account creates an encrypted copy of your essential data. The Self system securely manages the recovery mechanism, allowing you to restore your account on a new device after identity verification.")
-                    }
-                    
-                    // What to Expect Section
-                    VStack(alignment: .leading, spacing: 24) {
-                        HStack {
-                            Text("Backup Details")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.black)
-                            Spacer()
-                        }
-                        
-                        VStack(spacing: 20) {
-                            ExpectationStepView(
-                                stepNumber: 1,
-                                title: "System-Managed Recovery",
-                                description: "The Self system has secured your backup. Account recovery will involve idenity verification."
-                            )
-                            
-                            ExpectationStepView(
-                                stepNumber: 2,
-                                title: "Data Encrypted",
-                                description: "Your account data was encrypted for securely."
-                            )
-                            
-                            ExpectationStepView(
-                                stepNumber: 3,
-                                title: "Secure Upload",
-                                description: "Encrypted data was uploaded and store securely."
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    Button(action: {
-                        onNext()
-                    }) {
-                        HStack {
-                            if isProcessing {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                                Text("Backing up...")
-                            } else {
-                                Text("Start Backup Process")
-                            }
-                        }
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(isProcessing ? Color.blue.opacity(0.7) : Color.blue)
-                        .cornerRadius(12)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 40)
-                }
+            } onBack: {
+                onBack()
             }
         }
-        .background(Color.white)
     }
 }
 

@@ -11,6 +11,7 @@ public struct ServerConnectionScreen: View {
     @State private var isConnecting = false
     
     let onConnectToServer: (String) -> Void
+    let onBack: (() -> Void)?
     
     private let maxCharacters = 66
     
@@ -18,11 +19,12 @@ public struct ServerConnectionScreen: View {
         return serverAddress.count == maxCharacters && serverAddress.allSatisfy { $0.isHexDigit }
     }
     
-    public init(serverAddress: String = "", showSuccessMessage: Bool = true, isConnecting: Bool = false, onConnectToServer: @escaping (String) -> Void) {
+    public init(serverAddress: String = "", showSuccessMessage: Bool = true, isConnecting: Bool = false, onConnectToServer: @escaping (String) -> Void, onBack: (() -> Void)? = nil) {
         self.serverAddress = serverAddress
         self.showSuccessMessage = showSuccessMessage
         self.isConnecting = isConnecting
         self.onConnectToServer = onConnectToServer
+        self.onBack = onBack
     }
     
     public var body: some View {
@@ -30,6 +32,12 @@ public struct ServerConnectionScreen: View {
             VStack(spacing: 0) {
                 // DEBUG Header
                 HStack {
+                    Button {
+                        onBack?()
+                    } label: {
+                        Image(systemName: ResourceHelper.ICON_BACK)
+                            .foregroundStyle(Color.primaryBlue)
+                    }
                     Spacer()
                 }
                 .padding(.horizontal, 16)
@@ -40,19 +48,17 @@ public struct ServerConnectionScreen: View {
                     // Cloud Icon and Title Section
                     VStack(spacing: 24) {
                         // Cloud Icon
-                        Image(systemName: "cloud")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
+                        Image("private_connectivity", bundle: ResourceHelper.bundle)
                             .padding(.top, 40)
                         
                         // Title and Subtitle
                         VStack(spacing: 12) {
-                            Text("Connect to Server")
+                            Text("Connect by Address")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.black)
                                 .multilineTextAlignment(.center)
                             
-                            Text("Enter the server address to connect your Self account to authentication servers.")
+                            Text("Enter the server address/identifier to connect to the server.")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
@@ -60,49 +66,17 @@ public struct ServerConnectionScreen: View {
                         }
                     }
                     
-                    // Secure Connection Info Box
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "shield.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.blue)
-                            
-                            Text("Secure Connection")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.black)
-                            
-                            Spacer()
-                        }
-                        
-                        Text("Your connection will be encrypted and your biometric data remains secure on your device. Only verification results are shared.")
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray)
-                            .lineLimit(nil)
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                            .background(Color.blue.opacity(0.05))
-                    )
-                    .padding(.horizontal, 20)
+                    CardView(icon: "lock.shield.fill", title: "Secure Connection", description: "Your connection will be encrypted and all communications with the server will be secure.")
                     
                     // Server Address Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text("Server Address")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.black)
-                            Spacer()
-                        }
-                        
-                        Text("Enter the 66-character hexadecimal server address/ID provided by your administrator or service provider.")
+                    VStack(alignment: .leading, spacing: 24) {
+                        Text("Enter the 66-character hexadecimal server address/ID.")
                             .font(.system(size: 14))
                             .foregroundColor(.gray)
                             .lineLimit(nil)
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Server Address/ID", text: $serverAddress)
+                            TextField("Enter 66-char hex address", text: $serverAddress)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 12)
                                 .background(Color.white)
@@ -147,7 +121,7 @@ public struct ServerConnectionScreen: View {
                                     .scaleEffect(0.8)
                                 Text("Connecting...")
                             } else {
-                                Text("Connect to Server")
+                                Text("Connect")
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))

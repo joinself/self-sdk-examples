@@ -6,88 +6,39 @@
 import SwiftUI
 
 public struct VerifyEmailResultScreen: View {
+    let success: Bool
+    let errorMessage: String
     let onContinue: () -> Void
     let onBack: () -> Void
     
-    public init(onContinue: @escaping () -> Void, onBack: @escaping () -> Void) {
+    public init(success: Bool, errorMessage: String = "", onContinue: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.success = success
+        self.errorMessage = errorMessage
         self.onContinue = onContinue
         self.onBack = onBack
     }
-    
-    public var body: some View {
-        VStack(spacing: 0) {
-            // DEBUG Header
-            HStack {
-                Button {
-                    onBack()
-                } label: {
-                    Image(systemName: ResourceNames.ICON_BACK)
-                        .foregroundStyle(Color.gray)
-                }
 
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity)
-            
-            VStack(spacing: 40) {
-                // Shield Icon and Title Section
-                VStack(spacing: 24) {
-                    // Shield with Checkmark Icon
-                    ZStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
-                        
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.top, 40)
-                    
-                    // Title and Subtitle
-                    VStack(spacing: 12) {
-                        Text("Email Verified Successfully!")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.black)
-                            .multilineTextAlignment(.center)
-                            .padding(.leading)
-                            .padding(.trailing)
-                        
-                        CardView(icon: "checkmark.seal.fill", iconColor: .green, title: "Verification Complete", description: "Your email address has been verified and a secure credential has been created on your device.")
-                    }
-                }
-                Spacer()
-            }
-            
-            Spacer()
-            
-            VStack(spacing: 12) {
-                Button(action: {
-                    onContinue()
-                }) {
-                    Text("Continue")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.blue)
-                        .cornerRadius(12)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
-            .background(Color.white)
+    public var body: some View {
+        FlowResultScreen(success: success, headline: "Verification Success", subheadline: "Your email address has been successfully verified and a secure credential has been created on your device.", headlineFailure: "Verification Failure", subheadlineFailure: "Your email address could not be verified. Please try again.", messageSuccess: "Verification Complete", descriptionSuccess: "Your email address has been verified and a secure credential has been created on your device.",messageFailure: "Verification Failed", descriptionFailure: "Your email has not been verified. Error: \(errorMessage)", onContinue: {
+            onContinue()
+        }) {
+            onBack()
         }
-        .background(Color.white)
     }
 }
 
 #Preview {
-    VerifyEmailResultScreen {
+    ScrollView {
+        VerifyEmailResultScreen(success: true) {
+            
+        } onBack: {
+            
+        }
         
-    } onBack: {
-        
+        VerifyEmailResultScreen(success: false) {
+            
+        } onBack: {
+            
+        }
     }
 }

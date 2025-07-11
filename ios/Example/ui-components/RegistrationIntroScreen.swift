@@ -39,7 +39,7 @@ public struct RegistrationIntroScreen: View {
                 // User Icon and Title Section
                 VStack(spacing: 40) {
                     // User Icon
-                    Image("person_add", bundle: ResourceNames.bundle)
+                    Image("person_add", bundle: ResourceHelper.bundle)
                         .padding()
                     
                     // Title and Subtitle
@@ -58,7 +58,7 @@ public struct RegistrationIntroScreen: View {
                 }
                 
                 // What to Expect Section
-                CardView(icon: ResourceNames.ICON_LIVENESS, title: "Liveness Check Required", description: "You will be asked for camera permission when you start. Look directly at the camera and follow the on-screen instructions.")
+                CardView(icon: ResourceHelper.ICON_LIVENESS, title: "Liveness Check Required", description: "You will be asked for camera permission when you start. Look directly at the camera and follow the on-screen instructions.")
                 
                 Spacer()
                 VStack (spacing: 0){

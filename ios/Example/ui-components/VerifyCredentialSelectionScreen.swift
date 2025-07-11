@@ -26,8 +26,8 @@ public struct VerifyCredentialSelectionScreen: View {
                         Button {
                             onBack()
                         } label: {
-                            Image(systemName: ResourceNames.ICON_BACK)
-                                .foregroundStyle(Color.gray)
+                            Image(systemName: ResourceHelper.ICON_BACK)
+                                .foregroundStyle(Color.primaryBlue)
                         }
                         Spacer()
                     }
@@ -40,24 +40,20 @@ public struct VerifyCredentialSelectionScreen: View {
                         VStack(spacing: 24) {
                             // Shield with Checkmark Icon
                             ZStack {
-                                Image(systemName: "shield.fill")
+                                Image(systemName: "lock.shield.fill")
                                     .font(.system(size: 80))
                                     .foregroundColor(.blue)
-                                
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.white)
                             }
                             .padding(.top, 40)
                             
                             // Title and Subtitle
                             VStack(spacing: 12) {
-                                Text("Verify Credentials")
+                                Text("Get Credentials")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.black)
                                     .multilineTextAlignment(.center)
                                 
-                                Text("Choose the type of credential you want to verify. These verifications help establish trust and prove aspects of your identity.")
+                                Text("Choose the credential you want to get. These credentials help you establish trust and prove aspects of your identity.")
                                     .font(.system(size: 16))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -66,42 +62,33 @@ public struct VerifyCredentialSelectionScreen: View {
                         }
                         
                         // Available Actions Section
-                        VStack(alignment: .leading, spacing: 24) {
-                            HStack {
-                                Text("Available Actions")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(.black)
-                                Spacer()
-                            }
+                        VStack(spacing: 16) {
+                            ActionCardView(
+                                icon: "envelope",
+                                title: "Verify Email Address",
+                                description: "Verify ownership of your email address",
+                                action: {
+                                    onActionSelected(.emailAddress)
+                                }
+                            )
                             
-                            VStack(spacing: 16) {
-                                ActionCardView(
-                                    icon: "envelope",
-                                    title: "Verify Email Address",
-                                    description: "Verify ownership of your email address",
-                                    action: {
-                                        onActionSelected(.emailAddress)
-                                    }
-                                )
-                                
-                                ActionCardView(
-                                    icon: "person.text.rectangle",
-                                    title: "Verify Identity Document",
-                                    description: "Verify your goverment-issued identity documents",
-                                    action: {
-                                        onActionSelected(.identityDocument)
-                                    }
-                                )
-                                
-                                ActionCardView(
-                                    icon: "person.crop.rectangle.stack.fill",
-                                    title: "Get Custom Credential",
-                                    description: "Get credentials that created and verified by your server",
-                                    action: {
-                                        onActionSelected(.customCredential)
-                                    }
-                                )
-                            }
+                            ActionCardView(
+                                icon: "person.text.rectangle",
+                                title: "Verify Identity Document",
+                                description: "Verify your goverment-issued identity documents",
+                                action: {
+                                    onActionSelected(.identityDocument)
+                                }
+                            )
+                            
+                            ActionCardView(
+                                icon: "person.crop.rectangle.stack.fill",
+                                title: "Get Custom Credential",
+                                description: "Get credentials that created and verified by your server",
+                                action: {
+                                    onActionSelected(.customCredential)
+                                }
+                            )
                         }
                         .padding(.horizontal, 20)
                         

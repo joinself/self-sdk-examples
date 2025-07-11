@@ -15,116 +15,12 @@ public struct VerifyDocumentStartScreen: View {
     }
     
     public var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // DEBUG Header
-                HStack {
-                    Button {
-                        onBack()
-                    } label: {
-                        Image(systemName: ResourceNames.ICON_BACK)
-                            .foregroundStyle(Color.gray)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                
-                VStack(spacing: 40) {
-                    // Shield Icon and Title Section
-                    VStack(spacing: 24) {
-                        // Shield with Checkmark Icon
-                        ZStack {
-                            Image(systemName: "person.text.rectangle.fill")
-                                .font(.system(size: 80))
-                                .foregroundColor(.blue)
-                            
-//                            Image(systemName: "checkmark")
-//                                .font(.system(size: 32, weight: .bold))
-//                                .foregroundColor(.white)
-                        }
-                        .padding(.top, 40)
-                        
-                        // Title and Subtitle
-                        VStack(spacing: 12) {
-                            Text("Identity Document Verification")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.black)
-                                .multilineTextAlignment(.center)
-                                .padding(.leading)
-                                .padding(.trailing)
-                            Text("Your identity document has been successfully verified and a secure credential has been created on your device.")
-                                .font(.system(size: 16))
-                                .foregroundColor(.gray)
-                                .padding(.leading)
-                                .padding(.trailing)
-                            
-                            CardView(icon: "checkmark.seal.fill", iconColor: .green, title: "Verification Complete", description: "Your document has been authenticated and a verifiable credential has been securely stored on your device. You can now use this credential to prove your identity.")
-                        }
-                    }
-                    Spacer()
-                }
-                
-                VStack(alignment: .leading, spacing: 24) {
-                    HStack {
-                        Text("What You Can Do Now")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.black)
-                        Spacer()
-                    }
-                    
-                    VStack(spacing: 16) {
-                        SimpleCardView(
-                            icon: "shield",
-                            title: "Share Your Credentials",
-                            description: "Use your verified credentials to authenticate with services",
-                            action: {
-                                
-                            }
-                        )
-                        
-                        SimpleCardView(
-                            icon: "person.text.rectangle.fill",
-                            title: "Prove Your Identity",
-                            description: "Your verified document can be used as proof of your identity",
-                            action: {
-                                
-                            }
-                        )
-                        
-                        SimpleCardView(
-                            icon: "checkmark.circle.fill",
-                            title: "Access Protected Service",
-                            description: "Many service accept verified credentials for enhanced security",
-                            action: {
-                                
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal, 20)
+        FlowStartScreen(headlineIcon: Image("ic_identity", bundle: ResourceHelper.bundle), title: "Identity Verification ", subtitle: "Verify your government-issued identity documents like passport, driver’s license, or national ID. This creates a secure, verifiable credential stored on your device.", cardTitle: "Document Capture Required", cardSubtitle: "You will be asked to capture images of your identity document. Ensure good lighting and that all text is clearly visible.", cardIcon: Image("ic_camera", bundle: ResourceHelper.bundle)) {
+            onContinue()
+        } onCancel: {
             
-                Spacer()
-                
-                VStack(spacing: 12) {
-                    Button(action: {
-                        onContinue()
-                    }) {
-                        Text("Start Document Verification")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.blue)
-                            .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
-                .background(Color.white)
-            }
-            .background(Color.white)
+        } onBack: {
+            onBack()
         }
     }
 }

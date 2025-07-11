@@ -21,8 +21,8 @@ public struct VerifyEmailStartScreen: View {
                 Button {
                     onBack()
                 } label: {
-                    Image(systemName: ResourceNames.ICON_BACK)
-                        .foregroundStyle(Color.gray)
+                    Image(systemName: ResourceHelper.ICON_BACK)
+                        .foregroundStyle(Color.primaryBlue)
                 }
 
                 Spacer()
@@ -36,32 +36,26 @@ public struct VerifyEmailStartScreen: View {
                 VStack(spacing: 24) {
                     // Shield with Checkmark Icon
                     ZStack {
-                        Image(systemName: "envelope")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
-                        
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
+                        Image("ic_email", bundle: ResourceHelper.bundle)
                     }
                     .padding(.top, 40)
                     
                     // Title and Subtitle
                     VStack(spacing: 12) {
-                        Text("Email Address Verification")
+                        Text("Email Verification")
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.black)
                             .multilineTextAlignment(.center)
                             .padding(.leading)
                             .padding(.trailing)
                         
-                        Text("Verify ownship of your email address to create a trusted credential.")
+                        Text("Verify ownership of your email address to create a trusted credential.")
                             .font(.system(size: 16))
                             .foregroundColor(.gray)
                             .padding(.leading)
                             .padding(.trailing)
                         
-                        CardView(icon: "checkmark.seal.fill", iconColor: .accentColor, title: "Email Verification Required", description: "You will need to enter your email address and confirm it by clicking a verification link sent to your inbox. Keep your email app handy during this process.")
+                        CardView(iconImage: Image("ic_email_unread", bundle: ResourceHelper.bundle), iconColor: .accentColor, title: "Email Verification Required", description: "You will need to provide your email address and confirm it by entering a verification code sent to your inbox. Keep your email app handy during this process.")
                     }
                 }
                 Spacer()
@@ -73,7 +67,7 @@ public struct VerifyEmailStartScreen: View {
                 Button(action: {
                     onContinue()
                 }) {
-                    Text("Start Email Verification")
+                    Text("Start")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
