@@ -331,18 +331,19 @@ struct ContentView: View {
                         }
                     }
                 case .shareEmailStart:
-                    ShareEmailCredentialScreen(credentialName: "Email") {
-                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted)
-                        
-                        self.setCurrentAppScreen(screen: .shareEmailResult(success: true))
-                        
-                    } onDeny: {
-                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected)
-                        self.setCurrentAppScreen(screen: .shareEmailResult(success: false))
-                    } onBack: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentScreen = .actionSelection
+                    ShareEmailCredentialStartScreen {
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .accepted) { messageId, error in
+                            let success = error == nil
+                            self.setCurrentAppScreen(screen: .shareEmailResult(success: success))
                         }
+                    } onCancel: {
+                        viewModel.responseToCredentialRequest(credentialRequest: nil, responseStatus: .rejected) { messageId, error in
+                            let success = error == nil
+                            self.setCurrentAppScreen(screen: .actionSelection)
+                            self.showToastMessage("Share credential rejected!")
+                        }
+                    } onBack: {
+                        self.setCurrentAppScreen(screen: .actionSelection)
                     }
 
                 case .shareEmailResult(let success):
