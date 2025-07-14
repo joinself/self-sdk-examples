@@ -1,0 +1,8 @@
+app_identifier("com.joinself.app.demo") # The bundle identifier of your app
+apple_id("ops@joinself.com") # Your Apple Developer Portal username
+
+itc_team_id("123036030") # App Store Connect Team ID
+team_id("B233VZ3W3Z") # Developer Portal Team ID
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile
