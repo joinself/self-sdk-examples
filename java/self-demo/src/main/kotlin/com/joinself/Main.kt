@@ -49,6 +49,7 @@ sealed class SERVER_REQUESTS {
         val REQUEST_GET_CUSTOM_CREDENTIAL: String = "REQUEST_GET_CUSTOM_CREDENTIAL"
     }
 }
+var inboxAddress: PublicKey? = null
 
 /**
  * run in terminal: ./gradlew :self-demo:run
@@ -60,7 +61,6 @@ fun main() {
     val signal = Semaphore(1)
     signal.acquire()
 
-    var inboxAddress: PublicKey? = null
     var responderAddress: PublicKey? = null
     var groupAddress: PublicKey? = null
     var discoveryRequestId: String = ""
@@ -131,6 +131,8 @@ fun main() {
                     }
 
                     signal.release()
+
+                    generateQrCode(account)
                 }
                 ContentType.INTRODUCTION -> {
                     println("received introduction")
@@ -320,6 +322,19 @@ fun main() {
     println("status: ${SelfStatusName.getName(status.code())}")
     signal.acquire()
 
+    generateQrCode(account)
+
+    println("\n\n")
+    println("Type quit or Ctrl-C to exit")
+    while (true) {
+        val q = readln()
+        if (q == "quit") {
+            break
+        }
+    }
+}
+
+private fun generateQrCode(account: Account) {
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
             account.inboxOpen { status: SelfStatus, address: PublicKey ->
@@ -335,30 +350,19 @@ fun main() {
     if (inboxAddress == null) {
         throw Exception("Can't open inbox")
     }
-    println("\n\n")
-    println("server address: ${inboxAddress.encodeHex()}")
+    println("\n")
+    println("server address: ${inboxAddress!!.encodeHex()}")
     println("clients should use this address or scan the qrcode to connect to this server")
 
     val expires = Timestamp.now() + 3600
-    val keyPackage = account.connectionNegotiateOutOfBand(inboxAddress, expires)
+    val keyPackage = account.connectionNegotiateOutOfBand(inboxAddress!!, expires)
     val discoveryRequest = DiscoveryRequestBuilder()
         .keyPackage(keyPackage)
         .expires(expires)
         .finish()
     val anonymousMessage = AnonymousMessage.fromContent(discoveryRequest)
-    if (sandbox) {
-        anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
-    }
+    anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
     val qrCodeBytes = anonymousMessage.encodeQR(QrEncoding.UNICODE)
     val qrCodeString = qrCodeBytes.decodeToString()
     println(qrCodeString)
-
-    println("\n\n")
-    println("Type quit or Ctrl-C to exit")
-    while (true) {
-        val q = readln()
-        if (q == "quit") {
-            break
-        }
-    }
 }
