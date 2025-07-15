@@ -423,7 +423,6 @@ struct ContentView: View {
                 case .docSignStart:
                     DocSignStartScreen(
                         onSignDocument: {
-//                            startDocumentSigning()
                             viewModel.respondToVerificationRequest(verificationRequest: nil, status: .accepted, completion: { messageId, error in
                                 if error == nil {
                                     self.setCurrentAppScreen(screen: .docSignResult(success: true))
@@ -433,14 +432,9 @@ struct ContentView: View {
                             })
                         },
                         onRejectDocument: {
-                            //rejectDocumentSigning()
                             viewModel.respondToVerificationRequest(verificationRequest: nil, status: .rejected, completion: { messageId, error in
-                                // FIXME: This should be doc sign rejected
-                                if error == nil {
-                                    self.setCurrentAppScreen(screen: .docSignResult(success: true))
-                                } else {
-                                    self.setCurrentAppScreen(screen: .docSignResult(success: false))
-                                }
+                                self.setCurrentAppScreen(screen: .actionSelection)
+                                self.showToastMessage("Document signing rejected!")
                             })
                         }
                     )
@@ -450,9 +444,7 @@ struct ContentView: View {
                         onContinue: {
                             // Return to action selection (don't show connection success toast)
                             showConnectionSuccessToast = false
-                            withAnimation(.easeInOut(duration: 0.5)) {
-                                currentScreen = .actionSelection
-                            }
+                            setCurrentAppScreen(screen: .actionSelection)
                         }
                     )
                     
@@ -792,124 +784,6 @@ struct ContentView: View {
             currentScreen = .verifyCredential
         }
     }
-    
-    // MARK: - Document Signing Methods
-    
-    /*private func handleSignDocumentsAction() {
-        print("📄 ContentView: Starting document signing flow...")
-        
-        guard let account = initializedAccount else {
-            showToastMessage("Document signing requires an active account")
-            return
-        }
-        
-        // Show overlay and spinner
-        showServerRequestOverlay = true
-        overlayMessage = "Waiting for document signing request..."
-        
-        // Send document signing request message to server
-        sendDocumentSigningRequest(account: account)
-        
-        // Start 5-second timeout
-        serverRequestTimeoutTask = Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
-            
-            await MainActor.run {
-                if showServerRequestOverlay {
-                    // Timeout occurred
-                    print("📄 ContentView: Document signing request timed out")
-                    showServerRequestOverlay = false
-                    showToastMessage("Document signing request timed out. Please try again.")
-                }
-            }
-        }
-    }*/
-    
-    /*
-    private func sendDocumentSigningRequest(account: Account) {
-        print("📄 ContentView: Sending document signing request message to server...")
-        
-        guard let serverAddress = connectedServerAddress else {
-            print("📄 ContentView: ❌ Cannot send message - no server connected")
-            showServerRequestOverlay = false
-            showToastMessage("No server connected. Please connect to a server first.")
-            return
-        }
-        
-        Task {
-            do {
-                let chatMessage = ChatMessage.Builder()
-                    .toIdentifier(serverAddress)
-                    .fromIdentifier(account.generateAddress())
-                    .withMessage("REQUEST_DOCUMENT_SIGNING")
-                    .build()
-                
-                try await account.send(message: chatMessage, onAcknowledgement: { messageId, error in
-                    Task { @MainActor in
-                        if let error = error {
-                            print("📄 ContentView: ❌ Document signing request send failed: \(error)")
-                            showServerRequestOverlay = false
-                            showToastMessage("Failed to send document signing request: \(error.localizedDescription)")
-                        } else {
-                            print("📄 ContentView: ✅ Document signing request sent successfully with ID: \(messageId)")
-                            // Message sent successfully, now waiting for server response via message listener
-                        }
-                    }
-                })
-            } catch {
-                print("📄 ContentView: ❌ Failed to build document signing request: \(error)")
-                showServerRequestOverlay = false
-                showToastMessage("Failed to build document signing request: \(error.localizedDescription)")
-            }
-        }
-    }
-    */
-    
-    /*
-    private func startDocumentSigning() {
-        print("📄 ContentView: Starting document signing with Self SDK")
-        
-        guard let account = initializedAccount else {
-            showToastMessage("Document signing requires an active account")
-            return
-        }
-        
-        // For now, simulate signing process
-        // TODO: Implement actual document signing using Self SDK
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            print("📄 ContentView: ✅ Document signed successfully")
-            
-            // Send verification response back to server
-            sendVerificationResponse(account: account, accepted: true)
-            
-            // Navigate to success result screen
-            withAnimation(.easeInOut(duration: 0.5)) {
-                currentScreen = .docSignResult(success: true)
-            }
-        }
-    }
-    */
-    
-    /*
-    private func rejectDocumentSigning() {
-        print("📄 ContentView: User rejected document signing")
-        
-        guard let account = initializedAccount else {
-            showToastMessage("Document signing requires an active account")
-            return
-        }
-        
-        // Send rejection to server
-        sendVerificationResponse(account: account, accepted: false)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            print("📄 ContentView: ✅ Document signing rejection sent to server")
-            // Navigate to rejection result screen
-            withAnimation(.easeInOut(duration: 0.5)) {
-                currentScreen = .docSignResult(success: false)
-            }
-        }
-    }*/
     
     private func sendCredentialResponse(account: Account, credentials: [Credential]) {
         print("🔐 ContentView: Sending credential response back to server...")
