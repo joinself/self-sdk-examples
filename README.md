@@ -2,7 +2,7 @@
 
 This repository provides example applications demonstrating the usage of Self SDKs across various platforms. Our SDKs enable you to integrate Self's identity and messaging capabilities into your applications.
 
-**Note on Submodules:** This repository utilizes Git submodules to include some of the SDK examples (e.g., Golang). To ensure you clone everything correctly, use:
+**Note on Submodules:** This repository utilizes Git submodules to include some of the SDK examples (e.g. Golang). To ensure you clone everything correctly, use:
 
 ```bash
 git clone --recurse-submodules https://github.com/joinself/self-sdk-examples.git
@@ -18,8 +18,8 @@ git submodule update --init --recursive
 
 Our mobile SDKs allow you to build secure and user-friendly applications for Android and iOS.
 
-*   **Android:** Find examples for our Android SDK in the [`android/`](./android/) directory.
-*   **iOS:** Explore examples for our iOS SDK in the [`ios/`](./ios/) directory.
+*   **Android:** Find examples for our Android SDK [here](https://github.com/joinself/demo-android)
+*   **iOS:** Explore examples for our iOS SDK [here](https://github.com/joinself/demo-ios)
 
 ## Server SDKs
 
@@ -29,5 +29,3 @@ Our server-side SDKs are designed for robust backend integrations.
 *   **Java:** Discover examples for our Java SDK in the [`java/`](./java/) directory.
 
 We encourage you to explore these examples to understand how to best utilize Self SDKs in your projects.
-
-
