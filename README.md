@@ -19,8 +19,8 @@ git submodule update --init --recursive
 Our mobile SDKs allow you to build secure and user-friendly applications for Android and iOS.
 
 *   **Android:** Find examples for our Android SDK in the [android](./android/) directory
-*   **Android Demo App:** See our demo application for a more in-depth example on Android [here](https://github.com/joinself/demo-android)
-*   **iOS Demo App:** See our demo application for a more in-depth example on iOS [here](https://github.com/joinself/demo-ios)
+*   **Android Demo App:** See our demo application for a more in-depth Android example [here](https://github.com/joinself/demo-android)
+*   **iOS Demo App:** See our demo application for a more in-depth iOS example [here](https://github.com/joinself/demo-ios)
 
 ## Server SDKs
 
