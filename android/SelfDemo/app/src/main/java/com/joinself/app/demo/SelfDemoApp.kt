@@ -189,8 +189,6 @@ fun SelfDemoApp(
                     else -> {}
                 }
             }
-
-
         }
 
         composable<MainRoute.Registration> {
@@ -621,5 +619,9 @@ fun SelfDemoApp(
                 }
             }
         )
+    }
+
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "Version: ${BuildConfig.VERSION_NAME}")
     }
 }

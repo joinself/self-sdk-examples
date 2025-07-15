@@ -1,4 +1,3 @@
-import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 plugins {
@@ -7,30 +6,41 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     id("com.github.triplet.play") version "3.12.1"
+    id("com.gladed.androidgitversion")
 }
+
+
 val SELF_PLAY_UPLOAD_STORE_FILE = (rootProject.extra["SELF_PLAY_UPLOAD_STORE_FILE"] ?: System.getenv("SELF_PLAY_UPLOAD_STORE_FILE")).toString()
 val SELF_PLAY_UPLOAD_STORE_PASSWORD = (rootProject.extra["SELF_PLAY_UPLOAD_STORE_PASSWORD"] ?: System.getenv("SELF_PLAY_UPLOAD_STORE_PASSWORD")).toString()
 val SELF_PLAY_UPLOAD_KEY_ALIAS = (rootProject.extra["SELF_PLAY_UPLOAD_KEY_ALIAS"] ?: System.getenv("SELF_PLAY_UPLOAD_KEY_ALIAS")).toString()
 val SELF_PLAY_UPLOAD_KEY_PASSWORD = (rootProject.extra["SELF_PLAY_UPLOAD_KEY_PASSWORD"] ?: System.getenv("SELF_PLAY_UPLOAD_KEY_PASSWORD")).toString()
 val GOOGLE_PLAY_CREDS = (rootProject.extra["GOOGLE_PLAY_CREDS"] ?: System.getenv("GOOGLE_PLAY_CREDS")).toString()
 
+androidGitVersion {
+    codeFormat = "MNNNPPRRR"
+    isUntrackedIsDirty = false
+    untrackedIsDirty = false
+    format = "%tag%%-count%%-commit%%-branch%"
+    baseCode = 3
+}
+
 android {
     namespace = "com.joinself.app.demo"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.joinself.app.demo"
         minSdk = 28
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.1.0"
+        versionCode = androidGitVersion.code()
+        versionName = androidGitVersion.name()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters.clear()
             abiFilters.add("arm64-v8a")
         }
-        setProperty("archivesBaseName", "self-demo")
+        setProperty("archivesBaseName", "self-demo-${versionName}")
     }
     signingConfigs {
         create("release") {
@@ -59,6 +69,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         jniLibs {
@@ -75,12 +86,6 @@ android {
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
-    }
-    applicationVariants.all {
-        outputs.forEach { output ->
-            val apkName = "self-demo-${output.name}.apk"
-            (output as? BaseVariantOutputImpl)?.outputFileName = apkName
-        }
     }
 }
 
