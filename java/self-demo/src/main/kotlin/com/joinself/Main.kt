@@ -365,4 +365,31 @@ private fun generateQrCode(account: Account) {
     val qrCodeBytes = anonymousMessage.encodeQR(QrEncoding.UNICODE)
     val qrCodeString = qrCodeBytes.decodeToString()
     println(qrCodeString)
+    println()
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendLivenessRequest(account: Account, groupAddress: PublicKey) {
+    val credentialRequest = CredentialPresentationRequestBuilder()
+        .presentationType(arrayOf("VerifiablePresentation", "CustomPresentation"))
+        .details(arrayOf("VerifiableCredential","LivenessCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "sourceImageHash", "")))
+        .expires(Timestamp.now() + 3600)
+        .finish()
+    val credentialRequestId = credentialRequest.id().toHexString()
+
+    val sendStatus = account.messageSend(groupAddress, credentialRequest)
+    println("send credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendDocumentRequest(account: Account, groupAddress: PublicKey) {
+    val credentialRequest = CredentialPresentationRequestBuilder()
+        .presentationType(arrayOf("VerifiablePresentation", "DocumentPresentation"))
+        .details(arrayOf("VerifiableCredential","PassportCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "dateOfBirth", "")))
+        .expires(Timestamp.now() + 3600)
+        .finish()
+    val credentialRequestId = credentialRequest.id().toHexString()
+
+    val sendStatus = account.messageSend(groupAddress, credentialRequest)
+    println("send credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
 }
