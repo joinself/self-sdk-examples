@@ -1,0 +1,29 @@
+name: _java-build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: eclipse-temurin:17.0.11_9-jdk-jammy
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Build
+        shell: bash
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+
+          apt-get update
+          apt-get install -y unzip
+          ./gradlew :self-demo:distZip
+          cd ${CI_WORKDIR}/self-demo/build/distributions
+          unzip self-demo.zip
+          tar -czf self-sdk-demo_java.tar.gz ${CI_WORKDIR}/self-demo/build/distributions/self-demo
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: self-demo/build/distributions/self-sdk-demo_java.tar.gz
