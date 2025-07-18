@@ -15,15 +15,16 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
           apt-get update
           apt-get install -y unzip
+          cd ${CI_WORKDIR}/java
           ./gradlew :self-demo:distZip
-          cd ${CI_WORKDIR}/self-demo/build/distributions
+          cd ${CI_WORKDIR}/java/self-demo/build/distributions
           unzip self-demo.zip
-          tar -czf self-sdk-demo_java.tar.gz ${CI_WORKDIR}/self-demo/build/distributions/self-demo
+          cd ${CI_WORKDIR}/java/self-demo/build/distributions/self-demo
+          tar -czf self-sdk-demo_java.tar.gz *
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: self-demo/build/distributions/self-sdk-demo_java.tar.gz
+          path: java/self-demo/build/distributions/self-demo/self-sdk-demo_java.tar.gz
