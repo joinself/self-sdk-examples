@@ -36,6 +36,7 @@ import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.Message
 import com.joinself.sdk.models.VerificationRequest
 import com.joinself.sdk.ui.DisplayCredentialRequestUI
+import com.joinself.sdk.ui.DisplayVerificationRequestUI
 import com.joinself.sdk.ui.integrateUIFlows
 import com.joinself.sdk.ui.openQRCodeFlow
 import com.joinself.sdk.ui.openRegistrationFlow
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
             val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
-            var credentialRequest by remember {  mutableStateOf<CredentialRequest?>(null) }
+            var request by remember {  mutableStateOf<Any?>(null) }
 
             val account = remember {
                 Account.Builder()
@@ -79,11 +80,12 @@ class MainActivity : ComponentActivity() {
                             when (message) {
                                 is CredentialRequest -> {
                                     Log.d("Self", "received credential message")
-                                    credentialRequest = message
+                                    request = message
                                 }
 
                                 is VerificationRequest -> {
                                     Log.d("Self", "received verification message")
+                                    request = message
                                 }
                             }
                         }
@@ -158,7 +160,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    if (credentialRequest != null) {
+                    if (request != null) {
                         Dialog(
                             onDismissRequest = { },
                             properties = DialogProperties(
@@ -172,9 +174,18 @@ class MainActivity : ComponentActivity() {
                                     .fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                account.DisplayCredentialRequestUI(selfModifier, credentialRequest!!, onFinish = {
-                                    credentialRequest = null
-                                })
+                                when(request) {
+                                    is CredentialRequest -> {
+                                        account.DisplayCredentialRequestUI(selfModifier, request as CredentialRequest, onFinish = {
+                                            request = null
+                                        })
+                                    }
+                                    is VerificationRequest -> {
+                                        account.DisplayVerificationRequestUI(selfModifier, request as VerificationRequest, onFinish = {
+                                            request = null
+                                        })
+                                    }
+                                }
                             }
                         }
                     }
