@@ -15,7 +15,6 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-
           apt-get update
           apt-get install -y unzip
           cd ${CI_WORKDIR}/java
