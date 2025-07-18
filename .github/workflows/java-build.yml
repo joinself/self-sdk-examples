@@ -27,4 +27,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: self-demo/build/distributions/self-sdk-demo_java.tar.gz
+          path: java/self-demo/build/distributions/self-sdk-demo_java.tar.gz
