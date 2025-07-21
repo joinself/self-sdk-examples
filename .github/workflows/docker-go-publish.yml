@@ -1,4 +1,4 @@
-name: _docker-publish
+name: _docker-java-publish
 
 on:
   workflow_call:
@@ -16,9 +16,5 @@ jobs:
           cd ${CI_WORKDIR}/golang
           docker build -t ghcr.io/joinself/self-sdk-demo:go .
 
-          cd ${CI_WORKDIR}/java
-          docker build -t ghcr.io/joinself/self-sdk-demo:java .
-
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker push ghcr.io/joinself/self-sdk-demo:go
-          docker push ghcr.io/joinself/self-sdk-demo:java
