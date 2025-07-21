@@ -1,0 +1,17 @@
+name: _docker-go-build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup job
+        uses: joinself/github-actions-public/setup-job@main
+      - name: Build
+        shell: bash
+        run: |
+          . ${GITHUB_WORKSPACE}/.ci/env
+          cd ${CI_WORKDIR}/golang
+          docker build -t ghcr.io/joinself/self-sdk-demo:go .
