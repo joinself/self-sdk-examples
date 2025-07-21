@@ -1,4 +1,4 @@
-name: _docker-java-publish
+name: _docker-go-publish
 
 on:
   workflow_call:
