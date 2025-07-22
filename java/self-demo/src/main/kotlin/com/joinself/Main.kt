@@ -50,6 +50,8 @@ sealed class SERVER_REQUESTS {
     }
 }
 var inboxAddress: PublicKey? = null
+var responderAddress: PublicKey? = null
+var groupAddress: PublicKey? = null
 
 /**
  * run in terminal: ./gradlew :self-demo:run
@@ -61,8 +63,6 @@ fun main() {
     val signal = Semaphore(1)
     signal.acquire()
 
-    var responderAddress: PublicKey? = null
-    var groupAddress: PublicKey? = null
     var discoveryRequestId: String = ""
 
     val sandbox = true
@@ -149,15 +149,7 @@ fun main() {
 
                     when (chat.message()) {
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_AUTH -> {
-                            val credentialRequest = CredentialPresentationRequestBuilder()
-                                .presentationType(arrayOf("VerifiablePresentation", "CustomPresentation"))
-                                .details(arrayOf("VerifiableCredential","LivenessCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "sourceImageHash", "")))
-                                .expires(Timestamp.now() + 3600)
-                                .finish()
-                            val credentialRequestId = credentialRequest.id().toHexString()
-
-                            val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
-                            println("send auth request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
+                            sendLivenessRequest(account)
                         }
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_EMAIL -> {
                             val credentialRequest = CredentialPresentationRequestBuilder()
@@ -168,18 +160,10 @@ fun main() {
                             val credentialRequestId = credentialRequest.id().toHexString()
 
                             val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
-                            println("send email credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
+                            println("send email credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress?.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_DOCUMENT -> {
-                            val credentialRequest = CredentialPresentationRequestBuilder()
-                                .presentationType(arrayOf("VerifiablePresentation", "DocumentPresentation"))
-                                .details(arrayOf("VerifiableCredential","PassportCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "documentNumber", "")))
-                                .expires(Timestamp.now() + 3600)
-                                .finish()
-                            val credentialRequestId = credentialRequest.id().toHexString()
-
-                            val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
-                            println("send document credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
+                            sendDocumentRequest(account)
                         }
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM -> {
                             val credentialRequest = CredentialPresentationRequestBuilder()
@@ -190,84 +174,13 @@ fun main() {
                             val credentialRequestId = credentialRequest.id().toHexString()
 
                             val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
-                            println("send custom credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - requestId:${credentialRequestId}")
+                            println("send custom credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress?.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING -> {
-                            val terms = "Agreement test"
-                            val agreementTerms = BinaryObject.create(
-                                "text/plain",
-                                terms.encodeToByteArray()
-                            )
-
-                            account.objectStore(agreementTerms)
-                            val uploadStatus = runBlocking {
-                                suspendCoroutine { continuation ->
-                                    account.objectUpload( agreementTerms, false) { status ->
-                                        continuation.resumeWith(Result.success(status))
-                                    }
-                                }
-                            }
-                            if (!uploadStatus.success()) {
-                                println("failed to upload object ${SelfStatusName.getName(uploadStatus.code())}")
-                                return@configure
-                            }
-                            val claims = HashMap<String, Any>()
-                            claims["termsHash"] = agreementTerms.hash()!!.toHexString()
-                            claims["parties"] = arrayOf(
-                                hashMapOf("type" to "signatory", "id" to inboxAddress!!.encodeHex()),
-                                hashMapOf("type" to "signatory", "id" to responderAddress?.encodeHex()),
-                            )
-
-                            val unsignedAgreementCredential = CredentialBuilder()
-                                .credentialType(arrayOf("VerifiableCredential", "AgreementCredential"))
-                                .credentialSubject(Address.key(inboxAddress!!))
-                                .credentialSubjectClaims(claims)
-                                .issuer(Address.key(inboxAddress!!))
-                                .validFrom(Timestamp.now())
-                                .signWith(inboxAddress!!, Timestamp.now())
-                                .finish()
-                            val signedAgreementCredential = account.credentialIssue(unsignedAgreementCredential)
-
-                            val unsignedAgreementPresentation = PresentationBuilder()
-                                .presentationType(arrayOf("VerifiablePresentation", "AgreementPresentation"))
-                                .holder(Address.key(inboxAddress!!))
-                                .credentialAdd(signedAgreementCredential)
-                                .finish()
-                            val signedAgreementPresentation = account.presentationIssue(unsignedAgreementPresentation)
-
-                            val agreementRequest = CredentialVerificationRequestBuilder()
-                                .credentialType(arrayOf("VerifiableCredential", "AgreementCredential"))
-                                .evidence("terms", agreementTerms)
-                                .proof(signedAgreementPresentation)
-                                .expires(Timestamp.now() + 3600)
-                                .finish()
-
-                            val sendStatus = account.messageSend(responderAddress!!, agreementRequest)
-                            println("send agreement status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress!!.encodeHex()} - requestId:${agreementRequest.id().toHexString()}")
+                            sendAggreementRequest(account)
                         }
                         SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
-                            val subjectAddress = Address.key(responderAddress!!)
-                            val issuerAddress = Address.key(inboxAddress!!)
-                            val customerCredential = CredentialBuilder()
-                                .credentialType(arrayOf("VerifiableCredential", "CustomerCredential"))
-                                .credentialSubject(subjectAddress)
-                                .credentialSubjectClaims(mapOf(
-                                    "name" to "Test Name"))
-                                .issuer(issuerAddress)
-                                .validFrom(Timestamp.now())
-                                .signWith(inboxAddress!!, Timestamp.now())
-                                .finish()
-                            val customerVerifiableCredential = account.credentialIssue(customerCredential)
-
-                            val content = com.joinself.selfsdk.kmp.message.CredentialBuilder()
-                                .credential(customerVerifiableCredential)
-                                .finish()
-
-                            val messageId = content.id().toHexString()
-
-                            val sendStatus = account.messageSend(responderAddress, content)
-                            println("send Custom Credentials status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress.encodeHex()} - messageId:${messageId}")
-
+                            sendCustomCredentials(account)
                         }
                     }
                 }
@@ -365,4 +278,111 @@ private fun generateQrCode(account: Account) {
     val qrCodeBytes = anonymousMessage.encodeQR(QrEncoding.UNICODE)
     val qrCodeString = qrCodeBytes.decodeToString()
     println(qrCodeString)
+    println()
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendLivenessRequest(account: Account) {
+    val credentialRequest = CredentialPresentationRequestBuilder()
+        .presentationType(arrayOf("VerifiablePresentation", "CustomPresentation"))
+        .details(arrayOf("VerifiableCredential","LivenessCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "sourceImageHash", "")))
+        .expires(Timestamp.now() + 3600)
+        .finish()
+    val credentialRequestId = credentialRequest.id().toHexString()
+
+    val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
+    println("send liveness request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress?.encodeHex()} - requestId:${credentialRequestId}")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendDocumentRequest(account: Account) {
+    val credentialRequest = CredentialPresentationRequestBuilder()
+        .presentationType(arrayOf("VerifiablePresentation", "DocumentPresentation"))
+        .details(arrayOf("VerifiableCredential","PassportCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "documentNumber", "")))
+        .expires(Timestamp.now() + 3600)
+        .finish()
+    val credentialRequestId = credentialRequest.id().toHexString()
+
+    val sendStatus = account.messageSend(groupAddress!!, credentialRequest)
+    println("send credential request status: ${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress?.encodeHex()} - requestId:${credentialRequestId}")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendAggreementRequest(account: Account) {
+    val terms = "Agreement test"
+    val agreementTerms = BinaryObject.create(
+        "text/plain",
+        terms.encodeToByteArray()
+    )
+
+    account.objectStore(agreementTerms)
+    val uploadStatus = runBlocking {
+        suspendCoroutine { continuation ->
+            account.objectUpload( agreementTerms, false) { status ->
+                continuation.resumeWith(Result.success(status))
+            }
+        }
+    }
+    if (!uploadStatus.success()) {
+        println("failed to upload object ${SelfStatusName.getName(uploadStatus.code())}")
+        return
+    }
+    val claims = HashMap<String, Any>()
+    claims["termsHash"] = agreementTerms.hash()!!.toHexString()
+    claims["parties"] = arrayOf(
+        hashMapOf("type" to "signatory", "id" to inboxAddress!!.encodeHex()),
+        hashMapOf("type" to "signatory", "id" to responderAddress?.encodeHex()),
+    )
+
+    val unsignedAgreementCredential = CredentialBuilder()
+        .credentialType(arrayOf("VerifiableCredential", "AgreementCredential"))
+        .credentialSubject(Address.key(inboxAddress!!))
+        .credentialSubjectClaims(claims)
+        .issuer(Address.key(inboxAddress!!))
+        .validFrom(Timestamp.now())
+        .signWith(inboxAddress!!, Timestamp.now())
+        .finish()
+    val signedAgreementCredential = account.credentialIssue(unsignedAgreementCredential)
+
+    val unsignedAgreementPresentation = PresentationBuilder()
+        .presentationType(arrayOf("VerifiablePresentation", "AgreementPresentation"))
+        .holder(Address.key(inboxAddress!!))
+        .credentialAdd(signedAgreementCredential)
+        .finish()
+    val signedAgreementPresentation = account.presentationIssue(unsignedAgreementPresentation)
+
+    val agreementRequest = CredentialVerificationRequestBuilder()
+        .credentialType(arrayOf("VerifiableCredential", "AgreementCredential"))
+        .evidence("terms", agreementTerms)
+        .proof(signedAgreementPresentation)
+        .expires(Timestamp.now() + 3600)
+        .finish()
+
+    val sendStatus = account.messageSend(responderAddress!!, agreementRequest)
+    println("send agreement status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress!!.encodeHex()} - requestId:${agreementRequest.id().toHexString()}")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendCustomCredentials(account: Account) {
+    val subjectAddress = Address.key(responderAddress!!)
+    val issuerAddress = Address.key(inboxAddress!!)
+    val customerCredential = CredentialBuilder()
+        .credentialType(arrayOf("VerifiableCredential", "CustomerCredential"))
+        .credentialSubject(subjectAddress)
+        .credentialSubjectClaims(mapOf(
+            "name" to "Test Name"))
+        .issuer(issuerAddress)
+        .validFrom(Timestamp.now())
+        .signWith(inboxAddress!!, Timestamp.now())
+        .finish()
+    val customerVerifiableCredential = account.credentialIssue(customerCredential)
+
+    val content = com.joinself.selfsdk.kmp.message.CredentialBuilder()
+        .credential(customerVerifiableCredential)
+        .finish()
+
+    val messageId = content.id().toHexString()
+
+    val sendStatus = account.messageSend(responderAddress!!, content)
+    println("send Custom Credentials status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - messageId:${messageId}")
 }
