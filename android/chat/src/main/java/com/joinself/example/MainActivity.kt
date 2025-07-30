@@ -62,8 +62,6 @@ class MainActivity : ComponentActivity() {
             log = { Log.d("Self", it) }
         )
 
-
-
         setContent {
             val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
@@ -150,12 +148,8 @@ class MainActivity : ComponentActivity() {
                 statusText = ""
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
-                        val gAdress = account.connectWith(serverInboxAddress!!, info = mapOf())
-                        if (gAdress != null) {
-                            groupAddress = gAdress
-
-                            statusText = "group address: $gAdress"
-                        }
+                        val groupAddress = account.connectWith(serverInboxAddress!!, info = mapOf())
+                        statusText = "group address: $groupAddress"
                     } catch (ex: Exception) {
                         Log.e("Self", ex.message, ex)
                         statusText = "wrong server address"

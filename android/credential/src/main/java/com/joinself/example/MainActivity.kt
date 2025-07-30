@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None }
             ) {
-                SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
+                SelfSDK.integrateUIFlows(this, navController, selfModifier = selfModifier)
 
                 composable("main") {
                     Column(
