@@ -1,14 +1,11 @@
 package com.joinself.example
 
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Arrangement
@@ -30,15 +27,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.joinself.common.Environment
-import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
-import com.joinself.sdk.ui.addLivenessCheckRoute
-import com.joinself.ui.component.LoadingDialog
+import com.joinself.sdk.models.Message
+import com.joinself.sdk.ui.integrateUIFlows
+import com.joinself.sdk.ui.openBackupFlow
+import com.joinself.sdk.ui.openRegistrationFlow
+import com.joinself.sdk.ui.openRestoreFlow
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -49,71 +47,44 @@ class MainActivity : ComponentActivity() {
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            pushToken = null,
             log = { Log.d("SelfSDK", it) }
         )
-
-        // the sdk will store data in this directory, make sure it exists.
-        val storagePath = File(applicationContext.filesDir.absolutePath + "/account1")
-        if (!storagePath.exists()) storagePath.mkdirs()
-
-        val account = Account.Builder()
-            .setContext(applicationContext)
-            .setEnvironment(Environment.production)
-            .setSandbox(true)
-            .setStoragePath(storagePath.absolutePath)
-            .build()
 
         setContent {
             val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
 
-            var isRegistered by remember { mutableStateOf(account.registered()) }
-            var isDisplayProgressDialog by remember { mutableStateOf(false) }
-
-            // save to file system
-            var backupByteArray by remember { mutableStateOf(byteArrayOf()) }
-            val saveLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-            ) { uri: Uri? ->
-                uri?.let {
-                    applicationContext.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                        outputStream.write(backupByteArray)
-                    }
-                }
-            }
-
-            // restore: selfie capture, pickup the backup file
-            var isRestoreFlow by remember { mutableStateOf(false) }
-            var selfieByteArray by remember { mutableStateOf(byteArrayOf()) }
-            val pickerLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.GetContent()
-            ) { uri: Uri? ->
-                uri?.let {
-                    val backupBytes = applicationContext.contentResolver.openInputStream(it)?.use { input ->
-                        input.readBytes()
-                    }
-                    if (backupBytes != null && backupBytes.isNotEmpty() && selfieByteArray.isNotEmpty()) {
-                        coroutineScope.launch(Dispatchers.IO) {
-                            try {
-                                isDisplayProgressDialog = true
-                                val credentials = account.restore(backupBytes, selfieByteArray)
-                                isRegistered = credentials.isNotEmpty()
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(applicationContext, "Restore result: ${credentials.isNotEmpty()}", Toast.LENGTH_LONG).show()
-                                }
-                            } catch (ex: Exception) {
-                                Log.e("SelfSDK", "restore error", ex)
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(applicationContext, "Restore failed: ${ex.message}", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                            isDisplayProgressDialog = false
+            val account = remember {
+                // the sdk will store data in this directory, make sure it exists.
+                val storagePath = File(applicationContext.filesDir.absolutePath + "/account1")
+                if (!storagePath.exists()) storagePath.mkdirs()
+                Account.Builder()
+                    .setContext(applicationContext)
+                    .setEnvironment(Environment.production)
+                    .setSandbox(true)
+                    .setStoragePath(storagePath.absolutePath)
+                    .setCallbacks(object : Account.Callbacks {
+                        override fun onMessage(message: Message) {
+                            Log.d("Self", "onMessage: ${message.id()}")
                         }
-                    }
-                }
+
+                        override fun onConnect() {
+                            Log.d("Self", "onConnect")
+                        }
+                        override fun onDisconnect(errorMessage: String?) {
+                            Log.d("Self", "onDisconnect: $errorMessage")
+                        }
+                        override fun onAcknowledgement(id: String) {
+                            Log.d("Self", "onAcknowledgement: $id")
+                        }
+                        override fun onError(id: String, errorMessage: String?) {
+                            Log.d("Self", "onError: $errorMessage")
+                        }
+                    })
+                    .build()
             }
+            var isRegistered by remember { mutableStateOf(account.registered()) }
 
             NavHost(navController = navController,
                 startDestination = "main",
@@ -121,6 +92,8 @@ class MainActivity : ComponentActivity() {
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None }
             ) {
+                SelfSDK.integrateUIFlows(this, navController, selfModifier = selfModifier)
+
                 composable("main") {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -129,11 +102,13 @@ class MainActivity : ComponentActivity() {
                             .padding(start = 8.dp, end = 8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
+                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: $isRegistered")
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
                             onClick = {
-                                navController.navigate("livenessRoute")
+                                account.openRegistrationFlow { isSuccess, error ->
+                                    isRegistered = isSuccess
+                                }
                             },
                             enabled = !isRegistered
                         ) {
@@ -143,12 +118,14 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier,
                             onClick = {
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    backupByteArray = account.backup()
-
-                                    withContext(Dispatchers.Main) {
-                                        saveLauncher.launch("self_sdk.backup")
-                                    }
+                                coroutineScope.launch(Dispatchers.Main) {
+                                    account.openBackupFlow(onFinish = { isSuccess, error ->
+                                        if (isSuccess) {
+                                            coroutineScope.launch(Dispatchers.Main) {
+                                                Toast.makeText(applicationContext, "Backup successfully", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    })
                                 }
                             },
                             enabled = isRegistered
@@ -159,50 +136,22 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier,
                             onClick = {
-                                isRestoreFlow = true
-                                navController.navigate("livenessRoute")
+                                coroutineScope.launch(Dispatchers.Main) {
+                                    account.openRestoreFlow(onFinish = { isSuccess, error ->
+                                        if (isSuccess) {
+                                            coroutineScope.launch(Dispatchers.Main) {
+                                                Toast.makeText(applicationContext, "Restore successfully", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    })
+                                }
                             },
                             enabled = !isRegistered
                         ) {
                             Text(text = "Restore")
                         }
-
-                        if (isDisplayProgressDialog) {
-                            LoadingDialog(selfModifier)
-                        }
                     }
                 }
-
-                // add liveness check to main navigation
-                addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = { account },
-                    withCredential = true,
-                    onFinish = { selfie, credentials ->
-                        if (isRestoreFlow) {
-                            selfieByteArray = selfie
-                            pickerLauncher.launch("application/octet-stream")
-                        } else if (!account.registered()) {
-                            coroutineScope.launch(Dispatchers.IO) {
-                                try {
-                                    if (selfie.isNotEmpty() && credentials.isNotEmpty()) {
-                                        val success = account.register(selfieImage = selfie, credentials = credentials)
-                                        if (success) {
-                                            isRegistered = true
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(applicationContext, "Register account successfully", Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                    }
-                                } catch (_: InvalidCredentialException) { }
-                            }
-                        }
-
-                        // nav back to main
-                        coroutineScope.launch(Dispatchers.Main) {
-                            navController.popBackStack("livenessRoute", true)
-                        }
-                    }
-                )
             }
         }
     }
