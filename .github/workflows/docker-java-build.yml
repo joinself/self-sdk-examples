@@ -1,4 +1,4 @@
-name: _docker-build
+name: _docker-java-build
 
 on:
   workflow_call:
@@ -13,7 +13,5 @@ jobs:
         shell: bash
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
-          cd ${CI_WORKDIR}/golang
-          docker build -t ghcr.io/joinself/self-sdk-demo:go .
           cd ${CI_WORKDIR}/java
           docker build -t ghcr.io/joinself/self-sdk-demo:java .

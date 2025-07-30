@@ -1,0 +1,24 @@
+name: CI - Java
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'java/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'java/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/java-build.yml
+    secrets: inherit
+  publish:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/java-publish.yml
+    secrets: inherit
+    needs: build

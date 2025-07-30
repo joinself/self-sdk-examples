@@ -1,4 +1,4 @@
-name: CI - Docker
+name: CI - Docker Java
 
 on:
   push:
@@ -6,21 +6,19 @@ on:
       - main
     paths:
       - 'java/**'
-      - 'golang/**'
   pull_request:
     branches:
       - main
     paths:
       - 'java/**'
-      - 'golang/**'
   workflow_dispatch:
 
 jobs:
   build:
-    uses: ./.github/workflows/docker-build.yml
+    uses: ./.github/workflows/docker-java-build.yml
     secrets: inherit
   publish:
     if: ${{ github.ref == 'refs/heads/main' }}
-    uses: ./.github/workflows/docker-publish.yml
+    uses: ./.github/workflows/docker-java-publish.yml
     secrets: inherit
     needs: build
