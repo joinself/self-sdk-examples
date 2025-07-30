@@ -47,7 +47,6 @@ class MainActivity : ComponentActivity() {
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            pushToken = null,
             log = { Log.d(LOGTAG, it) }
         )
 
@@ -130,6 +129,7 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
+                                // open a document verification flow, credentials are store in local database automatically
                                 account.openDocumentVerificationFlow(
                                     isDevMode = true,
                                     onFinish = {isSuccess, error ->
@@ -148,6 +148,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // integrate self ui flows into the app
                 SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
             }
         }

@@ -35,8 +35,7 @@ import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.Message
 import com.joinself.sdk.models.VerificationRequest
-import com.joinself.sdk.ui.DisplayCredentialRequestUI
-import com.joinself.sdk.ui.DisplayVerificationRequestUI
+import com.joinself.sdk.ui.DisplayRequestUI
 import com.joinself.sdk.ui.integrateUIFlows
 import com.joinself.sdk.ui.openQRCodeFlow
 import com.joinself.sdk.ui.openRegistrationFlow
@@ -106,9 +105,6 @@ class MainActivity : ComponentActivity() {
                     .build()
             }
             var isRegistered by remember { mutableStateOf(account.registered()) }
-            var groupAddress by remember { mutableStateOf("") }
-
-            var statusText by remember { mutableStateOf("") }
 
             NavHost(navController = navController,
                 startDestination = "main",
@@ -146,9 +142,6 @@ class MainActivity : ComponentActivity() {
                                     onFinish = { qrCode, discoverData ->
                                         coroutineScope.launch(Dispatchers.IO) {
                                             val gAdress = account.connectWith(qrCode)
-                                            if (gAdress.isNotEmpty()) {
-                                                groupAddress = gAdress
-                                            }
                                         }
                                     },
                                     onExit = {}
@@ -176,14 +169,19 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 when(request) {
                                     is CredentialRequest -> {
-                                        account.DisplayCredentialRequestUI(selfModifier, request as CredentialRequest, onFinish = {
-                                            request = null
-                                        })
+                                        // display the UI for credential request
+                                        account.DisplayRequestUI(selfModifier, request as CredentialRequest,
+                                            onFinish = { isSuccess, status ->
+                                                request = null
+                                            }
+                                        )
                                     }
                                     is VerificationRequest -> {
-                                        account.DisplayVerificationRequestUI(selfModifier, request as VerificationRequest, onFinish = {
-                                            request = null
-                                        })
+                                        account.DisplayRequestUI(selfModifier, request as VerificationRequest,
+                                            onFinish = { isSuccess, status ->
+                                                request = null
+                                            }
+                                        )
                                     }
                                 }
                             }

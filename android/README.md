@@ -40,6 +40,7 @@ This app connect to another app by an inbox address and sends, receives chat mes
 
 Steps:
   - Register an account
+  - Run server in `java/chat` and copy the address
   - Enter server inbox address, then click `Connect` to establish a connection with server.
   - Enter a message and send it.
 
@@ -69,11 +70,11 @@ adb -d install -r chat-qrcode/build/outputs/apk/debug/chat-qrcode-debug.apk
 #### 4. Verification
 
 This simple app demonstrates how to integrate email and document verification processes.
-It also displays all verified credentials in the sdk.
+After finishing the flow, credentials are stored in local database. You can share them with other apps. See `credential` example.
 
 Steps:
   - Register an account
-  - Choose email, liveness, or document verification
+  - Choose email, or document verification
 
 Build & install command   
 ```bash
@@ -93,8 +94,9 @@ This app demonstrates:
 
 Steps:
   - Register an account
-  - Enter server inbox address, then click `Connect` to establish a connection with server.
-  - Handle incoming credential request
+  - Run server in `java/credentials` to receive credential request
+  - Or run server in `java/agreement` to receive agreement request
+  - Click on `Scan QRCode` to establish a connection with server and receive a request from server above
 
 Build & install command   
 ```bash
@@ -109,10 +111,10 @@ This simple app demonstrates how to back up sdk database and restore it.
 
 Steps:
 - Register an account
-- Choose back up and save the backup file in file system
+- Choose `back up` to start backup flow
 
 - Uninstall & Reinstall it again
-- Restore from backup file in file system
+- Choose `Restore` to restore from backup
 
 Build & install command
 ```bash

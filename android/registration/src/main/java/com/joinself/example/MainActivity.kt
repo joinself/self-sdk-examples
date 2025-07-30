@@ -41,7 +41,6 @@ class MainActivity : ComponentActivity() {
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            pushToken = null,
             log = { Log.d("Self", it) }
         )
 
@@ -97,6 +96,7 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
                             onClick = {
+                                // open registration flow to create an account
                                 account.openRegistrationFlow { isSuccess, error ->
                                     isRegistered = isSuccess
                                 }
@@ -108,6 +108,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // integrate self ui flows into your app
                 SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
             }
         }
