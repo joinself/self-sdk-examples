@@ -2,7 +2,6 @@ package com.joinself.example
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,20 +37,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.joinself.common.Environment
-import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.ChatMessage
+import com.joinself.sdk.models.Message
+import com.joinself.sdk.models.PublicKey
 import com.joinself.sdk.models.Receipt
-import com.joinself.sdk.ui.adQRCodeRoute
-import com.joinself.sdk.ui.addLivenessCheckRoute
+import com.joinself.sdk.ui.integrateUIFlows
+import com.joinself.sdk.ui.openQRCodeFlow
+import com.joinself.sdk.ui.openRegistrationFlow
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : ComponentActivity() {
+    private lateinit var account: Account
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,65 +60,81 @@ class MainActivity : ComponentActivity() {
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            pushToken = null,
             log = { Log.d("Self", it) }
         )
-
-        // the sdk will store data in this directory, make sure it exists.
-        val storagePath = File(applicationContext.filesDir.absolutePath + "/account1")
-        if (!storagePath.exists()) storagePath.mkdirs()
-
-        val account = Account.Builder()
-            .setContext(applicationContext)
-            .setEnvironment(Environment.production)
-            .setSandbox(true)
-            .setStoragePath(storagePath.absolutePath)
-            .build()
 
         setContent {
             val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
 
-            var isRegistered by remember { mutableStateOf(account.registered()) }
-            var groupAddress by remember { mutableStateOf("") }
+            var groupAddress by remember { mutableStateOf<PublicKey?>(null) }
             val messages = remember { mutableStateListOf<String>() }
             var inputMessage by remember { mutableStateOf("") }
 
             fun sendChat() {
+                requireNotNull(groupAddress)
+
                 // build a chat message
                 val chat = ChatMessage.Builder()
-                    .setToIdentifier(groupAddress)
                     .setMessage(inputMessage)
                     .build()
 
                 // send chat to server
                 coroutineScope.launch(Dispatchers.IO) {
-                    account.send(chat) { messageId, _ ->
-                        messages.add(inputMessage)
-                        inputMessage = ""
-                    }
+                    val messageId = account.send(toAddress = groupAddress!!, message = chat)
+                    messages.add(inputMessage)
+                    inputMessage = ""
                 }
             }
 
-            LaunchedEffect(Unit) {
-                // need to wait for account connected
-                account.setOnStatusListener { status ->
-                    println("onStatus $status")
-                }
-
-                // listen to messages from server
-                account.setOnMessageListener { msg ->
-                    when (msg) {
-                        is ChatMessage -> {
-                            messages.add(msg.message()) // append to the message list
-                        }
-                        is Receipt -> {
-                            println("receipt message")
-                        }
-                    }
+            // send delivered receipt
+            fun sendReceipt(message: ChatMessage) {
+                val receipt = Receipt.Builder()
+                    .setDelivered(listOf(message.id()))
+                    .build()
+                coroutineScope.launch(Dispatchers.IO) {
+                    account.send(groupAddress!!,receipt)
                 }
             }
+
+            // the sdk will store data in this directory, make sure it exists.
+            val storagePath = File(applicationContext.filesDir.absolutePath + "/account1")
+            if (!storagePath.exists()) storagePath.mkdirs()
+            account = Account.Builder()
+                .setContext(applicationContext)
+                .setEnvironment(Environment.production)
+                .setSandbox(true)
+                .setStoragePath(storagePath.absolutePath)
+                .setCallbacks(object : Account.Callbacks {
+                    override fun onMessage(message: Message) {
+                        Log.d("Self", "onMessage: ${message.id()}")
+                        when (message) {
+                            is ChatMessage -> {
+                                messages.add(message.message()) // append text to the message list
+
+                                sendReceipt(message) // send delivered receipt
+                            }
+                            is Receipt -> {
+                                println("receipt message")
+                            }
+                        }
+                    }
+                    override fun onConnect() {
+                        Log.d("Self", "onConnect")
+                    }
+                    override fun onDisconnect(errorMessage: String?) {
+                        Log.d("Self", "onDisconnect: $errorMessage")
+                    }
+                    override fun onAcknowledgement(id: String) {
+                        Log.d("Self", "onAcknowledgement: $id")
+                    }
+                    override fun onError(id: String, errorMessage: String?) {
+                        Log.d("Self", "onError: $errorMessage")
+                    }
+                })
+                .build()
+            var isRegistered by remember { mutableStateOf(account.registered()) }
 
             NavHost(navController = navController,
                 startDestination = "main",
@@ -125,6 +142,8 @@ class MainActivity : ComponentActivity() {
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None }
             ) {
+                SelfSDK.integrateUIFlows(this, navController, selfModifier = selfModifier)
+
                 composable("main") {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -133,10 +152,12 @@ class MainActivity : ComponentActivity() {
                             .padding(start = 8.dp, end = 8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
+                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: $isRegistered")
                         Button(
                             onClick = {
-                                navController.navigate("livenessRoute")
+                                account.openRegistrationFlow { isSuccess, error ->
+                                    isRegistered = isSuccess
+                                }
                             },
                             enabled = !isRegistered
                         ) {
@@ -145,9 +166,16 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                navController.navigate("qrRoute")
+                                account.openQRCodeFlow(
+                                    onFinish = { qrCode, discoverData ->
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            groupAddress = account.connectWith(qrCode)
+                                        }
+                                    },
+                                    onExit = {}
+                                )
                             },
-                            enabled = isRegistered && groupAddress.isEmpty()
+                            enabled = isRegistered
                         ) {
                             Text(text = "Scan QRCode")
                         }
@@ -162,14 +190,14 @@ class MainActivity : ComponentActivity() {
                                 onValueChange = {
                                     inputMessage = it
                                 },
-                                enabled = groupAddress.isNotEmpty(),
+                                enabled = groupAddress != null,
                                 placeholder = { Text("enter chat message") }
                             )
                             Button(modifier = Modifier.width(80.dp), contentPadding = PaddingValues(0.dp),
                                 onClick = {
                                     sendChat()
                                 },
-                                enabled = isRegistered && groupAddress.isNotEmpty()
+                                enabled = isRegistered && groupAddress != null
                             ) {
                                 Text(text = "Send")
                             }
@@ -184,59 +212,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-
-                // add liveness check to main navigation
-                addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = { account },
-                    withCredential = true,
-                    onFinish = { selfie, credentials ->
-                        if (!account.registered()) {
-                            coroutineScope.launch(Dispatchers.IO) {
-                                try {
-                                    if (selfie.isNotEmpty() && credentials.isNotEmpty()) {
-                                        val success = account.register(selfieImage = selfie, credentials = credentials)
-                                        if (success) {
-                                            isRegistered = true
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(applicationContext, "Register account successfully", Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                    }
-                                } catch (_: InvalidCredentialException) { }
-                            }
-                        }
-                        // nav back to main
-                        coroutineScope.launch(Dispatchers.Main) {
-                            navController.popBackStack("livenessRoute", true)
-                        }
-                    }
-                )
-
-                // integrate qrcode flow
-                adQRCodeRoute(navController, "qrRoute", selfModifier = selfModifier,
-                    onFinish = { qrCodeBytes, _ ->
-                        coroutineScope.launch(Dispatchers.IO) {
-                            // parse qrcode first and check the correct environment
-                            val discoveryData = Account.qrCode(qrCodeBytes)
-                            if (discoveryData?.sandbox == false) {
-                                return@launch
-                            }
-
-                            // then connect with the connection in the qrcode
-                            account.connectWith(qrCodeBytes)
-                            groupAddress = discoveryData?.address ?: "" // keep address to send data
-
-                            coroutineScope.launch(Dispatchers.Main) {
-                                navController.popBackStack("qrRoute", true)
-                            }
-                        }
-                    },
-                    onExit = {
-                        coroutineScope.launch(Dispatchers.Main) {
-                            navController.popBackStack("qrRoute", true)
-                        }
-                    }
-                )
             }
         }
     }

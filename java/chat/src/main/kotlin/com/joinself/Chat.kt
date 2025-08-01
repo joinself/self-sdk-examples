@@ -115,7 +115,6 @@ fun main() {
                             println("store push token fromAddress:${message.fromAddress().encodeHex()} - forAddress:${groupAddress?.encodeHex()}")
                         }
                     }
-                    signal.release()
                 }
                 ContentType.CHAT -> {
                     val chat = Chat.decode(content)
@@ -184,7 +183,6 @@ fun main() {
     discoveryRequestId = discoveryRequest.id().toHexString()
     println("waiting for response to discovery request requestId:${discoveryRequestId}")
 
-    signal.acquire()
     signal.acquire()
 
     if (responderAddress == null || groupAddress == null) {

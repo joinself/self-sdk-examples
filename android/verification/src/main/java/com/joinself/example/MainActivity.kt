@@ -13,47 +13,40 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.joinself.common.Environment
-import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
-import com.joinself.sdk.models.Claim
-import com.joinself.sdk.ui.addDocumentVerificationRoute
-import com.joinself.sdk.ui.addEmailRoute
-import com.joinself.sdk.ui.addLivenessCheckRoute
+import com.joinself.sdk.models.Message
+import com.joinself.sdk.ui.integrateUIFlows
+import com.joinself.sdk.ui.openDocumentVerificationFlow
+import com.joinself.sdk.ui.openEmailVerificationFlow
+import com.joinself.sdk.ui.openRegistrationFlow
 import com.joinself.ui.theme.SelfModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : ComponentActivity() {
-    val LOGTAG = "Self"
+    val LOGTAG = "SelfSDK"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            pushToken = null,
             log = { Log.d(LOGTAG, it) }
         )
 
@@ -66,6 +59,23 @@ class MainActivity : ComponentActivity() {
             .setEnvironment(Environment.production)
             .setSandbox(true)
             .setStoragePath(storagePath.absolutePath)
+            .setCallbacks(object : Account.Callbacks {
+                override fun onMessage(message: Message) {
+                    Log.d(LOGTAG, "onMessage: ${message.id()}")
+                }
+                override fun onConnect() {
+                    Log.d(LOGTAG, "onConnect")
+                }
+                override fun onDisconnect(errorMessage: String?) {
+                    Log.d(LOGTAG, "onDisconnect: $errorMessage")
+                }
+                override fun onAcknowledgement(id: String) {
+                    Log.d(LOGTAG, "onAcknowledgement: $id")
+                }
+                override fun onError(id: String, errorMessage: String?) {
+                    Log.d(LOGTAG, "onError: $errorMessage")
+                }
+            })
             .build()
 
         setContent {
@@ -74,22 +84,7 @@ class MainActivity : ComponentActivity() {
             val selfModifier = SelfModifier.sdk()
 
             var isRegistered by remember { mutableStateOf(account.registered()) }
-            val claims = remember { mutableStateListOf<Claim>() }
 
-            fun refreshClaims() {
-                val credentials = account.credentialsByType()
-                claims.clear()
-                claims.addAll(credentials.flatMap { cred -> cred.credentials.flatMap { it.claims() } })
-            }
-
-            LaunchedEffect(Unit) {
-                // need to wait for account connected
-                account.setOnStatusListener { status ->
-                    if (status == 0L) {
-                        refreshClaims()
-                    }
-                }
-            }
 
             NavHost(navController = navController,
                 startDestination = "main",
@@ -108,7 +103,9 @@ class MainActivity : ComponentActivity() {
                         Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: $isRegistered")
                         Button(
                             onClick = {
-                                navController.navigate("livenessRoute")
+                                account.openRegistrationFlow { isSuccess, error ->
+                                    isRegistered = isSuccess
+                                }
                             },
                             enabled = !isRegistered
                         ) {
@@ -117,16 +114,13 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                navController.navigate("livenessRoute")
-                            },
-                            enabled = isRegistered
-                        ) {
-                            Text(text = "Liveness Verification")
-                        }
-
-                        Button(
-                            onClick = {
-                                navController.navigate("emailRoute")
+                                account.openEmailVerificationFlow { isSuccess, error ->
+                                    if (isSuccess) {
+                                        coroutineScope.launch(Dispatchers.Main) {
+                                            Toast.makeText(applicationContext, "Email verification successfully", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                }
                             },
                             enabled = isRegistered
                         ) {
@@ -135,86 +129,27 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                navController.navigate("documentRoute")
+                                // open a document verification flow, credentials are store in local database automatically
+                                account.openDocumentVerificationFlow(
+                                    isDevMode = true,
+                                    onFinish = {isSuccess, error ->
+                                        if (isSuccess) {
+                                            coroutineScope.launch(Dispatchers.Main) {
+                                                Toast.makeText(applicationContext, "Document verification successfully", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
                             },
                             enabled = isRegistered
                         ) {
                             Text(text = "Document Verification")
                         }
-
-                        // list all verified credentials
-                        Text(
-                            modifier = Modifier.padding(top = 10.dp),
-                            fontWeight = FontWeight.Bold,
-                            text = "Credentials on Self Account: ${claims.size}"
-                        )
-                        LazyColumn {
-                            items(claims) { claim ->
-                                Text(text = "${claim.subject()}: ${claim.value()}")
-                            }
-                        }
                     }
                 }
 
-                // add liveness check to main navigation
-                addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = { account },
-                    withCredential = true,
-                    onFinish = { selfie, credentials ->
-                        // check result selfie image and credentials from server
-                        if (!account.registered()) {
-                            coroutineScope.launch(Dispatchers.IO) {
-                                try {
-                                    if (selfie.isNotEmpty() && credentials.isNotEmpty()) {
-                                        val success = account.register(selfieImage = selfie, credentials = credentials)
-                                        if (success) {
-                                            isRegistered = true
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(applicationContext, "Register account successfully", Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                    }
-                                } catch (_: InvalidCredentialException) { }
-                            }
-                        } else if (credentials.isNotEmpty()) {
-                            coroutineScope.launch(Dispatchers.Main) {
-                                Toast.makeText(applicationContext, "Liveness check successfully", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                        // nav back to main
-                        coroutineScope.launch(Dispatchers.Main) {
-                            navController.popBackStack("livenessRoute", true)
-                        }
-                    }
-                )
-
-                // integrate email verification flow
-                addEmailRoute(navController, route = "emailRoute", selfModifier = selfModifier,
-                    account = { account },
-                    onFinish = { isSuccess, error ->
-                        if (isSuccess) {
-                            refreshClaims() // refresh email credentials to display
-
-                            coroutineScope.launch(Dispatchers.Main) {
-                                Toast.makeText(applicationContext, "Email verification successfully", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    }
-                )
-
-                // integrate passport, idcard verification flow
-                addDocumentVerificationRoute(navController, route = "documentRoute", selfModifier = selfModifier,account = { account },
-                    isDevMode = { false }, // true for testing only
-                    onFinish = { isSuccess, error ->
-                        if (isSuccess) {
-                            refreshClaims() // refresh email credentials to display
-
-                            coroutineScope.launch(Dispatchers.Main) {
-                                Toast.makeText(applicationContext, "Document verification successfully", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    }
-                )
+                // integrate self ui flows into the app
+                SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
             }
         }
     }

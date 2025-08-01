@@ -2,7 +2,6 @@ package com.joinself.example
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,34 +25,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.joinself.common.Environment
-import com.joinself.common.exception.InvalidCredentialException
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
-import com.joinself.sdk.models.ChatMessage
-import com.joinself.sdk.models.CredentialRequest
-import com.joinself.sdk.models.CredentialResponse
-import com.joinself.sdk.models.Receipt
-import com.joinself.sdk.models.SigningRequest
-import com.joinself.sdk.models.SigningResponse
-import com.joinself.sdk.models.VerificationRequest
-import com.joinself.sdk.models.VerificationResponse
-import com.joinself.sdk.ui.addLivenessCheckRoute
+import com.joinself.sdk.models.Message
+import com.joinself.sdk.ui.integrateUIFlows
+import com.joinself.sdk.ui.openRegistrationFlow
 import com.joinself.ui.theme.SelfModifier
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : ComponentActivity() {
-
+    val LOGTAG = "SelfSDK"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            pushToken = null,
-            log = { Log.d("Self", it) }
+            log = { Log.d(LOGTAG, it) }
         )
 
         // the sdk will store data in this directory, make sure it exists.
@@ -66,46 +53,26 @@ class MainActivity : ComponentActivity() {
             .setEnvironment(Environment.production)
             .setSandbox(true)
             .setStoragePath(storagePath.absolutePath)
+            .setCallbacks(object : Account.Callbacks {
+                override fun onMessage(message: Message) {
+                    Log.d(LOGTAG, "onMessage: ${message.id()}")
+                }
+                override fun onConnect() {
+                    Log.d(LOGTAG, "onConnect")
+                }
+                override fun onDisconnect(errorMessage: String?) {
+                    Log.d(LOGTAG, "onDisconnect: $errorMessage")
+                }
+                override fun onAcknowledgement(id: String) {
+                    Log.d(LOGTAG, "onAcknowledgement: $id")
+                }
+                override fun onError(id: String, errorMessage: String?) {
+                    Log.d(LOGTAG, "onError: $errorMessage")
+                }
+            })
             .build()
 
-        // listen to callbacks to receive data from the SDK
-        account.setOnInfoRequest { key ->
-            println("info request $key")
-        }
-        account.setOnInfoResponse { fromAddress, data ->
-        }
-
-        account.setOnStatusListener { status ->
-            println("onStatus $status")
-        }
-        account.setOnRelayConnectListener {
-            println("onRelay connectted")
-        }
-
-        account.setOnMessageListener { msg ->
-            when (msg) {
-                is ChatMessage -> println("chat messages")
-                is Receipt -> println("receipt message")
-            }
-        }
-
-        account.setOnRequestListener { msg ->
-            when (msg) {
-                is CredentialRequest -> println("credential request")
-                is VerificationRequest -> println("verification request")
-                is SigningRequest -> println("signing request")
-            }
-        }
-        account.setOnResponseListener { msg ->
-            when (msg) {
-                is CredentialResponse -> println("credential response")
-                is VerificationResponse -> println("verification response")
-                is SigningResponse -> println("signing response")
-            }
-        }
-
         setContent {
-            val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
 
@@ -125,11 +92,14 @@ class MainActivity : ComponentActivity() {
                             .padding(start = 8.dp, end = 8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
+                        Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: $isRegistered")
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
                             onClick = {
-                                navController.navigate("livenessRoute")
+                                // open registration flow to create an account
+                                account.openRegistrationFlow { isSuccess, error ->
+                                    isRegistered = isSuccess
+                                }
                             },
                             enabled = !isRegistered
                         ) {
@@ -138,34 +108,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // add liveness check to main navigation
-                addLivenessCheckRoute(navController, route = "livenessRoute", selfModifier = selfModifier,
-                    account = {
-                        account
-                    },
-                    withCredential = true,
-                    onFinish = { selfie, credentials ->
-                        if (!account.registered()) {
-                            coroutineScope.launch(Dispatchers.IO) {
-                                try {
-                                    if (selfie.isNotEmpty() && credentials.isNotEmpty()) {
-                                        val success = account.register(selfieImage = selfie, credentials = credentials)
-                                        if (success) {
-                                            isRegistered = true
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(applicationContext, "Register account successfully", Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                    }
-                                } catch (_: InvalidCredentialException) { }
-                            }
-                        }
-                        // nav back to main
-                        coroutineScope.launch(Dispatchers.Main) {
-                            navController.popBackStack("livenessRoute", true)
-                        }
-                    }
-                )
+                // integrate self ui flows into your app
+                SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
             }
         }
     }

@@ -176,7 +176,7 @@ fun main() {
     signal.acquire()
 
     if (credentialResponse == null) {
-        println("agreement response is null")
+        println("credential response is null")
         return
     }
     println("\n-------------\n")
