@@ -33,7 +33,10 @@ import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
 import com.joinself.sdk.models.CredentialRequest
+import com.joinself.sdk.models.DiscoveryData
 import com.joinself.sdk.models.Message
+import com.joinself.sdk.models.QrEncoding
+import com.joinself.sdk.models.ResponseStatus
 import com.joinself.sdk.models.VerificationRequest
 import com.joinself.sdk.ui.DisplayRequestUI
 import com.joinself.sdk.ui.integrateUIFlows
@@ -45,14 +48,14 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class MainActivity : ComponentActivity() {
-
+    val LOGTAG = "SelfSDK"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         // init the sdk
         SelfSDK.initialize(applicationContext,
-            log = { Log.d("Self", it) }
+            log = { Log.d(LOGTAG, it) }
         )
 
         // the sdk will store data in this directory, make sure it exists.
@@ -75,31 +78,31 @@ class MainActivity : ComponentActivity() {
                     .setStoragePath(storagePath.absolutePath)
                     .setCallbacks(object : Account.Callbacks {
                         override fun onMessage(message: Message) {
-                            Log.d("Self", "onMessage: ${message.id()}")
+                            Log.d(LOGTAG, "onMessage: ${message.id()}")
                             when (message) {
                                 is CredentialRequest -> {
-                                    Log.d("Self", "received credential message")
+                                    Log.d(LOGTAG, "received credential message")
                                     request = message
                                 }
 
                                 is VerificationRequest -> {
-                                    Log.d("Self", "received verification message")
+                                    Log.d(LOGTAG, "received verification message")
                                     request = message
                                 }
                             }
                         }
 
                         override fun onConnect() {
-                            Log.d("Self", "onConnect")
+                            Log.d(LOGTAG, "onConnect")
                         }
                         override fun onDisconnect(errorMessage: String?) {
-                            Log.d("Self", "onDisconnect: $errorMessage")
+                            Log.d(LOGTAG, "onDisconnect: $errorMessage")
                         }
                         override fun onAcknowledgement(id: String) {
-                            Log.d("Self", "onAcknowledgement: $id")
+                            Log.d(LOGTAG, "onAcknowledgement: $id")
                         }
                         override fun onError(id: String, errorMessage: String?) {
-                            Log.d("Self", "onError: $errorMessage")
+                            Log.d(LOGTAG, "onError: $errorMessage")
                         }
                     })
                     .build()
