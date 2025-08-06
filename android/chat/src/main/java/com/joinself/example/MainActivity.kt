@@ -174,8 +174,10 @@ class MainActivity : ComponentActivity() {
                         Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: ${isRegistered}")
                         Button(
                             onClick = {
-                                account.openRegistrationFlow { isSuccess, error ->
-                                    isRegistered = isSuccess
+                                coroutineScope.launch {
+                                    account.openRegistrationFlow { isSuccess, error ->
+                                        isRegistered = isSuccess
+                                    }
                                 }
                             },
                             enabled = !isRegistered

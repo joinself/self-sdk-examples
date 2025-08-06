@@ -155,8 +155,10 @@ class MainActivity : ComponentActivity() {
                         Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: $isRegistered")
                         Button(
                             onClick = {
-                                account.openRegistrationFlow { isSuccess, error ->
-                                    isRegistered = isSuccess
+                                coroutineScope.launch {
+                                    account.openRegistrationFlow { isSuccess, error ->
+                                        isRegistered = isSuccess
+                                    }
                                 }
                             },
                             enabled = !isRegistered
@@ -166,14 +168,16 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                account.openQRCodeFlow(
-                                    onFinish = { qrCode, discoverData ->
-                                        coroutineScope.launch(Dispatchers.IO) {
-                                            groupAddress = account.connectWith(qrCode)
-                                        }
-                                    },
-                                    onExit = {}
-                                )
+                                coroutineScope.launch {
+                                    account.openQRCodeFlow(
+                                        onFinish = { qrCode, discoverData ->
+                                            coroutineScope.launch(Dispatchers.IO) {
+                                                groupAddress = account.connectWith(qrCode)
+                                            }
+                                        },
+                                        onExit = {}
+                                    )
+                                }
                             },
                             enabled = isRegistered
                         ) {

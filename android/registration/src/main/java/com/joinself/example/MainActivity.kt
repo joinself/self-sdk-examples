@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,13 +25,18 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.joinself.common.ComparisonOperator
+import com.joinself.common.Constants
 import com.joinself.common.Environment
 import com.joinself.sdk.SelfSDK
 import com.joinself.sdk.models.Account
+import com.joinself.sdk.models.CredentialMessage
+import com.joinself.sdk.models.CredentialRequest
 import com.joinself.sdk.models.Message
 import com.joinself.sdk.ui.integrateUIFlows
 import com.joinself.sdk.ui.openRegistrationFlow
 import com.joinself.ui.theme.SelfModifier
+import kotlinx.coroutines.launch
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -73,6 +79,7 @@ class MainActivity : ComponentActivity() {
             .build()
 
         setContent {
+            val coroutineScope = rememberCoroutineScope()
             val navController = rememberNavController()
             val selfModifier = SelfModifier.sdk()
 
@@ -84,6 +91,9 @@ class MainActivity : ComponentActivity() {
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None }
             ) {
+                // integrate self ui flows into your app
+                SelfSDK.integrateUIFlows(this, navController, selfModifier = selfModifier)
+
                 composable("main") {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -96,9 +106,11 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
                             onClick = {
-                                // open registration flow to create an account
-                                account.openRegistrationFlow { isSuccess, error ->
-                                    isRegistered = isSuccess
+                                coroutineScope.launch {
+                                    // open registration flow to create an account
+                                    account.openRegistrationFlow { isSuccess, error ->
+                                        isRegistered = isSuccess
+                                    }
                                 }
                             },
                             enabled = !isRegistered
@@ -107,9 +119,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-
-                // integrate self ui flows into your app
-                SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
             }
         }
     }
