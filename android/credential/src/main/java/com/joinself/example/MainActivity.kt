@@ -128,8 +128,10 @@ class MainActivity : ComponentActivity() {
                         Text(modifier = Modifier.padding(top = 40.dp).align(Alignment.CenterHorizontally), text = "Registered: ${isRegistered}")
                         Button(modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
-                                account.openRegistrationFlow { isSuccess, error ->
-                                    isRegistered = isSuccess
+                                coroutineScope.launch {
+                                    account.openRegistrationFlow { isSuccess, error ->
+                                        isRegistered = isSuccess
+                                    }
                                 }
                             },
                             enabled = !isRegistered
@@ -141,14 +143,16 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
-                                account.openQRCodeFlow(
-                                    onFinish = { qrCode, discoverData ->
-                                        coroutineScope.launch(Dispatchers.IO) {
-                                            val gAdress = account.connectWith(qrCode)
-                                        }
-                                    },
-                                    onExit = {}
-                                )
+                                coroutineScope.launch {
+                                    account.openQRCodeFlow(
+                                        onFinish = { qrCode, discoverData ->
+                                            coroutineScope.launch(Dispatchers.IO) {
+                                                val gAdress = account.connectWith(qrCode)
+                                            }
+                                        },
+                                        onExit = {}
+                                    )
+                                }
                             },
                             enabled = isRegistered,
                         ) {
@@ -173,11 +177,11 @@ class MainActivity : ComponentActivity() {
                                 when(request) {
                                     is CredentialRequest -> {
                                         // display the UI for credential request
-                                        account.DisplayRequestUI(selfModifier, request as CredentialRequest,
-                                            onFinish = { isSuccess, status ->
-                                                request = null
-                                            }
-                                        )
+                                            account.DisplayRequestUI(selfModifier, request as CredentialRequest,
+                                                onFinish = { isSuccess, status ->
+                                                    request = null
+                                                }
+                                            )
                                     }
                                     is VerificationRequest -> {
                                         account.DisplayRequestUI(selfModifier, request as VerificationRequest,

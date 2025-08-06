@@ -103,8 +103,10 @@ class MainActivity : ComponentActivity() {
                         Text(modifier = Modifier.padding(top = 40.dp), text = "Registered: $isRegistered")
                         Button(
                             onClick = {
-                                account.openRegistrationFlow { isSuccess, error ->
-                                    isRegistered = isSuccess
+                                coroutineScope.launch {
+                                    account.openRegistrationFlow { isSuccess, error ->
+                                        isRegistered = isSuccess
+                                    }
                                 }
                             },
                             enabled = !isRegistered
@@ -114,10 +116,12 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                account.openEmailVerificationFlow { isSuccess, error ->
-                                    if (isSuccess) {
-                                        coroutineScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(applicationContext, "Email verification successfully", Toast.LENGTH_LONG).show()
+                                coroutineScope.launch {
+                                    account.openEmailVerificationFlow { isSuccess, error ->
+                                        if (isSuccess) {
+                                            coroutineScope.launch(Dispatchers.Main) {
+                                                Toast.makeText(applicationContext, "Email verification successfully", Toast.LENGTH_LONG).show()
+                                            }
                                         }
                                     }
                                 }
@@ -129,17 +133,20 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                // open a document verification flow, credentials are store in local database automatically
-                                account.openDocumentVerificationFlow(
-                                    isDevMode = true,
-                                    onFinish = {isSuccess, error ->
-                                        if (isSuccess) {
-                                            coroutineScope.launch(Dispatchers.Main) {
-                                                Toast.makeText(applicationContext, "Document verification successfully", Toast.LENGTH_LONG).show()
+                                coroutineScope.launch {
+                                    // open a document verification flow, credentials are store in local database automatically
+                                    account.openDocumentVerificationFlow(
+                                        isDevMode = true,
+                                        onFinish = { isSuccess, error ->
+                                            Log.d(LOGTAG, "Document verification status: $isSuccess")
+                                            if (isSuccess) {
+                                                coroutineScope.launch(Dispatchers.Main) {
+                                                    Toast.makeText(applicationContext, "Document verification successfully", Toast.LENGTH_LONG).show()
+                                                }
                                             }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             },
                             enabled = isRegistered
                         ) {
@@ -149,7 +156,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // integrate self ui flows into the app
-                SelfSDK.integrateUIFlows(this,navController, selfModifier = selfModifier)
+                SelfSDK.integrateUIFlows(this, navController, selfModifier = selfModifier)
             }
         }
     }
