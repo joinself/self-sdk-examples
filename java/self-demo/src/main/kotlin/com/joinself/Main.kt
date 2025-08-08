@@ -22,6 +22,7 @@ import com.joinself.selfsdk.kmp.event.Reference
 import com.joinself.selfsdk.kmp.event.Welcome
 import com.joinself.selfsdk.kmp.keypair.signing.PublicKey
 import com.joinself.selfsdk.kmp.message.Chat
+import com.joinself.selfsdk.kmp.message.ChatBuilder
 import com.joinself.selfsdk.kmp.message.ComparisonOperator
 import com.joinself.selfsdk.kmp.message.ContentType
 import com.joinself.selfsdk.kmp.message.CredentialPresentationDetailParameter
@@ -181,6 +182,9 @@ fun main() {
                         }
                         SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
                             sendCustomCredentials(account)
+                        }
+                        else -> {
+                            sendChatResponse(account, chat)
                         }
                     }
                 }
@@ -385,4 +389,15 @@ private fun sendCustomCredentials(account: Account) {
 
     val sendStatus = account.messageSend(responderAddress!!, content)
     println("send Custom Credentials status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - messageId:${messageId}")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendChatResponse(account: Account, chat: Chat) {
+    val content = "server: respond to ${chat.message()}"
+    val chat = ChatBuilder()
+        .message(content)
+        .finish()
+    val sendStatus = account.messageSend(responderAddress!!, chat)
+    val msgId = chat.id().toHexString()
+    println("send chat status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - messageId:$msgId")
 }
