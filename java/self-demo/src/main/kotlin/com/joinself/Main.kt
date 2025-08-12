@@ -184,6 +184,13 @@ fun main() {
                             sendCustomCredentials(account)
                         }
                         else -> {
+                            val attachments = chat.attachments()
+                            attachments.forEach {
+                                account.objectDownload(it) { dStatus, dObj ->
+                                    println("attachment ${dObj?.mimeType()} - size:${dObj?.data()?.size}")
+                                }
+                            }
+
                             sendChatResponse(account, chat)
                         }
                     }
