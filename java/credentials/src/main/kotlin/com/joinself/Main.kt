@@ -1,15 +1,15 @@
 package com.joinself
 
-import com.joinself.selfsdk.kmp.account.Account
-import com.joinself.selfsdk.kmp.account.LogLevel
-import com.joinself.selfsdk.kmp.account.Target
-import com.joinself.selfsdk.kmp.error.SelfStatus
-import com.joinself.selfsdk.kmp.error.SelfStatusName
-import com.joinself.selfsdk.kmp.event.*
-import com.joinself.selfsdk.kmp.keypair.signing.PublicKey
-import com.joinself.selfsdk.kmp.message.*
-import com.joinself.selfsdk.kmp.platform.Attestation
-import com.joinself.selfsdk.kmp.time.Timestamp
+import com.joinself.selfsdk.account.Account
+import com.joinself.selfsdk.account.LogLevel
+import com.joinself.selfsdk.account.Target
+import com.joinself.selfsdk.error.SelfStatus
+import com.joinself.selfsdk.error.SelfStatusName
+import com.joinself.selfsdk.event.*
+import com.joinself.selfsdk.keypair.signing.PublicKey
+import com.joinself.selfsdk.message.*
+import com.joinself.selfsdk.platform.Attestation
+import com.joinself.selfsdk.time.Timestamp
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
@@ -121,7 +121,7 @@ fun main() {
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
-            account.inboxOpen { status: SelfStatus, address: PublicKey ->
+            account.inboxOpen(expires = 0L) { status: SelfStatus, address: PublicKey ->
                 println("inbox open status:${SelfStatusName.getName(status.code())} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))

@@ -106,8 +106,10 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
                             onClick = {
-                                account.openRegistrationFlow { isSuccess, error ->
-                                    isRegistered = isSuccess
+                                coroutineScope.launch {
+                                    account.openRegistrationFlow { isSuccess, error ->
+                                        isRegistered = isSuccess
+                                    }
                                 }
                             },
                             enabled = !isRegistered
@@ -139,6 +141,7 @@ class MainActivity : ComponentActivity() {
                                 coroutineScope.launch(Dispatchers.Main) {
                                     account.openRestoreFlow(onFinish = { isSuccess, error ->
                                         if (isSuccess) {
+                                            isRegistered = true
                                             coroutineScope.launch(Dispatchers.Main) {
                                                 Toast.makeText(applicationContext, "Restore successfully", Toast.LENGTH_LONG).show()
                                             }

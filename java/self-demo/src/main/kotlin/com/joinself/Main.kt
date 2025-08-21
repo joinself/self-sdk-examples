@@ -1,39 +1,40 @@
 package com.joinself
 
-import com.joinself.selfsdk.kmp.account.Account
-import com.joinself.selfsdk.kmp.account.LogLevel
-import com.joinself.selfsdk.kmp.account.Target
-import com.joinself.selfsdk.kmp.asset.BinaryObject
-import com.joinself.selfsdk.kmp.credential.Address
-import com.joinself.selfsdk.kmp.credential.CredentialBuilder
-import com.joinself.selfsdk.kmp.credential.PresentationBuilder
-import com.joinself.selfsdk.kmp.error.SelfStatus
-import com.joinself.selfsdk.kmp.error.SelfStatusName
-import com.joinself.selfsdk.kmp.event.AnonymousMessage
-import com.joinself.selfsdk.kmp.event.Commit
-import com.joinself.selfsdk.kmp.event.Flag
-import com.joinself.selfsdk.kmp.event.FlagSet
-import com.joinself.selfsdk.kmp.event.Integrity
-import com.joinself.selfsdk.kmp.event.KeyPackage
-import com.joinself.selfsdk.kmp.event.Message
-import com.joinself.selfsdk.kmp.event.Proposal
-import com.joinself.selfsdk.kmp.event.QrEncoding
-import com.joinself.selfsdk.kmp.event.Reference
-import com.joinself.selfsdk.kmp.event.Welcome
-import com.joinself.selfsdk.kmp.keypair.signing.PublicKey
-import com.joinself.selfsdk.kmp.message.Chat
-import com.joinself.selfsdk.kmp.message.ComparisonOperator
-import com.joinself.selfsdk.kmp.message.ContentType
-import com.joinself.selfsdk.kmp.message.CredentialPresentationDetailParameter
-import com.joinself.selfsdk.kmp.message.CredentialPresentationRequestBuilder
-import com.joinself.selfsdk.kmp.message.CredentialPresentationResponse
-import com.joinself.selfsdk.kmp.message.CredentialVerificationRequestBuilder
-import com.joinself.selfsdk.kmp.message.CredentialVerificationResponse
-import com.joinself.selfsdk.kmp.message.DiscoveryRequestBuilder
-import com.joinself.selfsdk.kmp.message.DiscoveryResponse
-import com.joinself.selfsdk.kmp.message.Receipt
-import com.joinself.selfsdk.kmp.platform.Attestation
-import com.joinself.selfsdk.kmp.time.Timestamp
+import com.joinself.selfsdk.account.Account
+import com.joinself.selfsdk.account.LogLevel
+import com.joinself.selfsdk.account.Target
+import com.joinself.selfsdk.asset.BinaryObject
+import com.joinself.selfsdk.credential.Address
+import com.joinself.selfsdk.credential.CredentialBuilder
+import com.joinself.selfsdk.credential.PresentationBuilder
+import com.joinself.selfsdk.error.SelfStatus
+import com.joinself.selfsdk.error.SelfStatusName
+import com.joinself.selfsdk.event.AnonymousMessage
+import com.joinself.selfsdk.event.Commit
+import com.joinself.selfsdk.event.Flag
+import com.joinself.selfsdk.event.FlagSet
+import com.joinself.selfsdk.event.Integrity
+import com.joinself.selfsdk.event.KeyPackage
+import com.joinself.selfsdk.event.Message
+import com.joinself.selfsdk.event.Proposal
+import com.joinself.selfsdk.event.QrEncoding
+import com.joinself.selfsdk.event.Reference
+import com.joinself.selfsdk.event.Welcome
+import com.joinself.selfsdk.keypair.signing.PublicKey
+import com.joinself.selfsdk.message.Chat
+import com.joinself.selfsdk.message.ChatBuilder
+import com.joinself.selfsdk.message.ComparisonOperator
+import com.joinself.selfsdk.message.ContentType
+import com.joinself.selfsdk.message.CredentialPresentationDetailParameter
+import com.joinself.selfsdk.message.CredentialPresentationRequestBuilder
+import com.joinself.selfsdk.message.CredentialPresentationResponse
+import com.joinself.selfsdk.message.CredentialVerificationRequestBuilder
+import com.joinself.selfsdk.message.CredentialVerificationResponse
+import com.joinself.selfsdk.message.DiscoveryRequestBuilder
+import com.joinself.selfsdk.message.DiscoveryResponse
+import com.joinself.selfsdk.message.Receipt
+import com.joinself.selfsdk.platform.Attestation
+import com.joinself.selfsdk.time.Timestamp
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
@@ -182,6 +183,16 @@ fun main() {
                         SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
                             sendCustomCredentials(account)
                         }
+                        else -> {
+                            val attachments = chat.attachments()
+                            attachments.forEach {
+                                account.objectDownload(it) { dStatus, dObj ->
+                                    println("attachment ${dObj?.mimeType()} - size:${dObj?.data()?.size}")
+                                }
+                            }
+
+                            sendChatResponse(account, chat)
+                        }
                     }
                 }
                 ContentType.RECEIPT -> {
@@ -250,7 +261,7 @@ fun main() {
 private fun generateQrCode(account: Account) {
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
-            account.inboxOpen { status: SelfStatus, address: PublicKey ->
+            account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
                 println("inbox open status:${SelfStatusName.getName(status.code())} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))
@@ -377,7 +388,7 @@ private fun sendCustomCredentials(account: Account) {
         .finish()
     val customerVerifiableCredential = account.credentialIssue(customerCredential)
 
-    val content = com.joinself.selfsdk.kmp.message.CredentialBuilder()
+    val content = com.joinself.selfsdk.message.CredentialBuilder()
         .credential(customerVerifiableCredential)
         .finish()
 
@@ -385,4 +396,15 @@ private fun sendCustomCredentials(account: Account) {
 
     val sendStatus = account.messageSend(responderAddress!!, content)
     println("send Custom Credentials status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - messageId:${messageId}")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sendChatResponse(account: Account, chat: Chat) {
+    val content = "server: respond to ${chat.message()}"
+    val chat = ChatBuilder()
+        .message(content)
+        .finish()
+    val sendStatus = account.messageSend(responderAddress!!, chat)
+    val msgId = chat.id().toHexString()
+    println("send chat status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - messageId:$msgId")
 }
