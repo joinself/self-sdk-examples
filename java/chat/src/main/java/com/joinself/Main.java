@@ -1,13 +1,12 @@
 package com.joinself;
 
-
-import com.joinself.selfsdk.kmp.account.*;
-import com.joinself.selfsdk.kmp.error.SelfStatus;
-import com.joinself.selfsdk.kmp.error.SelfStatusName;
-import com.joinself.selfsdk.kmp.event.*;
-import com.joinself.selfsdk.kmp.keypair.signing.PublicKey;
-import com.joinself.selfsdk.kmp.message.*;
-import com.joinself.selfsdk.kmp.time.Timestamp;
+import com.joinself.selfsdk.account.*;
+import com.joinself.selfsdk.error.SelfStatus;
+import com.joinself.selfsdk.error.SelfStatusName;
+import com.joinself.selfsdk.event.*;
+import com.joinself.selfsdk.keypair.signing.PublicKey;
+import com.joinself.selfsdk.message.*;
+import com.joinself.selfsdk.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.charset.StandardCharsets;
@@ -149,7 +148,7 @@ public class Main {
             }
 
             long expires = Timestamp.Companion.now() + 3600;
-            com.joinself.selfsdk.kmp.crypto.KeyPackage keyPackage = account.connectionNegotiateOutOfBand(inboxAddress, expires);
+            com.joinself.selfsdk.crypto.KeyPackage keyPackage = account.connectionNegotiateOutOfBand(inboxAddress, expires);
             Content discoveryRequest = new DiscoveryRequestBuilder()
                     .keyPackage(keyPackage)
                     .expires(expires)
