@@ -22,13 +22,8 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.google")
             }
         }
-        maven {
-            name = "Central Portal Snapshots"
-            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-            content {
-                includeGroup("com.joinself")
-            }
-        }
+
+        maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
         mavenCentral()
         maven { url = uri("https://maven.google.com") }
         maven { url = uri("https://maven.microblink.com") }
