@@ -3,6 +3,10 @@ package com.joinself
 import com.joinself.selfsdk.account.Account
 import com.joinself.selfsdk.account.LogLevel
 import com.joinself.selfsdk.account.Target
+import com.joinself.selfsdk.credential.CredentialField
+import com.joinself.selfsdk.credential.CredentialType
+import com.joinself.selfsdk.credential.predicate.Predicate
+import com.joinself.selfsdk.credential.predicate.PredicateTree
 import com.joinself.selfsdk.error.SelfStatus
 import com.joinself.selfsdk.error.SelfStatusName
 import com.joinself.selfsdk.event.*
@@ -76,6 +80,9 @@ fun main() {
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
                 println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
             }
+        },
+        onDropped = {dropped: Dropped ->
+            println("KMP dropped ${dropped.reason()}")
         },
         onProposal = { proposal: Proposal ->
             println("KMP proposal")
@@ -161,11 +168,19 @@ fun main() {
         return
     }
     println("\n")
-    
+
+    val passportPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.PASSPORT)
+        .and(Predicate.equals(CredentialField.SUBJECT_PASSPORT_GIVEN_NAMES, "Vu"))
+    val emailPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.EMAIL)
+        .and(Predicate.notEmpty(CredentialField.SUBJECT_EMAIL_ADDRESS))
+    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS)
+        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_SOURCE_IMAGE_HASH))
+
+    val predicatesTree = PredicateTree.create(emailPredicate.and(livenessPredicate.or(passportPredicate)))
+
     val credentialRequest = CredentialPresentationRequestBuilder()
-        .presentationType(arrayOf("VerifiablePresentation", "CustomPresentation"))
-        .details(arrayOf("VerifiableCredential","LivenessCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "sourceImageHash", "")))
-        .details(arrayOf("VerifiableCredential","EmailCredential"), arrayOf(CredentialPresentationDetailParameter.create(ComparisonOperator.NOT_EQUALS, "emailAddress", "")))
+        .presentationType("CustomPresentation")
+        .predicates(predicatesTree)
         .expires(Timestamp.now() + 3600)
         .finish()
 
