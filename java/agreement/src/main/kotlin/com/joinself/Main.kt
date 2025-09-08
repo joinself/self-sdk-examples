@@ -8,7 +8,6 @@ import com.joinself.selfsdk.credential.Address
 import com.joinself.selfsdk.credential.CredentialBuilder
 import com.joinself.selfsdk.credential.PresentationBuilder
 import com.joinself.selfsdk.error.SelfStatus
-import com.joinself.selfsdk.error.SelfStatusName
 import com.joinself.selfsdk.event.*
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.*
@@ -71,7 +70,7 @@ fun main() {
             println("KMP keypackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
-                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                    println("connection establish status:${status.name()} - group:${groupAddress.encodeHex()}")
                     responderAddress = keyPackage.fromAddress()
 
                     signal.release()
@@ -115,8 +114,11 @@ fun main() {
         onWelcome = { welcome: Welcome ->
             println("KMP welcome")
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
-                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
+                println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
             }
+        },
+        onDropped = {dropped: Dropped ->
+            println("KMP dropped ${dropped.reason()}")
         },
         onIntegrity = { integrity: Integrity ->
             println("KMP integrity")
@@ -124,12 +126,12 @@ fun main() {
         }
     )
     signal.acquire()
-    println("status: ${SelfStatusName.getName(status.code())}")
+    println("status: ${status.name()}")
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
             account.inboxOpen(expires = 0L) { status: SelfStatus, address: PublicKey ->
-                println("inbox open status:${SelfStatusName.getName(status.code())} - address:${address.encodeHex()}")
+                println("inbox open status:${status.name()} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))
                 } else {
@@ -185,7 +187,7 @@ fun main() {
         }
     }
     if (!uploadStatus.success()) {
-        println("failed to upload object ${SelfStatusName.getName(uploadStatus.code())}")
+        println("failed to upload object ${uploadStatus.name()}")
         return
     }
     val claims = HashMap<String, Any>()
@@ -196,7 +198,7 @@ fun main() {
     )
 
     val unsignedAgreementCredential = CredentialBuilder()
-        .credentialType(arrayOf("VerifiableCredential", "AgreementCredential"))
+        .credentialType( "AgreementCredential")
         .credentialSubject(Address.key(inboxAddress))
         .credentialSubjectClaims(claims)
         .issuer(Address.key(inboxAddress))
@@ -206,22 +208,22 @@ fun main() {
     val signedAgreementCredential = account.credentialIssue(unsignedAgreementCredential)
 
     val unsignedAgreementPresentation = PresentationBuilder()
-        .presentationType(arrayOf("VerifiablePresentation", "AgreementPresentation"))
+        .presentationType( "AgreementPresentation")
         .holder(Address.key(inboxAddress))
         .credentialAdd(signedAgreementCredential)
         .finish()
     val signedAgreementPresentation = account.presentationIssue(unsignedAgreementPresentation)
 
     val agreementRequest = CredentialVerificationRequestBuilder()
-        .credentialType(arrayOf("VerifiableCredential", "AgreementCredential"))
+        .credentialType("AgreementCredential")
         .evidence("terms", agreementTerms)
         .proof(signedAgreementPresentation)
         .expires(Timestamp.now() + 3600)
         .finish()
 
     agreementRequestId = agreementRequest.id().toHexString()
-    val sendStatus = account.messageSend(responderAddress!!, agreementRequest)
-    println("send agreement status:${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress!!.encodeHex()} - requestId:${agreementRequest.id().toHexString()}")
+    val sendStatus = account.messageSend(responderAddress, agreementRequest)
+    println("send agreement status:${sendStatus.name()} - to:${responderAddress.encodeHex()} - requestId:${agreementRequest.id().toHexString()}")
     signal.acquire()
 
     if (agreementResponse == null) {
@@ -229,10 +231,10 @@ fun main() {
         return
     }
     println("\n-------------\n")
-    println("Response received with status:${agreementResponse!!.status().name}")
+    println("Response received with status:${agreementResponse.status().name}")
     var isIssued: Boolean = false
     var isSigner: Boolean = false
-    agreementResponse?.credentials()?.forEach { cred ->
+    agreementResponse.credentials()?.forEach { cred ->
         try {
             cred.validate()
         } catch (ex: Exception) {
@@ -248,7 +250,7 @@ fun main() {
             if (subjectId == inboxAddress.encodeHex()) {
                 isIssued = true
             }
-            if (subjectId == responderAddress?.encodeHex()) {
+            if (subjectId == responderAddress.encodeHex()) {
                 isSigner = true
             }
         }

@@ -8,7 +8,6 @@ import com.joinself.selfsdk.credential.CredentialType
 import com.joinself.selfsdk.credential.predicate.Predicate
 import com.joinself.selfsdk.credential.predicate.PredicateTree
 import com.joinself.selfsdk.error.SelfStatus
-import com.joinself.selfsdk.error.SelfStatusName
 import com.joinself.selfsdk.event.*
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.*
@@ -68,7 +67,7 @@ fun main() {
             println("KMP keypackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
-                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                    println("connection establish status:${status.name()} - group:${groupAddress.encodeHex()}")
                     responderAddress = keyPackage.fromAddress()
 
                     signal.release()
@@ -78,7 +77,7 @@ fun main() {
         onWelcome = { welcome: Welcome ->
             println("KMP welcome")
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
-                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
+                println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
             }
         },
         onDropped = {dropped: Dropped ->
@@ -124,12 +123,12 @@ fun main() {
         }
     )
     signal.acquire()
-    println("status: ${SelfStatusName.getName(status.code())}")
+    println("status: ${status.name()}")
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
             account.inboxOpen(expires = 0L) { status: SelfStatus, address: PublicKey ->
-                println("inbox open status:${SelfStatusName.getName(status.code())} - address:${address.encodeHex()}")
+                println("inbox open status:${status.name()} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))
                 } else {
@@ -176,7 +175,7 @@ fun main() {
     val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS)
         .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_SOURCE_IMAGE_HASH))
 
-    val predicatesTree = PredicateTree.create(emailPredicate.and(livenessPredicate.or(passportPredicate)))
+    val predicatesTree = PredicateTree.create(emailPredicate.and(livenessPredicate))
 
     val credentialRequest = CredentialPresentationRequestBuilder()
         .presentationType("CustomPresentation")
@@ -187,7 +186,7 @@ fun main() {
     credentialRequestId = credentialRequest.id().toHexString()
 
     val sendStatus = account.messageSend(responderAddress, credentialRequest)
-    println("send CredentialPresentation request status: ${SelfStatusName.getName(sendStatus.code())} - to:${responderAddress?.encodeHex()} - requestId:${credentialRequestId}")
+    println("send CredentialPresentation request status: ${sendStatus.name()} - to:${responderAddress?.encodeHex()} - requestId:${credentialRequestId}")
     signal.acquire()
 
     if (credentialResponse == null) {

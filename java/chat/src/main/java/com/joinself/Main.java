@@ -2,13 +2,13 @@ package com.joinself;
 
 import com.joinself.selfsdk.account.*;
 import com.joinself.selfsdk.error.SelfStatus;
-import com.joinself.selfsdk.error.SelfStatusName;
 import com.joinself.selfsdk.event.*;
 import com.joinself.selfsdk.keypair.signing.PublicKey;
 import com.joinself.selfsdk.message.*;
 import com.joinself.selfsdk.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
@@ -94,9 +94,14 @@ public class Main {
                             account.connectionAccept(welcome.toAddress(), welcome.welcome(), new ConnectionCallback() {
                                 @Override
                                 public void onCompletion(@Nullable SelfStatus status, @NotNull PublicKey groupAddress) {
-                                    System.out.println("accepted connection encrypted group status:" + SelfStatusName.Companion.getName(status.code()) + " - from:" + welcome.fromAddress().encodeHex() + " - group:" + groupAddress.encodeHex());
+                                    System.out.println("accepted connection encrypted group status:" + status.name() + " - from:" + welcome.fromAddress().encodeHex() + " - group:" + groupAddress.encodeHex());
                                 }
                             });
+                        }
+
+                        @Override
+                        public void onDropped(@NotNull Dropped dropped) {
+                            System.out.println("KMP dropped");
                         }
 
                         @Override
@@ -132,11 +137,11 @@ public class Main {
                     }
             );
             signal.acquire();
-            System.out.println("status:" + SelfStatusName.Companion.getName(status.code()));
+            System.out.println("status:" + status.name());
             account.inboxOpen(Timestamp.Companion.now() + 360, new InboxOpenCallback() {
                 @Override
                 public void onCompletion(@Nullable SelfStatus selfStatus, @Nullable PublicKey address) {
-                    System.out.println("inbox open status:" + SelfStatusName.Companion.getName(status.code()) + " - address:" + address.encodeHex());
+                    System.out.println("inbox open status:" + status.name() + " - address:" + address.encodeHex());
                     inboxAddress = address;
                     signal.release();
                 }

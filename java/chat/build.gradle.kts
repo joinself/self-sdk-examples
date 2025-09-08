@@ -24,6 +24,7 @@ kotlin {
 
 application {
     mainClass = "com.joinself.ChatKt"
+//    mainClass = "com.joinself.Main" // java codes
 }
 
 tasks.named<JavaExec>("run") {
