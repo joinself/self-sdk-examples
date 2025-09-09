@@ -4,7 +4,6 @@ import com.joinself.selfsdk.account.Account
 import com.joinself.selfsdk.account.LogLevel
 import com.joinself.selfsdk.account.Target
 import com.joinself.selfsdk.error.SelfStatus
-import com.joinself.selfsdk.error.SelfStatusName
 import com.joinself.selfsdk.event.*
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.ContentType
@@ -62,15 +61,18 @@ fun main() {
             println("KMP keypackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
-                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${groupAddress.encodeHex()}")
+                    println("connection establish status:${status.name()} - group:${groupAddress.encodeHex()}")
                 }
             )
         },
         onWelcome = { welcome: Welcome ->
             println("KMP welcome")
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
-                println("connection accepted status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
+                println("connection accepted status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
             }
+        },
+        onDropped = {dropped: Dropped ->
+            println("KMP dropped ${dropped.reason()}")
         },
         onProposal = { proposal: Proposal ->
             println("KMP proposal")
@@ -102,12 +104,12 @@ fun main() {
         }
     )
     signal.acquire()
-    println("status: ${SelfStatusName.getName(status.code())}")
+    println("status: ${status.name()}")
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
             account.inboxOpen(expires = 0L) { status: SelfStatus, address: PublicKey ->
-                println("inbox open status:${SelfStatusName.getName(status.code())} - address:${address.encodeHex()}")
+                println("inbox open status:${status.name()} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))
                 } else {

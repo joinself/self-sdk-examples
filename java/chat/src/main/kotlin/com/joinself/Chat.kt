@@ -7,7 +7,6 @@ import com.joinself.selfsdk.credential.Address
 import com.joinself.selfsdk.credential.CredentialBuilder
 import com.joinself.selfsdk.credential.PresentationBuilder
 import com.joinself.selfsdk.error.SelfStatus
-import com.joinself.selfsdk.error.SelfStatusName
 import com.joinself.selfsdk.event.*
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.*
@@ -67,7 +66,7 @@ fun main() {
             println("KMP keypackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, gAddress: PublicKey ->
-                    println("connection establish status:${SelfStatusName.getName(status.code())} - group:${gAddress.encodeHex()}")
+                    println("connection establish status:${status.name()} - group:${gAddress.encodeHex()}")
                     responderAddress = keyPackage.fromAddress()
                     groupAddress = gAddress
                     signal.release()
@@ -77,7 +76,7 @@ fun main() {
         onWelcome = { welcome: Welcome ->
             println("KMP welcome")
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, gAddress: PublicKey ->
-                println("accepted connection encrypted group status:${SelfStatusName.getName(status.code())} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
+                println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
                 responderAddress = welcome.fromAddress()
                 groupAddress = gAddress
             }
@@ -140,18 +139,21 @@ fun main() {
                 }
             }
         },
+        onDropped = {dropped: Dropped ->
+            println("KMP dropped ${dropped.reason()}")
+        },
         onIntegrity = { integrity: Integrity ->
             println("KMP integrity")
             Attestation.deviceCheck(applicationAddress = PublicKey.decodeHex("0016fced9deea88223b7faaee3e28f0363c99974c67ee7842ead128a0f36a9f1e3"), integrityToken =  ByteArray(integrity.requestHash().size + 128))
         }
     )
-    println("status: ${SelfStatusName.getName(status.code())}")
+    println("status: ${status.name()}")
     signal.acquire()
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
             account.inboxOpen(expires = 0L) { status: SelfStatus, address: PublicKey ->
-                println("inbox open status:${SelfStatusName.getName(status.code())} - address:${address.encodeHex()}")
+                println("inbox open status:${status.name()} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))
                 } else {
@@ -198,7 +200,7 @@ fun main() {
     val timestamp = Timestamp.now()
 
     val displayNameCredential = CredentialBuilder()
-        .credentialType(arrayOf("VerifiableCredential", "ApplicationCredential"))
+        .credentialType("ApplicationCredential")
         .credentialSubject(subjectAddress)
         .credentialSubjectClaim("applicationName", "JVM chat example")
         .issuer(issuerAddress)
@@ -207,7 +209,7 @@ fun main() {
         .finish()
     val displayNameVerifiableCredential = account.credentialIssue(displayNameCredential)
     val unsignedPresentation = PresentationBuilder()
-        .presentationType(arrayOf("VerifiablePresentation", "ApplicationPresentation"))
+        .presentationType("ApplicationPresentation")
         .holder(Address.aureWithKey(identifierAddress, inboxAddress))
         .credentialAdd(displayNameVerifiableCredential)
         .finish()
@@ -216,7 +218,7 @@ fun main() {
         .documentAddress(identifierAddress)
         .presentation(signedPresentation)
     val introductionStatus = account.messageSend(responderAddress, introBuilder.finish())
-    println("send introduction status:${SelfStatusName.getName(introductionStatus.code())}")
+    println("send introduction status:${introductionStatus.name()}")
 
     val chat = ChatBuilder()
         .message("hello")
@@ -224,7 +226,7 @@ fun main() {
     var sendStatus = account.messageSend(groupAddress, chat)
 
     var msgId = chat.id().toHexString()
-    println("send chat status:${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - messageId:$msgId")
+    println("send chat status:${sendStatus.name()} - to:${groupAddress.encodeHex()} - messageId:$msgId")
 
     println("\n\n")
     println("Press enter to exit")
@@ -237,12 +239,12 @@ fun main() {
             .finish()
         sendStatus = account.messageSend(groupAddress, chat)
         msgId = chat.id().toHexString()
-        println("send chat status:${SelfStatusName.getName(sendStatus.code())} - to:${groupAddress.encodeHex()} - messageId:$msgId")
+        println("send chat status:${sendStatus.name()} - to:${groupAddress.encodeHex()} - messageId:$msgId")
 
         // send chat notification
         val chatSummary = chat.summary()
         account.notificationSend(groupAddress, chatSummary) { status: SelfStatus ->
-            println("send chat notification status:${SelfStatusName.getName(status.code())} - id:${chatSummary.id().toHexString()}")
+            println("send chat notification status:${status.name()} - id:${chatSummary.id().toHexString()}")
         }
         println("\n")
     }
