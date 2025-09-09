@@ -177,7 +177,7 @@ fun main() {
                         }
                         SERVER_REQUESTS.REQUEST_CREDENTIAL_CUSTOM -> {
                             val customPredicate = Predicate.contains(CredentialField.TYPE, "CustomerCredential")
-                                .and(Predicate.notEmpty("name"))
+                                .and(Predicate.notEmpty("/credentialSubject/name"))
                             val predicatesTree = PredicateTree.create(customPredicate)
 
                             val credentialRequest = CredentialPresentationRequestBuilder()

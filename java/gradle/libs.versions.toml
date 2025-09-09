@@ -2,7 +2,7 @@
 kotlin = "2.0.21"
 coroutines = "1.9.0"
 serialization = "1.7.3"
-selfJvm = "1.0.2"
+selfJvm = "1.0.3"
 
 [libraries]
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
