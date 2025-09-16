@@ -14,6 +14,7 @@ import (
 	"github.com/go-pdf/fpdf"
 	"github.com/joinself/self-go-sdk/account"
 	"github.com/joinself/self-go-sdk/credential"
+	"github.com/joinself/self-go-sdk/credential/predicate"
 	"github.com/joinself/self-go-sdk/event"
 	"github.com/joinself/self-go-sdk/keypair/signing"
 	"github.com/joinself/self-go-sdk/message"
@@ -24,8 +25,8 @@ var selfAccount *account.Account
 var inboxAddress *signing.PublicKey
 
 func main() {
-	fmt.Println("🔗 Self SDK Connection Server")
-	fmt.Println("=============================")
+	log.Println("Self SDK Connection Server")
+	log.Println("=============================")
 
 	startSelf()
 }
@@ -50,55 +51,55 @@ func startSelf() {
 		LogLevel:    account.LogWarn,
 		Callbacks: account.Callbacks{
 			OnConnect: func(acc *account.Account) {
-				log.Println("✅ Connected to Self network")
+				log.Println("Connected to Self network")
 			},
 			OnDisconnect: func(acc *account.Account, err error) {
-				log.Println("❌ Disconnected from Self network:", err)
+				log.Println("Disconnected from Self network:", err)
 			},
 			OnWelcome: func(acc *account.Account, wlc *event.Welcome) {
-				log.Printf("🎉 Connection received from: %s", wlc.FromAddress().String())
+				log.Printf("Connection received from: %s", wlc.FromAddress().String())
 
 				// Accept the connection request
 				_, err := acc.ConnectionAccept(wlc.ToAddress(), wlc.Welcome())
 				if err != nil {
-					log.Printf("❌ Failed to accept connection: %v", err)
+					log.Printf("Failed to accept connection: %v", err)
 					return
 				}
 
-				log.Println("✅ Connection established successfully!")
-				log.Println("🚀 Ready to exchange messages and credentials")
+				log.Println("Connection established successfully!")
+				log.Println("Ready to exchange messages and credentials")
 
 				// Generate new QR code for the next connection
-				fmt.Println("\n📱 Ready for next connection:")
+				log.Println("\nReady for next connection:")
 				displayConnectionQR()
 			},
 			OnKeyPackage: func(acc *account.Account, kp *event.KeyPackage) {
 				_, err := acc.ConnectionEstablish(kp.ToAddress(), kp.KeyPackage())
 				if err != nil {
-					log.Println("❌ OnKeyPackage: Failed to establish connection:", err)
+					log.Println("OnKeyPackage: Failed to establish connection:", err)
 					panic(err)
 				} else {
-					log.Println("✅ OnKeyPackage: Successfully established connection with client:", kp.FromAddress())
+					log.Println("OnKeyPackage: Successfully established connection with client:", kp.FromAddress())
 				}
 			},
 			OnMessage: func(acc *account.Account, msg *event.Message) {
-				switch event.ContentTypeOf(msg) {
-				case message.ContentTypeCredentialPresentationResponse:
+				contentType := event.ContentTypeOf(msg)
+				if contentType == message.ContentTypeCredentialPresentationResponse {
 					handleCredentialResponse(msg)
-				case message.ContentTypeCredentialVerificationResponse:
+				} else if contentType == message.ContentTypeCredentialVerificationResponse {
 					handleDocumentSigningResponse(msg)
-				case message.ContentTypeChat:
+				} else if contentType == message.ContentTypeChat {
 					handleChatMessage(acc, msg)
-				case message.ContentTypeDiscoveryRequest:
-					log.Printf("📨 Received discovery request from %s", msg.FromAddress())
+				} else if contentType == message.ContentTypeDiscoveryRequest {
+					log.Printf("Received discovery request from %s", msg.FromAddress())
 					handleDiscoveryRequest(acc, msg)
-				case message.ContentTypeDiscoveryResponse:
-					log.Printf("📨 Received discovery response from %s", msg.FromAddress())
+				} else if contentType == message.ContentTypeDiscoveryResponse {
+					log.Printf("Received discovery response from %s", msg.FromAddress())
 					handleDiscoveryResponse(msg)
-				case message.ContentTypeIntroduction:
-					log.Printf("📨 Received introduction message from %s", msg.FromAddress())
-				default:
-					log.Printf("📨 Unknown message type: %d from %s", event.ContentTypeOf(msg), msg.FromAddress())
+				} else if contentType == message.ContentTypeIntroduction {
+					log.Printf("Received introduction message from %s", msg.FromAddress())
+				} else {
+					log.Printf("Unknown message type: %d from %s", event.ContentTypeOf(msg), msg.FromAddress())
 				}
 			},
 		},
@@ -110,7 +111,7 @@ func startSelf() {
 		log.Fatal("failed to initialize account: ", err)
 	}
 
-	log.Println("🔧 Self account initialized")
+	log.Println("Self account initialized")
 
 	inboxList, err := selfAccount.InboxList()
 	if err != nil {
@@ -122,7 +123,7 @@ func startSelf() {
 	log.Println("server address:", inboxList[0])
 
 	// Generate initial QR code after account is ready
-	fmt.Println("\n📱 Initial connection QR code:")
+	log.Println("\nInitial connection QR code:")
 	displayConnectionQR()
 
 	// handle graceful shutdown
@@ -131,28 +132,28 @@ func startSelf() {
 
 	go func() {
 		sig := <-sigs
-		log.Println("🛑 Received signal:", sig)
+		log.Println("Received signal:", sig)
 		err := selfAccount.Close()
 		if err != nil {
-			log.Println("❌ Error closing SDK:", err)
+			log.Println("Error closing SDK:", err)
 		} else {
-			log.Println("✅ Self client closed gracefully")
+			log.Println("Self client closed gracefully")
 		}
 		os.Exit(0)
 	}()
 
 	defer func() {
-		log.Println("🧹 Cleaning up...")
+		log.Println("Cleaning up...")
 		err := selfAccount.Close()
 		if err != nil {
-			log.Println("❌ Error in defer close:", err)
+			log.Println("Error in defer close:", err)
 		} else {
-			log.Println("✅ Self client closed")
+			log.Println("Self client closed")
 		}
 	}()
 
 	// Keep the server running
-	fmt.Println("⏳ Server running... Press Ctrl+C to exit")
+	log.Println("Server running... Press Ctrl+C to exit")
 	select {}
 }
 
@@ -160,14 +161,14 @@ func startSelf() {
 func displayConnectionQR() {
 	qrCode, expiresAt, err := generateConnectionQR()
 	if err != nil {
-		log.Printf("❌ Failed to generate QR code: %v", err)
+		log.Printf("Failed to generate QR code: %v", err)
 		return
 	}
 
-	fmt.Println("\n" + qrCode)
-	fmt.Printf("⏱️  Expires: %s\n", expiresAt.Format("15:04:05 MST"))
-	fmt.Println("📱 Scan this QR code with your Self mobile app to establish a connection")
-	fmt.Println()
+	log.Println("\n" + qrCode)
+	log.Printf("Expires: %s\n", expiresAt.Format("15:04:05 MST"))
+	log.Println("Scan this QR code with your Self mobile app to establish a connection")
+	log.Println()
 }
 
 // generateConnectionQR creates a QR code for mobile app connections
@@ -247,61 +248,69 @@ func sendCredentialRequest(selfAccount *account.Account, msg *event.Message, cre
 	switch credentialType {
 	case "liveness":
 		content, err = message.NewCredentialPresentationRequest().
-			Type([]string{"VerifiablePresentation", "CustomPresentation"}).
-			Details(
-				credential.CredentialTypeLiveness,
-				[]*message.CredentialPresentationDetailParameter{
-					message.NewCredentialPresentationDetailParameter(
-						message.OperatorNotEquals,
-						"sourceImageHash",
-						"",
+			PresentationType("CustomPresentation").
+			Predicates(
+				predicate.NewTree(
+					predicate.Contains(
+						credential.FieldType,
+						credential.CredentialTypeLiveness,
+					).And(
+						predicate.NotEmpty(
+							credential.FieldSubjectLivenessSourceImageHash,
+						),
 					),
-				},
+				),
 			).
 			Finish()
 
 	case "email":
 		content, err = message.NewCredentialPresentationRequest().
-			Type([]string{"VerifiablePresentation", "CustomPresentation"}).
-			Details(
-				credential.CredentialTypeEmail,
-				[]*message.CredentialPresentationDetailParameter{
-					message.NewCredentialPresentationDetailParameter(
-						message.OperatorNotEquals,
-						"emailAddress",
-						"",
+			PresentationType("CustomPresentation").
+			Predicates(
+				predicate.NewTree(
+					predicate.Contains(
+						credential.FieldType,
+						credential.CredentialTypeEmail,
+					).And(
+						predicate.NotEmpty(
+							credential.FieldSubjectEmailAddress,
+						),
 					),
-				},
+				),
 			).
 			Finish()
 
 	case "document":
 		content, err = message.NewCredentialPresentationRequest().
-			Type([]string{"VerifiablePresentation", "CustomPresentation"}).
-			Details(
-				credential.CredentialTypePassport,
-				[]*message.CredentialPresentationDetailParameter{
-					message.NewCredentialPresentationDetailParameter(
-						message.OperatorNotEquals,
-						"documentNumber",
-						"",
+			PresentationType("CustomPresentation").
+			Predicates(
+				predicate.NewTree(
+					predicate.Contains(
+						credential.FieldType,
+						credential.CredentialTypePassport,
+					).And(
+						predicate.NotEmpty(
+							credential.FieldSubjectPassportDocumentNumber,
+						),
 					),
-				},
+				),
 			).
 			Finish()
 
 	case "custom":
 		content, err = message.NewCredentialPresentationRequest().
-			Type([]string{"VerifiablePresentation", "CustomPresentation"}).
-			Details(
-				[]string{"VerifiableCredential", "CustomerCredential"},
-				[]*message.CredentialPresentationDetailParameter{
-					message.NewCredentialPresentationDetailParameter(
-						message.OperatorNotEquals,
-						"name",
-						"",
+			PresentationType("CustomPresentation").
+			Predicates(
+				predicate.NewTree(
+					predicate.Contains(
+						credential.FieldType,
+						"CustomerCredential",
+					).And(
+						predicate.NotEmpty(
+							"/credentialSubject/name",
+						),
 					),
-				},
+				),
 			).
 			Finish()
 
@@ -323,7 +332,7 @@ func sendCredentialRequest(selfAccount *account.Account, msg *event.Message, cre
 }
 
 func sendCustomCredential(selfAccount *account.Account, msg *event.Message) {
-	credentialType := []string{"VerifiableCredential", "CustomerCredential"}
+	credentialType := "CustomerCredential"
 	subjectAddress := credential.AddressKey(msg.FromAddress())
 	issuerAddress := credential.AddressKey(inboxAddress)
 
@@ -472,7 +481,7 @@ func sendDocumentSigningRequest(selfAccount *account.Account, msg *event.Message
 	}
 
 	unsignedAgreementCredential, err := credential.NewCredential().
-		CredentialType([]string{"VerifiableCredential", "AgreementCredential"}).
+		CredentialType("AgreementCredential").
 		CredentialSubject(credential.AddressKey(serverAddress)).
 		CredentialSubjectClaims(claims).
 		CredentialSubjectClaim("terms", hex.EncodeToString(agreementTerms.Id())).
@@ -491,7 +500,7 @@ func sendDocumentSigningRequest(selfAccount *account.Account, msg *event.Message
 	}
 
 	unsignedAgreementPresentation, err := credential.NewPresentation().
-		PresentationType([]string{"VerifiablePresentation", "AgreementPresentation"}).
+		PresentationType("AgreementPresentation").
 		Holder(credential.AddressKey(serverAddress)).
 		CredentialAdd(signedAgreementCredential).
 		Finish()
@@ -506,7 +515,7 @@ func sendDocumentSigningRequest(selfAccount *account.Account, msg *event.Message
 	}
 
 	content, err := message.NewCredentialVerificationRequest().
-		Type([]string{"VerifiableCredential", "AgreementCredential"}).
+		Type("AgreementCredential").
 		Evidence("terms", agreementTerms).
 		Proof(signedAgreementPresentation).
 		Expires(time.Now().Add(time.Hour * 24)).
@@ -531,12 +540,12 @@ func handleDocumentSigningResponse(msg *event.Message) {
 		return
 	}
 
-	switch response.Status() {
-	case message.ResponseStatusAccepted, message.ResponseStatusCreated:
+	status := response.Status()
+	if status == message.ResponseStatusAccepted || status == message.ResponseStatusCreated {
 		log.Printf("handleDocumentSigningResponse: Client %s has digitally signed the agreement", msg.FromAddress())
-	case message.ResponseStatusUnauthorized, message.ResponseStatusForbidden, message.ResponseStatusNotAcceptable:
+	} else if status == message.ResponseStatusUnauthorized || status == message.ResponseStatusForbidden || status == message.ResponseStatusNotAcceptable {
 		log.Printf("handleDocumentSigningResponse: Client %s declined to sign the agreement", msg.FromAddress())
-	default:
+	} else {
 		log.Printf("handleDocumentSigningResponse: UNKNOWN RESPONSE STATUS from client: %s", msg.FromAddress())
 	}
 }
