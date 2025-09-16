@@ -14,11 +14,11 @@ jobs:
         env:
           C_INCLUDE_PATH: /opt/homebrew/include/
           LIBRARY_PATH: $LIBRARY_PATH:/opt/homebrew/lib
-          PATH: /opt/homebrew/opt/go@1.24/bin:$PATH
         run: |
           . ${GITHUB_WORKSPACE}/.ci/env
           brew install joinself/tap/self-sdk@0.85.0-16
           brew install go@1.24
+          export PATH="/opt/homebrew/opt/go@1.24/bin:$PATH"
           cd golang
           GOOS=darwin GOARCH=arm64 go build -o self-sdk-demo
           tar -czf self-sdk-demo_go_darwin_arm64.tar.gz self-sdk-demo
