@@ -14,6 +14,10 @@ import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.*
 import com.joinself.selfsdk.platform.Attestation
 import com.joinself.selfsdk.time.Timestamp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
@@ -43,7 +47,7 @@ fun main() {
     val signal = Semaphore(1)
     signal.acquire()
 
-    var discoveryRequestId: String = ""
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     val sandbox = true
     val rpcAddress = if (sandbox) Target.PRODUCTION_SANDBOX.rpcEndpoint() else Target.PRODUCTION.rpcEndpoint()
@@ -75,13 +79,18 @@ fun main() {
             println("KMP commited")
         },
         onKeyPackage = { keyPackage: KeyPackage ->
-            println("KMP keypackage")
+            println("KMP keyPackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, gAddress: PublicKey ->
                     println("connection establish status:${status.name()} - group:${gAddress.encodeHex()}")
                     responderAddress = keyPackage.fromAddress()
                     groupAddress = gAddress
                     signal.release()
+
+                    coroutineScope.launch {
+                        delay(1000)
+                        generateQrCode(account)
+                    }
                 }
             )
         },
@@ -108,10 +117,6 @@ fun main() {
                     val discoveryResponse = DiscoveryResponse.decode(content)
                     val responseTo = discoveryResponse.responseTo().toHexString()
                     println("received response to discovery request from:${message.fromAddress().encodeHex()} - requestId:${responseTo} - messageId:${message.id().toHexString()}")
-
-                    if (responseTo != discoveryRequestId) {
-                        println("received response to unknown request requestId:$responseTo")
-                    }
 
                     signal.release()
 
