@@ -48,19 +48,12 @@ fun main() {
     signal.acquire()
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
-
-    val sandbox = true
-    val rpcAddress = if (sandbox) Target.PRODUCTION_SANDBOX.rpcEndpoint() else Target.PRODUCTION.rpcEndpoint()
-    val objectAddress = if (sandbox) Target.PRODUCTION_SANDBOX.objectEndpoint() else Target.PRODUCTION.objectEndpoint()
-    val messageAddress = if (sandbox) Target.PRODUCTION_SANDBOX.messageEndpoint() else Target.PRODUCTION.messageEndpoint()
-
+    
     val account = Account()
     val status = account.configure(
         storagePath = ":memory:",
         storageKey = ByteArray(32),
-        rpcEndpoint = rpcAddress,
-        objectEndpoint = objectAddress,
-        messageEndpoint = messageAddress,
+        target = Target.productionSandbox(),
         logLevel = LogLevel.INFO,
         onConnect = {
             println("KMP connected")
@@ -194,7 +187,7 @@ fun main() {
                     val delivered = receipt.delivered().filter{ it.isNotEmpty() }.map { it.toHexString() }.toList()
                     val read = receipt.read().filter{ it.isNotEmpty() }.map { it.toHexString() }.toList()
                     println("received receipt \ndelivered:$delivered\nread:$read")
-                    println("\n\n")
+                    println()
                 }
                 ContentType.CREDENTIAL_PRESENTATION_RESPONSE -> {
                     val credentialResponse = CredentialPresentationResponse.decode(content)
