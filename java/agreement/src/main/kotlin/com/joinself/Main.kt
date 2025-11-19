@@ -37,18 +37,11 @@ fun main() {
     var agreementRequestId: String = ""
     var agreementResponse: CredentialVerificationResponse? = null
 
-    val sandbox = true
-    val rpcAddress = if (sandbox) Target.PRODUCTION_SANDBOX.rpcEndpoint() else Target.PRODUCTION.rpcEndpoint()
-    val objectAddress = if (sandbox) Target.PRODUCTION_SANDBOX.objectEndpoint() else Target.PRODUCTION.objectEndpoint()
-    val messageAddress = if (sandbox) Target.PRODUCTION_SANDBOX.messageEndpoint() else Target.PRODUCTION.messageEndpoint()
-
     val account = Account()
     val status = account.configure(
         storagePath = ":memory:",
         storageKey = ByteArray(32),
-        rpcEndpoint = rpcAddress,
-        objectEndpoint = objectAddress,
-        messageEndpoint = messageAddress,
+        target = Target.productionSandbox(),
         logLevel = LogLevel.INFO,
         onConnect = {
             println("KMP connected")
@@ -151,9 +144,8 @@ fun main() {
         .expires(expires)
         .finish()
     val anonymousMessage = AnonymousMessage.fromContent(discoveryRequest)
-    if (sandbox) {
-        anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
-    }
+    anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
+
     val qrCodeBytes = anonymousMessage.encodeQR(QrEncoding.UNICODE)
     val qrCodeString = qrCodeBytes.decodeToString()
 

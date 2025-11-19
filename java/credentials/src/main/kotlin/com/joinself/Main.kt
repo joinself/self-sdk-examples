@@ -34,18 +34,11 @@ fun main() {
     var credentialRequestId: String = ""
     var credentialResponse: CredentialPresentationResponse? = null
 
-    val sandbox = true
-    val rpcAddress = if (sandbox) Target.PRODUCTION_SANDBOX.rpcEndpoint() else Target.PRODUCTION.rpcEndpoint()
-    val objectAddress = if (sandbox) Target.PRODUCTION_SANDBOX.objectEndpoint() else Target.PRODUCTION.objectEndpoint()
-    val messageAddress = if (sandbox) Target.PRODUCTION_SANDBOX.messageEndpoint() else Target.PRODUCTION.messageEndpoint()
-
     val account = Account()
     val status = account.configure(
         storagePath = ":memory:",
         storageKey = ByteArray(32),
-        rpcEndpoint = rpcAddress,
-        objectEndpoint = objectAddress,
-        messageEndpoint = messageAddress,
+        target = Target.productionSandbox(),
         logLevel = LogLevel.INFO,
         onConnect = {
             println("KMP connected")
@@ -148,9 +141,8 @@ fun main() {
         .expires(expires)
         .finish()
     val anonymousMessage = AnonymousMessage.fromContent(discoveryRequest)
-    if (sandbox) {
-        anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
-    }
+    anonymousMessage.setFlags(FlagSet(Flag.TARGET_SANDBOX))
+
     val qrCodeBytes = anonymousMessage.encodeQR(QrEncoding.UNICODE)
     val qrCodeString = qrCodeBytes.decodeToString()
 
@@ -172,8 +164,8 @@ fun main() {
         .and(Predicate.equals(CredentialField.SUBJECT_PASSPORT_GIVEN_NAMES, "Vu"))
     val emailPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.EMAIL)
         .and(Predicate.notEmpty(CredentialField.SUBJECT_EMAIL_ADDRESS))
-    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS)
-        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_SOURCE_IMAGE_HASH))
+    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS_AND_FACIAL_COMPARISON)
+        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_AND_FACIAL_COMPARISON_SOURCE_IMAGE_HASH))
 
     val predicatesTree = PredicateTree.create(emailPredicate.and(livenessPredicate))
 

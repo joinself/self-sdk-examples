@@ -48,7 +48,7 @@ fun main() {
     signal.acquire()
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
-    
+
     val account = Account()
     val status = account.configure(
         storagePath = ":memory:",
@@ -281,8 +281,8 @@ private fun generateQrCode(account: Account) {
 
 @OptIn(ExperimentalStdlibApi::class)
 private fun sendLivenessRequest(account: Account) {
-    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS)
-        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_SOURCE_IMAGE_HASH))
+    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS_AND_FACIAL_COMPARISON)
+        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_AND_FACIAL_COMPARISON_SOURCE_IMAGE_HASH))
     val predicatesTree = PredicateTree.create(livenessPredicate)
 
     val credentialRequest = CredentialPresentationRequestBuilder()
