@@ -1,7 +1,6 @@
 package com.joinself
 
-import com.joinself.selfsdk.account.Account
-import com.joinself.selfsdk.account.LogLevel
+import com.joinself.selfsdk.account.*
 import com.joinself.selfsdk.account.Target
 import com.joinself.selfsdk.credential.CredentialField
 import com.joinself.selfsdk.credential.CredentialType
@@ -34,29 +33,30 @@ fun main() {
     var credentialRequestId: String = ""
     var credentialResponse: CredentialPresentationResponse? = null
 
-    val account = Account()
-    val status = account.configure(
+    val config = Config(
         storagePath = ":memory:",
-        storageKey = ByteArray(32),
+        storageKey = ByteArray(size = 32),
         target = Target.productionSandbox(),
-        logLevel = LogLevel.INFO,
-        onConnect = {
+        logLevel =  LogLevel.INFO
+    )
+    val callbacks = Callbacks(
+        onConnect = {account ->
             println("KMP connected")
             signal.release()
         },
-        onDisconnect = { reason: SelfStatus? ->
+        onDisconnect = {account, reason: SelfStatus? ->
             println("KMP disconnected")
         },
-        onAcknowledgement = {reference: Reference ->
+        onAcknowledgement = {account, reference: Reference ->
             println("KMP onAcknowledgement id:${reference.id().toHexString()}")
         },
-        onError = {reference: Reference, error: SelfStatus ->
+        onError = {account, reference: Reference, error: SelfStatus ->
             println("KMP onError")
         },
-        onCommit = { commit: Commit ->
+        onCommit = {account, commit: Commit ->
             println("KMP commited")
         },
-        onKeyPackage = { keyPackage: KeyPackage ->
+        onKeyPackage = {account, keyPackage: KeyPackage ->
             println("KMP keypackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, groupAddress: PublicKey ->
@@ -67,19 +67,19 @@ fun main() {
                 }
             )
         },
-        onWelcome = { welcome: Welcome ->
+        onWelcome = {account, welcome: Welcome ->
             println("KMP welcome")
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
                 println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${groupAddress.encodeHex()}")
             }
         },
-        onDropped = {dropped: Dropped ->
+        onDropped = {account, dropped: Dropped ->
             println("KMP dropped ${dropped.reason()}")
         },
-        onProposal = { proposal: Proposal ->
+        onProposal = {account, proposal: Proposal ->
             println("KMP proposal")
         },
-        onMessage = { message: Message ->
+        onMessage = {account, message: Message ->
             val content = message.content()
             val contentType = content.contentType()
             println("KMP message type: $contentType")
@@ -110,13 +110,13 @@ fun main() {
                 }
             }
         },
-        onIntegrity = { integrity: Integrity ->
+        onIntegrity = {account, integrity: Integrity ->
             println("KMP integrity")
             Attestation.deviceCheck(applicationAddress = PublicKey.decodeHex("0016fced9deea88223b7faaee3e28f0363c99974c67ee7842ead128a0f36a9f1e3"), integrityToken =  ByteArray(integrity.requestHash().size + 128))
         }
     )
+    val account = Account(config, callbacks)
     signal.acquire()
-    println("status: ${status.name()}")
 
     inboxAddress = runBlocking {
         suspendCoroutine { continuation ->
