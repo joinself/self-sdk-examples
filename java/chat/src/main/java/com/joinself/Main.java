@@ -8,7 +8,6 @@ import com.joinself.selfsdk.message.*;
 import com.joinself.selfsdk.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
@@ -43,105 +42,98 @@ public class Main {
 
             String storagePath = ":memory:";
             byte[] storageKey = new byte[32];
-            Account account = new Account();
-            SelfStatus status = account.configure(
-                    storagePath,
-                    storageKey,
-                    Target.PRODUCTION_SANDBOX.rpcEndpoint(),
-                    Target.PRODUCTION_SANDBOX.objectEndpoint(),
-                    Target.PRODUCTION_SANDBOX.messageEndpoint(),
-                    LogLevel.INFO,
-                    new ConfigureCallbacks() {
-                        @Override
-                        public void onDisconnect(@Nullable SelfStatus reason) {
-                            System.out.println("KMP Disconnected with reason: " + reason);
-                        }
+            Config config = new Config(storagePath, storageKey, Target.Companion.productionSandbox(), LogLevel.INFO);
+            AccountCallbacks callbacks = new AccountCallbacks() {
+                @Override
+                public void onConnect(@NotNull Account account) {
+                    System.out.println("KMP connected");
+                    signal.release();
+                }
 
+                @Override
+                public void onDisconnect(@NotNull Account account, @Nullable SelfStatus selfStatus) {
+                    System.out.println("KMP Disconnected with reason: " + selfStatus);
+                }
+
+                @Override
+                public void onAcknowledgement(@NotNull Account account, @NotNull Reference reference) {
+                    System.out.println("KMP onAcknowledgement");
+                }
+
+                @Override
+                public void onError(@NotNull Account account, @NotNull Reference reference, @NotNull SelfStatus selfStatus) {
+                    System.out.println("KMP onError" + selfStatus);
+                }
+
+                @Override
+                public void onProposal(@NotNull Account account, @NotNull Proposal proposal) {
+                    System.out.println("KMP proposal");
+                }
+
+                @Override
+                public void onWelcome(@NotNull Account account, @NotNull Welcome welcome) {
+                    System.out.println("KMP welcome");
+                    account.connectionAccept(welcome.toAddress(), welcome.welcome(), new ConnectionCallback() {
                         @Override
-                        public void onConnect() {
-                            System.out.println("KMP connected");
+                        public void onCompletion(@Nullable SelfStatus status, @NotNull PublicKey groupAddress) {
+                            System.out.println("accepted connection encrypted group status:" + status.name() + " - from:" + welcome.fromAddress().encodeHex() + " - group:" + groupAddress.encodeHex());
+                        }
+                    });
+                }
+
+                @Override
+                public void onKeyPackage(@NotNull Account account, @NotNull KeyPackage keyPackage) {
+                    System.out.println("KMP keyPackage");
+                }
+
+                @Override
+                public void onCommit(@NotNull Account account, @NotNull Commit commit) {
+                    System.out.println("KMP commited");
+                }
+
+                @Override
+                public void onMessage(@NotNull Account account, @NotNull Message message) {
+                    Content content = message.content();
+                    ContentType contentType = content.contentType();
+                    System.out.println("received message" + contentType.name());
+                    switch (contentType) {
+                        case DISCOVERY_RESPONSE -> {
+                            DiscoveryResponse discoveryResponse = DiscoveryResponse.Companion.decode(content);
+                            String responseTo = bytesToHex(discoveryResponse.responseTo());
+                            System.out.println("received response to discovery request from:" + message.fromAddress().encodeHex() + " - requestId:" + responseTo + " - messageId:" + bytesToHex(message.id()));
+                            if (responseTo != discoveryRequestId) {
+                                System.out.println("received response to unknown request requestId:" + responseTo);
+                            }
+                            responderAddress = message.fromAddress();
+
                             signal.release();
                         }
-
-                        @Override
-                        public void onAcknowledgement(@NotNull Reference reference) {
-                            System.out.println("KMP onAcknowledgement");
-                        }
-
-                        @Override
-                        public void onError(@NotNull Reference reference, @NotNull SelfStatus selfStatus) {
-                            System.out.println("KMP onError");
-                        }
-
-                        @Override
-                        public void onProposal(@Nullable Proposal proposal) {
-                            System.out.println("KMP proposal");
-                        }
-
-                        @Override
-                        public void onKeyPackage(@Nullable KeyPackage keyPackage) {
-                            System.out.println("KMP keypackage");
-                        }
-
-                        @Override
-                        public void onCommit(@Nullable Commit commit) {
-                            System.out.println("KMP commited");
-                        }
-
-                        @Override
-                        public void onWelcome(@Nullable Welcome welcome) {
-                            System.out.println("KMP welcome");
-                            account.connectionAccept(welcome.toAddress(), welcome.welcome(), new ConnectionCallback() {
-                                @Override
-                                public void onCompletion(@Nullable SelfStatus status, @NotNull PublicKey groupAddress) {
-                                    System.out.println("accepted connection encrypted group status:" + status.name() + " - from:" + welcome.fromAddress().encodeHex() + " - group:" + groupAddress.encodeHex());
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onDropped(@NotNull Dropped dropped) {
-                            System.out.println("KMP dropped");
-                        }
-
-                        @Override
-                        public void onMessage(@Nullable Message message) {
-                            Content content = message.content();
-                            ContentType contentType = content.contentType();
-                            System.out.println("received message" + contentType.name());
-                            switch (contentType) {
-                                case DISCOVERY_RESPONSE -> {
-                                    DiscoveryResponse discoveryResponse = DiscoveryResponse.Companion.decode(content);
-                                    String responseTo = bytesToHex(discoveryResponse.responseTo());
-                                    System.out.println("received response to discovery request from:" + message.fromAddress().encodeHex() + " - requestId:" + responseTo + " - messageId:" + bytesToHex(message.id()));
-                                    if (responseTo != discoveryRequestId) {
-                                        System.out.println("received response to unknown request requestId:" + responseTo);
-                                    }
-                                    responderAddress = message.fromAddress();
-
-                                    signal.release();
-                                }
-                                case CHAT -> {
-                                    Chat chat = Chat.Companion.decode(content);
-                                    System.out.println(
-                                            "received chat message " +
-                                                    "\nfrom:"  + message.fromAddress().encodeHex() +
-                                                    "\nmessageId:" + bytesToHex(message.id()) +
-                                                    "\nmessage:" + chat.message() +
-                                                    "\nattachments:" + chat.attachments().length
-                                    );
-                                    System.out.println("\n");
-                                }
-                            }
+                        case CHAT -> {
+                            Chat chat = Chat.Companion.decode(content);
+                            System.out.println(
+                                    "received chat message " +
+                                            "\nfrom:"  + message.fromAddress().encodeHex() +
+                                            "\nmessageId:" + bytesToHex(message.id()) +
+                                            "\nmessage:" + chat.message() +
+                                            "\nattachments:" + chat.attachments().length
+                            );
+                            System.out.println("\n");
                         }
                     }
-            );
+                }
+
+                @Override
+                public void onDropped(@NotNull Account account, @NotNull Dropped dropped) {
+                    System.out.println("KMP dropped" + dropped.reason());
+                }
+            };
+            Account account = new Account(config, callbacks);
             signal.acquire();
-            System.out.println("status:" + status.name());
+
             account.inboxOpen(Timestamp.Companion.now() + 360, new InboxOpenCallback() {
                 @Override
                 public void onCompletion(@Nullable SelfStatus selfStatus, @Nullable PublicKey address) {
-                    System.out.println("inbox open status:" + status.name() + " - address:" + address.encodeHex());
+                    System.out.println("inbox open status:" + selfStatus.name() + " - address:" + address.encodeHex());
                     inboxAddress = address;
                     signal.release();
                 }

@@ -53,7 +53,7 @@ fun main() {
     val config = Config(
         storagePath = ":memory:",
         storageKey = ByteArray(size = 32),
-        target = Target.previewSandbox(),
+        target = Target.productionSandbox(),
         logLevel =  LogLevel.INFO
     )
     val callbacks = Callbacks(
