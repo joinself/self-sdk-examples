@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
@@ -52,10 +53,14 @@ suspend fun main() {
     println("Self Demo")
 
     val onConnect: Channel<Boolean> = Channel()
+    val userHome = System.getProperty("user.home")
+    val storagePath = "$userHome/.self_demo_server"
+    val directory = File(storagePath)
+    if (!directory.exists()) directory.mkdirs() // create directory if not exist
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
     val config = Config(
-        storagePath = ":memory:",
+        storagePath =  "$storagePath/selfsdk.db", // or ":memory:",
         storageKey = ByteArray(size = 32),
         target = Target.productionSandbox(),
         logLevel =  LogLevel.INFO
@@ -123,6 +128,22 @@ suspend fun main() {
                 }
                 ContentType.INTRODUCTION -> {
                     println("received introduction")
+                    val introduction = Introduction.decode(content)
+                    val presentations = introduction.presentations()
+                    presentations?.forEach { pre ->
+                        val credentials = pre.credentials()
+                        credentials.forEach { cred ->
+                            val claims = cred.credentialSubjectClaims()
+                            claims.forEach {
+                                println(
+                                    "types:${cred.credentialType().toList()}" +
+                                            "\nfield:${it.key}" +
+                                            "\nvalue:${it.value}"
+                                )
+                                println()
+                            }
+                        }
+                    }
                 }
                 ContentType.CHAT -> {
                     val chat = Chat.decode(content)
@@ -240,10 +261,11 @@ suspend fun main() {
     val account = Account(config, callbacks)
     onConnect.receive()
 
-    generateQrCode(account)
     generateDocument(account)
 
-    println("\n\n")
+    generateQrCode(account)
+
+    println("\n")
     println("Type quit or Ctrl-C to exit")
     while (true) {
         val q = readln()
@@ -256,6 +278,12 @@ suspend fun main() {
 private suspend fun generateDocument(account: Account) {
     if (inboxAddress == null) inboxAddress = inbox(account)
     requireNotNull(inboxAddress)
+
+    val documentAddresses = account.identityList()
+    if (documentAddresses.isNotEmpty()) {
+        println("\nApplication address: ${documentAddresses.first().encodeHex()}")
+        return
+    }
 
     val identifierAddress = account.keychainSigningCreate()
     val invocationAddress = account.keychainSigningCreate()
@@ -281,6 +309,7 @@ private suspend fun generateDocument(account: Account) {
 
     val status = suspendCoroutine { continuation ->
         account.identityExecute(operation) { status ->
+            println("identityExecute status:${status.name()} ${status.errorMessage()}")
             if (status.success()) {
                 continuation.resumeWith(Result.success(status))
             } else {
@@ -289,7 +318,7 @@ private suspend fun generateDocument(account: Account) {
         }
     }
 
-    println("identityExecute status:${status.name()} - application address:${identifierAddress.encodeHex()}")
+    println("\nApplication address:${identifierAddress.encodeHex()}")
 }
 
 private suspend fun inbox(account: Account): PublicKey? {
