@@ -10,14 +10,19 @@ import com.joinself.selfsdk.credential.*
 import com.joinself.selfsdk.credential.CredentialBuilder
 import com.joinself.selfsdk.credential.predicate.Predicate
 import com.joinself.selfsdk.credential.predicate.PredicateTree
+import com.joinself.selfsdk.error.SelfError
 import com.joinself.selfsdk.error.SelfStatus
 import com.joinself.selfsdk.event.*
+import com.joinself.selfsdk.identity.OperationBuilder
+import com.joinself.selfsdk.identity.Role
+import com.joinself.selfsdk.identity.RoleSet
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.*
 import com.joinself.selfsdk.platform.Attestation
 import com.joinself.selfsdk.time.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -43,11 +48,10 @@ var groupAddress: PublicKey? = null
  * run in terminal: ./gradlew :self-demo:run
  */
 @OptIn(ExperimentalStdlibApi::class)
-fun main() {
+suspend fun main() {
     println("Self Demo")
 
-    val signal = Semaphore(1)
-    signal.acquire()
+    val onConnect: Channel<Boolean> = Channel()
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
     val config = Config(
@@ -59,7 +63,8 @@ fun main() {
     val callbacks = Callbacks(
         onConnect = {
             println("KMP connected")
-            signal.release()
+
+            onConnect.trySend(true)
         },
         onDisconnect = { account, reason: SelfStatus? ->
             println("KMP disconnected")
@@ -80,7 +85,6 @@ fun main() {
                     println("connection establish status:${status.name()} - group:${gAddress.encodeHex()}")
                     responderAddress = keyPackage.fromAddress()
                     groupAddress = gAddress
-                    signal.release()
 
                     coroutineScope.launch {
                         delay(1000)
@@ -103,7 +107,7 @@ fun main() {
         onDropped = {account, dropped: Dropped ->
             println("KMP dropped ${dropped.reason()}")
         },
-        onMessage = {account, message: Message ->
+        onMessage = { account, message: Message ->
             val content = message.content()
             val contentType = content.contentType()
             println("\nKMP message type: $contentType")
@@ -113,9 +117,9 @@ fun main() {
                     val responseTo = discoveryResponse.responseTo().toHexString()
                     println("received response to discovery request from:${message.fromAddress().encodeHex()} - requestId:${responseTo} - messageId:${message.id().toHexString()}")
 
-                    signal.release()
-
-                    generateQrCode(account)
+                    coroutineScope.launch {
+                        generateQrCode(account)
+                    }
                 }
                 ContentType.INTRODUCTION -> {
                     println("received introduction")
@@ -234,9 +238,10 @@ fun main() {
     )
 
     val account = Account(config, callbacks)
-    signal.acquire()
+    onConnect.receive()
 
     generateQrCode(account)
+    generateDocument(account)
 
     println("\n\n")
     println("Type quit or Ctrl-C to exit")
@@ -248,19 +253,61 @@ fun main() {
     }
 }
 
-private fun generateQrCode(account: Account) {
-    inboxAddress = runBlocking {
-        suspendCoroutine { continuation ->
-            account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
-                println("inbox open status:${status.name()} - address:${address.encodeHex()}")
-                if (status.success()) {
-                    continuation.resumeWith(Result.success(address))
-                } else {
-                    continuation.resumeWith(Result.success(null))
-                }
+private suspend fun generateDocument(account: Account) {
+    if (inboxAddress == null) inboxAddress = inbox(account)
+    requireNotNull(inboxAddress)
+
+    val identifierAddress = account.keychainSigningCreate()
+    val invocationAddress = account.keychainSigningCreate()
+    val assertionAddress = account.keychainSigningCreate()
+    val authenticationAddress = account.keychainSigningCreate()
+    val messagingAddress = inboxAddress
+
+
+    val operation = OperationBuilder()
+        .identifier(identifierAddress)
+        .sequence(0)
+        .timestamp(Timestamp.now())
+        .grantEmbeddedSigning(assertionAddress, RoleSet(Role.INVOCATION))
+        .grantEmbeddedSigning(invocationAddress, RoleSet(Role.ASSERTION))
+        .grantEmbeddedSigning(authenticationAddress, RoleSet(Role.AUTHENTICATION))
+        .grantEmbeddedSigning(messagingAddress!!, RoleSet(Role.MESSAGING))
+        .signWith(identifierAddress)
+        .signWith(invocationAddress)
+        .signWith(assertionAddress)
+        .signWith(authenticationAddress)
+        .signWith(messagingAddress)
+        .finish()
+
+    val status = suspendCoroutine { continuation ->
+        account.identityExecute(operation) { status ->
+            if (status.success()) {
+                continuation.resumeWith(Result.success(status))
+            } else {
+                continuation.resumeWith(Result.failure(SelfError(status.errorMessage()!!)))
             }
         }
     }
+
+    println("identityExecute status:${status.name()} - application address:${identifierAddress.encodeHex()}")
+}
+
+private suspend fun inbox(account: Account): PublicKey? {
+    return suspendCoroutine { continuation ->
+        account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
+            println("inbox open status:${status.name()} - address:${address.encodeHex()}")
+            if (status.success()) {
+                continuation.resumeWith(Result.success(address))
+            } else {
+                continuation.resumeWith(Result.success(null))
+            }
+        }
+    }
+}
+
+private suspend fun generateQrCode(account: Account) {
+    if (inboxAddress == null) inboxAddress = inbox(account)
+
     if (inboxAddress == null) {
         throw Exception("Can't open inbox")
     }
