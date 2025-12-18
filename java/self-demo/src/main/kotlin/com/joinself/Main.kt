@@ -1,6 +1,8 @@
 package com.joinself
 
 import com.joinself.selfsdk.account.Account
+import com.joinself.selfsdk.account.Callbacks
+import com.joinself.selfsdk.account.Config
 import com.joinself.selfsdk.account.LogLevel
 import com.joinself.selfsdk.account.Target
 import com.joinself.selfsdk.asset.BinaryObject
@@ -8,18 +10,23 @@ import com.joinself.selfsdk.credential.*
 import com.joinself.selfsdk.credential.CredentialBuilder
 import com.joinself.selfsdk.credential.predicate.Predicate
 import com.joinself.selfsdk.credential.predicate.PredicateTree
+import com.joinself.selfsdk.error.SelfError
 import com.joinself.selfsdk.error.SelfStatus
 import com.joinself.selfsdk.event.*
+import com.joinself.selfsdk.identity.OperationBuilder
+import com.joinself.selfsdk.identity.Role
+import com.joinself.selfsdk.identity.RoleSet
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.*
 import com.joinself.selfsdk.platform.Attestation
 import com.joinself.selfsdk.time.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
 
 
@@ -41,51 +48,48 @@ var groupAddress: PublicKey? = null
  * run in terminal: ./gradlew :self-demo:run
  */
 @OptIn(ExperimentalStdlibApi::class)
-fun main() {
+suspend fun main() {
     println("Self Demo")
 
-    val signal = Semaphore(1)
-    signal.acquire()
+    val onConnect: Channel<Boolean> = Channel()
+    val userHome = System.getProperty("user.home")
+    val storagePath = "$userHome/.self_demo_server"
+    val directory = File(storagePath)
+    if (!directory.exists()) directory.mkdirs() // create directory if not exist
+    println("\nserver data is stored at: $storagePath\n")
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
-
-    val sandbox = true
-    val rpcAddress = if (sandbox) Target.PRODUCTION_SANDBOX.rpcEndpoint() else Target.PRODUCTION.rpcEndpoint()
-    val objectAddress = if (sandbox) Target.PRODUCTION_SANDBOX.objectEndpoint() else Target.PRODUCTION.objectEndpoint()
-    val messageAddress = if (sandbox) Target.PRODUCTION_SANDBOX.messageEndpoint() else Target.PRODUCTION.messageEndpoint()
-
-    val account = Account()
-    val status = account.configure(
-        storagePath = ":memory:",
-        storageKey = ByteArray(32),
-        rpcEndpoint = rpcAddress,
-        objectEndpoint = objectAddress,
-        messageEndpoint = messageAddress,
-        logLevel = LogLevel.INFO,
+    val config = Config(
+        storagePath =  "$storagePath/selfsdk.db", // or ":memory:",
+        storageKey = ByteArray(size = 32),
+        target = Target.productionSandbox(),
+        logLevel =  LogLevel.INFO
+    )
+    val callbacks = Callbacks(
         onConnect = {
             println("KMP connected")
-            signal.release()
+
+            onConnect.trySend(true)
         },
-        onDisconnect = { reason: SelfStatus? ->
+        onDisconnect = { account, reason: SelfStatus? ->
             println("KMP disconnected")
         },
-        onAcknowledgement = {reference: Reference ->
+        onAcknowledgement = {account, reference: Reference ->
             println("KMP onAcknowledgement id:${reference.id().toHexString()}")
         },
-        onError = {reference: Reference, error: SelfStatus ->
+        onError = {account, reference: Reference, error: SelfStatus ->
             println("KMP onError")
         },
-        onCommit = { commit: Commit ->
+        onCommit = {account, commit: Commit ->
             println("KMP commited")
         },
-        onKeyPackage = { keyPackage: KeyPackage ->
+        onKeyPackage = {account, keyPackage: KeyPackage ->
             println("KMP keyPackage")
             account.connectionEstablish(asAddress =  keyPackage.toAddress(), keyPackage = keyPackage.keyPackage(),
                 onCompletion = {status: SelfStatus, gAddress: PublicKey ->
                     println("connection establish status:${status.name()} - group:${gAddress.encodeHex()}")
                     responderAddress = keyPackage.fromAddress()
                     groupAddress = gAddress
-                    signal.release()
 
                     coroutineScope.launch {
                         delay(1000)
@@ -94,7 +98,7 @@ fun main() {
                 }
             )
         },
-        onWelcome = { welcome: Welcome ->
+        onWelcome = {account, welcome: Welcome ->
             println("KMP welcome")
             account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, gAddress: PublicKey ->
                 println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
@@ -102,13 +106,13 @@ fun main() {
                 groupAddress = gAddress
             }
         },
-        onProposal = { proposal: Proposal ->
+        onProposal = {account, proposal: Proposal ->
             println("KMP proposal")
         },
-        onDropped = {dropped: Dropped ->
+        onDropped = {account, dropped: Dropped ->
             println("KMP dropped ${dropped.reason()}")
         },
-        onMessage = { message: Message ->
+        onMessage = { account, message: Message ->
             val content = message.content()
             val contentType = content.contentType()
             println("\nKMP message type: $contentType")
@@ -118,21 +122,37 @@ fun main() {
                     val responseTo = discoveryResponse.responseTo().toHexString()
                     println("received response to discovery request from:${message.fromAddress().encodeHex()} - requestId:${responseTo} - messageId:${message.id().toHexString()}")
 
-                    signal.release()
-
-                    generateQrCode(account)
+                    coroutineScope.launch {
+                        generateQrCode(account)
+                    }
                 }
                 ContentType.INTRODUCTION -> {
                     println("received introduction")
+                    val introduction = Introduction.decode(content)
+                    val presentations = introduction.presentations()
+                    presentations?.forEach { pre ->
+                        val credentials = pre.credentials()
+                        credentials.forEach { cred ->
+                            val claims = cred.credentialSubjectClaims()
+                            claims.forEach {
+                                println(
+                                    "types:${cred.credentialType().toList()}" +
+                                            "\nfield:${it.key}" +
+                                            "\nvalue:${it.value}"
+                                )
+                                println()
+                            }
+                        }
+                    }
                 }
                 ContentType.CHAT -> {
                     val chat = Chat.decode(content)
 
                     println(
                         "\nfrom:${message.fromAddress().encodeHex()}" +
-                        "\nmessageId:${message.id().toHexString()}" +
-                        "\nmessage:${chat.message()}" +
-                        "\n"
+                                "\nmessageId:${message.id().toHexString()}" +
+                                "\nmessage:${chat.message()}" +
+                                "\n"
                     )
 
                     when (chat.message()) {
@@ -172,7 +192,7 @@ fun main() {
                             println("send custom credential request status: ${sendStatus.name()} - to:${groupAddress?.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING -> {
-                            sendAggreementRequest(account)
+                            sendAgreementRequest(account)
                         }
                         SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
                             sendCustomCredentials(account)
@@ -194,7 +214,7 @@ fun main() {
                     val delivered = receipt.delivered().filter{ it.isNotEmpty() }.map { it.toHexString() }.toList()
                     val read = receipt.read().filter{ it.isNotEmpty() }.map { it.toHexString() }.toList()
                     println("received receipt \ndelivered:$delivered\nread:$read")
-                    println("\n\n")
+                    println()
                 }
                 ContentType.CREDENTIAL_PRESENTATION_RESPONSE -> {
                     val credentialResponse = CredentialPresentationResponse.decode(content)
@@ -205,9 +225,9 @@ fun main() {
                             val claims = cred.credentialSubjectClaims()
                             claims.forEach {
                                 println(
-                                        "types:${cred.credentialType().toList()}" +
-                                        "\nfield:${it.key}" +
-                                        "\nvalue:${it.value}"
+                                    "types:${cred.credentialType().toList()}" +
+                                            "\nfield:${it.key}" +
+                                            "\nvalue:${it.value}"
                                 )
                                 println()
                             }
@@ -221,9 +241,9 @@ fun main() {
                         val claims = cred.credentialSubjectClaims()
                         claims.forEach {
                             println(
-                                    "types:${cred.credentialType().toList()}" +
-                                    "\nfield:${it.key}" +
-                                    "\nvalue:${it.value}"
+                                "types:${cred.credentialType().toList()}" +
+                                        "\nfield:${it.key}" +
+                                        "\nvalue:${it.value}"
                             )
                             println()
                         }
@@ -232,17 +252,20 @@ fun main() {
                 else -> { }
             }
         },
-        onIntegrity = { integrity: Integrity ->
+        onIntegrity = {account, integrity: Integrity ->
             println("KMP integrity")
             Attestation.deviceCheck(applicationAddress = PublicKey.decodeHex("0016fced9deea88223b7faaee3e28f0363c99974c67ee7842ead128a0f36a9f1e3"), integrityToken =  ByteArray(integrity.requestHash().size + 128))
         }
     )
-    println("status: ${status.name()}")
-    signal.acquire()
+
+    val account = Account(config, callbacks)
+    onConnect.receive()
+
+    generateDocument(account)
 
     generateQrCode(account)
 
-    println("\n\n")
+    println("\n")
     println("Type quit or Ctrl-C to exit")
     while (true) {
         val q = readln()
@@ -252,19 +275,68 @@ fun main() {
     }
 }
 
-private fun generateQrCode(account: Account) {
-    inboxAddress = runBlocking {
-        suspendCoroutine { continuation ->
-            account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
-                println("inbox open status:${status.name()} - address:${address.encodeHex()}")
-                if (status.success()) {
-                    continuation.resumeWith(Result.success(address))
-                } else {
-                    continuation.resumeWith(Result.success(null))
-                }
+private suspend fun generateDocument(account: Account) {
+    if (inboxAddress == null) inboxAddress = inbox(account)
+    requireNotNull(inboxAddress)
+
+    val documentAddresses = account.identityList()
+    if (documentAddresses.isNotEmpty()) {
+        println("\nApplication address: ${documentAddresses.first().encodeHex()}")
+        return
+    }
+
+    val identifierAddress = account.keychainSigningCreate()
+    val invocationAddress = account.keychainSigningCreate()
+    val assertionAddress = account.keychainSigningCreate()
+    val authenticationAddress = account.keychainSigningCreate()
+    val messagingAddress = inboxAddress
+
+
+    val operation = OperationBuilder()
+        .identifier(identifierAddress)
+        .sequence(0)
+        .timestamp(Timestamp.now())
+        .grantEmbeddedSigning(assertionAddress, RoleSet(Role.INVOCATION))
+        .grantEmbeddedSigning(invocationAddress, RoleSet(Role.ASSERTION))
+        .grantEmbeddedSigning(authenticationAddress, RoleSet(Role.AUTHENTICATION))
+        .grantEmbeddedSigning(messagingAddress!!, RoleSet(Role.MESSAGING))
+        .signWith(identifierAddress)
+        .signWith(invocationAddress)
+        .signWith(assertionAddress)
+        .signWith(authenticationAddress)
+        .signWith(messagingAddress)
+        .finish()
+
+    val status = suspendCoroutine { continuation ->
+        account.identityExecute(operation) { status ->
+            println("identityExecute status:${status.name()} ${status.errorMessage()}")
+            if (status.success()) {
+                continuation.resumeWith(Result.success(status))
+            } else {
+                continuation.resumeWith(Result.failure(SelfError(status.errorMessage()!!)))
             }
         }
     }
+
+    println("\nApplication address:${identifierAddress.encodeHex()}")
+}
+
+private suspend fun inbox(account: Account): PublicKey? {
+    return suspendCoroutine { continuation ->
+        account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
+            println("inbox open status:${status.name()} - address:${address.encodeHex()}")
+            if (status.success()) {
+                continuation.resumeWith(Result.success(address))
+            } else {
+                continuation.resumeWith(Result.success(null))
+            }
+        }
+    }
+}
+
+private suspend fun generateQrCode(account: Account) {
+    if (inboxAddress == null) inboxAddress = inbox(account)
+
     if (inboxAddress == null) {
         throw Exception("Can't open inbox")
     }
@@ -288,8 +360,8 @@ private fun generateQrCode(account: Account) {
 
 @OptIn(ExperimentalStdlibApi::class)
 private fun sendLivenessRequest(account: Account) {
-    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS)
-        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_SOURCE_IMAGE_HASH))
+    val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS_AND_FACIAL_COMPARISON)
+        .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_AND_FACIAL_COMPARISON_SOURCE_IMAGE_HASH))
     val predicatesTree = PredicateTree.create(livenessPredicate)
 
     val credentialRequest = CredentialPresentationRequestBuilder()
@@ -321,7 +393,7 @@ private fun sendDocumentRequest(account: Account) {
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-private fun sendAggreementRequest(account: Account) {
+private fun sendAgreementRequest(account: Account) {
     val terms = "Agreement test"
     val agreementTerms = BinaryObject.create(
         "text/plain",
@@ -409,4 +481,10 @@ private fun sendChatResponse(account: Account, chat: Chat) {
     val sendStatus = account.messageSend(responderAddress!!, chat)
     val msgId = chat.id().toHexString()
     println("send chat status:${sendStatus.name()} - to:${responderAddress?.encodeHex()} - messageId:$msgId")
+
+    // send chat notification
+    val chatSummary = chat.summary()
+    account.notificationSend(responderAddress!!, chatSummary) { status: SelfStatus ->
+        println("send chat notification status:${status.name()} - id:${chatSummary.id().toHexString()}")
+    }
 }
