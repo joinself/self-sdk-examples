@@ -27,7 +27,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.Semaphore
 import kotlin.coroutines.suspendCoroutine
 
 
@@ -57,6 +56,7 @@ suspend fun main() {
     val storagePath = "$userHome/.self_demo_server"
     val directory = File(storagePath)
     if (!directory.exists()) directory.mkdirs() // create directory if not exist
+    println("\nserver data is stored at: $storagePath\n")
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
     val config = Config(
@@ -192,7 +192,7 @@ suspend fun main() {
                             println("send custom credential request status: ${sendStatus.name()} - to:${groupAddress?.encodeHex()} - requestId:${credentialRequestId}")
                         }
                         SERVER_REQUESTS.REQUEST_DOCUMENT_SIGNING -> {
-                            sendAggreementRequest(account)
+                            sendAgreementRequest(account)
                         }
                         SERVER_REQUESTS.REQUEST_GET_CUSTOM_CREDENTIAL -> {
                             sendCustomCredentials(account)
@@ -393,7 +393,7 @@ private fun sendDocumentRequest(account: Account) {
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-private fun sendAggreementRequest(account: Account) {
+private fun sendAgreementRequest(account: Account) {
     val terms = "Agreement test"
     val agreementTerms = BinaryObject.create(
         "text/plain",
