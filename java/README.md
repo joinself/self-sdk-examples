@@ -85,6 +85,11 @@ Requirements:
 ./gradlew :self-demo:run
 ```
 
+To run different target, ex: previewSandbox
+
+- delete db `rm ~/.self_demo_server/selfsdk.db`
+- Change target `Target.previewSandbox()`, line 65 `self-demo/src/main/kotlin/com/joinself/Main.kt`
+
 ## Notes
 
 Run with debug, then attach debugger in Android Studio

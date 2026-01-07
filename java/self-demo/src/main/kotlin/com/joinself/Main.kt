@@ -275,8 +275,46 @@ suspend fun main() {
     }
 }
 
+private suspend fun document(account: Account): PublicKey {
+    val identifierAddress = account.keychainSigningCreate()
+    val invocationAddress = account.keychainSigningCreate()
+    val assertionAddress = account.keychainSigningCreate()
+    val authenticationAddress = account.keychainSigningCreate()
+
+    val messagingAddress = inboxAddress
+
+    val operation = OperationBuilder()
+        .identifier(identifierAddress)
+        .sequence(0)
+        .timestamp(Timestamp.now())
+        .grantEmbeddedSigning(assertionAddress, RoleSet(Role.INVOCATION))
+        .grantEmbeddedSigning(invocationAddress, RoleSet(Role.ASSERTION))
+        .grantEmbeddedSigning(authenticationAddress, RoleSet(Role.AUTHENTICATION))
+        .grantEmbeddedSigning(messagingAddress!!, RoleSet(Role.MESSAGING))
+        .signWith(identifierAddress)
+        .signWith(invocationAddress)
+        .signWith(assertionAddress)
+        .signWith(authenticationAddress)
+        .signWith(messagingAddress)
+        .finish()
+
+    val status = suspendCoroutine { continuation ->
+        account.identityExecute(operation) { status ->
+            println("identityExecute status:${status.name()} ${status.errorMessage()}")
+            if (status.success()) {
+                continuation.resumeWith(Result.success(status))
+            } else {
+                continuation.resumeWith(Result.failure(SelfError(status.errorMessage()!!)))
+            }
+        }
+    }
+
+    println("\ndocument address:${identifierAddress.encodeHex()}")
+    return identifierAddress
+}
+
 private suspend fun generateDocument(account: Account) {
-    if (inboxAddress == null) inboxAddress = inbox(account)
+    if (inboxAddress == null) inboxAddress = inboxOpen(account)
     requireNotNull(inboxAddress)
 
     val documentAddresses = account.identityList()
@@ -321,7 +359,7 @@ private suspend fun generateDocument(account: Account) {
     println("\nApplication address:${identifierAddress.encodeHex()}")
 }
 
-private suspend fun inbox(account: Account): PublicKey? {
+private suspend fun inboxOpen(account: Account): PublicKey? {
     return suspendCoroutine { continuation ->
         account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
             println("inbox open status:${status.name()} - address:${address.encodeHex()}")
@@ -335,7 +373,7 @@ private suspend fun inbox(account: Account): PublicKey? {
 }
 
 private suspend fun generateQrCode(account: Account) {
-    if (inboxAddress == null) inboxAddress = inbox(account)
+    if (inboxAddress == null) inboxAddress = inboxOpen(account)
 
     if (inboxAddress == null) {
         throw Exception("Can't open inbox")
