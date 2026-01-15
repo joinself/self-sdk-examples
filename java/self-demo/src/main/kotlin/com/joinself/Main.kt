@@ -62,7 +62,7 @@ suspend fun main() {
     val config = Config(
         storagePath =  "$storagePath/selfsdk.db", // or ":memory:",
         storageKey = ByteArray(size = 32),
-        target = Target.productionSandbox(),
+        target = Target.previewSandbox(),
         logLevel =  LogLevel.INFO
     )
     val callbacks = Callbacks(
@@ -382,10 +382,13 @@ private suspend fun generateQrCode(account: Account) {
     println("server address: ${inboxAddress!!.encodeHex()}")
     println("clients should use this address or scan the qrcode to connect to this server")
 
+    val documentAddress = document(account)
     val expires = Timestamp.now() + 3600
-    val keyPackage = account.connectionNegotiateOutOfBand(inboxAddress!!, expires)
+//    val keyPackage = account.connectionNegotiateOutOfBand(inboxAddress!!, expires)
     val discoveryRequest = DiscoveryRequestBuilder()
-        .keyPackage(keyPackage)
+//        .keyPackage(keyPackage)
+        .documentAddress(documentAddress)
+        .inboxAddress(inboxAddress!!)
         .expires(expires)
         .finish()
     val anonymousMessage = AnonymousMessage.fromContent(discoveryRequest)
