@@ -9,6 +9,7 @@ import com.joinself.protocol.rpc.developer.AdminApplicationSetupCompletion
 import com.joinself.protocol.rpc.developer.AdminApplicationSetupRequest
 import com.joinself.protocol.rpc.developer.AdminApplicationSetupResponse
 import com.joinself.protocol.rpc.developer.Content
+import com.joinself.protocol.rpc.developer.ControllerIdentityCreationApprovalRequest
 import com.joinself.protocol.rpc.developer.ControllerPairwiseIdentityNegotiationRequest
 import com.joinself.protocol.rpc.developer.ControllerPairwiseIdentityNegotiationResponse
 import com.joinself.protocol.rpc.developer.Event
@@ -20,6 +21,7 @@ import com.joinself.selfsdk.account.*
 import com.joinself.selfsdk.account.Target
 import com.joinself.selfsdk.credential.Address
 import com.joinself.selfsdk.credential.PresentationBuilder
+import com.joinself.selfsdk.credential.VerifiablePresentation
 import com.joinself.selfsdk.error.SelfStatus
 import com.joinself.selfsdk.event.*
 import com.joinself.selfsdk.identity.Method
@@ -28,9 +30,7 @@ import com.joinself.selfsdk.identity.OperationBuilder
 import com.joinself.selfsdk.identity.Role
 import com.joinself.selfsdk.identity.RoleSet
 import com.joinself.selfsdk.keypair.signing.PublicKey
-import com.joinself.selfsdk.message.ChatBuilder
 import com.joinself.selfsdk.message.ContentType
-import com.joinself.selfsdk.message.CredentialBuilder
 import com.joinself.selfsdk.message.Custom
 import com.joinself.selfsdk.message.CustomBuilder
 import com.joinself.selfsdk.message.DiscoveryRequestBuilder
@@ -40,11 +40,11 @@ import com.joinself.selfsdk.time.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okio.ByteString
 import okio.ByteString.Companion.toByteString
-import kotlin.coroutines.suspendCoroutine
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
@@ -104,13 +104,15 @@ class AdminApp {
                 println("KMP message type: $contentType")
                 when (contentType) {
                     ContentType.CUSTOM -> {
-                        val custom = Custom.decode(content)
-                        val event = Event.ADAPTER.decode(custom.payload())
-                        if (event.content?.admin_application_setup_response != null) {
-                            handleAdminSetupResponse(event.content.admin_application_setup_response)
-                        }
-                        if (event.content?.controller_pairwise_identity_negotiation_response != null) {
-                            receivedControllerPairwiseResponse(event.content.controller_pairwise_identity_negotiation_response)
+                        coroutineScope.launch {
+                            val custom = Custom.decode(content)
+                            val event = Event.ADAPTER.decode(custom.payload())
+                            if (event.content?.admin_application_setup_response != null) {
+                                handleAdminSetupResponse(event.content.admin_application_setup_response)
+                            }
+                            if (event.content?.controller_pairwise_identity_negotiation_response != null) {
+                                receivedControllerPairwiseResponse(event.content.controller_pairwise_identity_negotiation_response)
+                            }
                         }
                     }
                     ContentType.DISCOVERY_RESPONSE -> {
@@ -162,7 +164,10 @@ class AdminApp {
                     controllerPairwiseRequest()
                 }
                 "3" -> {
-                    confirmOrganisationDetails()
+                    confirmOrganisationDetailsRequest()
+                }
+                "4" -> {
+                    confirmControllerApprovalRequest()
                 }
                 else -> {
                     println("unknown command")
@@ -190,21 +195,31 @@ class AdminApp {
 
         printQRCode(eventBase64)
     }
-    fun handleAdminSetupResponse(response: AdminApplicationSetupResponse) {
-        val documentAddress = PublicKey.decodeBytes(response.document_address.toByteArray())
-        val decodedOperation = Operation.decodeBytes(documentAddress,response.operation.toByteArray())
-        account?.identityExecute(decodedOperation) {
-            println("identityExecute status:${it.name()} ${it.errorMessage()}")
 
-            adminSetupCompletion(documentAddress)
+    var adminApplicationPresentation: VerifiablePresentation? = null
+    suspend fun handleAdminSetupResponse(response: AdminApplicationSetupResponse) {
+        val adminIdentifier = PublicKey.decodeBytes(response.document_address.toByteArray())
+        val decodedOperation = Operation.decodeBytes(adminIdentifier,response.operation.toByteArray())
+        suspendCancellableCoroutine { continuation ->
+            account?.identityExecute(decodedOperation) {status ->
+                println("identityExecute status:${status.name()} ${status.errorMessage()}")
+                continuation.resumeWith(Result.success(status))
+            }
         }
 
+        val decodedPresentation = VerifiablePresentation.decodeBytes(response.presentations.first().toByteArray())
+        println("presentation type:${decodedPresentation.presentationType().toList()}")
+        account?.presentationStore(decodedPresentation)
+        adminApplicationPresentation = decodedPresentation
+
+        adminSetupCompletion(adminIdentifier)
+
     }
-    fun adminSetupCompletion(documentAddress: PublicKey) {
+    suspend fun adminSetupCompletion(adminIdentifier: PublicKey) {
         val event = Event(
             header_ = Header(version = Version.V1),
             content = Content(
-                admin_application_setup_completion = AdminApplicationSetupCompletion(document_address = documentAddress.encodeBytes().toByteString())
+                admin_application_setup_completion = AdminApplicationSetupCompletion(document_address = adminIdentifier.encodeBytes().toByteString())
             )
         )
 
@@ -236,8 +251,9 @@ class AdminApp {
         controllerIdentifier = PublicKey.decodeBytes(response.controller_address.toByteArray())
         controllerInvocation = PublicKey.decodeBytes(response.invocation_address.toByteArray())
     }
-
-    suspend fun confirmOrganisationDetails() {
+    var organisationVerifiablePresentation: VerifiablePresentation? = null
+    var organisationOperation: Operation? = null
+    suspend fun confirmOrganisationDetailsRequest() {
         if (organisationIdentifier == null || controllerIdentifier == null || controllerInvocation == null) {
             return
         }
@@ -250,15 +266,16 @@ class AdminApp {
             .signWith(inboxAddress!!, Timestamp.now())
             .validFrom(Timestamp.now())
             .finish()
-        val organisationVerifiableCredential = account!!.credentialIssue(organisationCredential)
+        val organisationVerifiableCredential = account!!.credentialIssue(organisationCredential!!)
         val organisationPresentation = PresentationBuilder()
             .presentationType("OrganisationCreationDetailsPresentation")
             .holder(Address.key(organisationIdentifier!!))
             .credentialAdd(organisationVerifiableCredential)
             .finish()
-        val organisationVerifiablePresentation = account!!.presentationIssue(organisationPresentation)
-        val encodedPresentation = organisationVerifiablePresentation.encodeBytes()
-        val organisationOperation = OperationBuilder()
+        organisationVerifiablePresentation = account!!.presentationIssue(organisationPresentation)
+        val encodedPresentation = organisationVerifiablePresentation!!.encodeBytes()
+
+        organisationOperation = OperationBuilder()
             .identifier(organisationIdentifier!!)
             .sequence(0)
             .timestamp(Timestamp.now())
@@ -266,8 +283,18 @@ class AdminApp {
             .signWith(organisationIdentifier!!)
             .signWith(controllerInvocation!!)
             .finish()
-        account?.identitySign(organisationOperation)
-        val encodedOperation = organisationOperation.encodeBytes()
+        account?.identitySign(organisationOperation!!)
+        val encodedOperation = organisationOperation!!.encodeBytes()
+
+        val presentations = mutableListOf<ByteString>()
+        presentations.add(encodedPresentation.toByteString())
+        val adminPresentation = account?.presentationLookupByPresentationType("AdminApplicationPresentation")?.firstOrNull()
+        if (adminPresentation != null) {
+            println("adminPresentation found")
+            presentations.add(adminPresentation.encodeBytes().toByteString())
+        } else if (adminApplicationPresentation != null) {
+            presentations.add(adminApplicationPresentation!!.encodeBytes().toByteString())
+        }
 
         val requestId = Random.nextBytes(20).toByteString()
         val event = Event(
@@ -277,7 +304,7 @@ class AdminApp {
                     header_ = RequestHeader(request_id = requestId),
                     identity_address = organisationIdentifier!!.encodeBytes().toByteString(),
                     identity_operation = encodedOperation.toByteString(),
-                    presentations = listOf(encodedPresentation.toByteString())
+                    presentations = presentations
                 )
             )
         )
@@ -287,9 +314,36 @@ class AdminApp {
         println("send IdentityDetailsConfirmationRequest status:${status?.name()} - request_id:${requestId}")
     }
 
+    suspend fun confirmControllerApprovalRequest() {
+        if (organisationIdentifier == null || controllerIdentifier == null || controllerInvocation == null) {
+            return
+        }
+        val encodedOperation = organisationOperation!!.encodeBytes()
+        val encodedPresentation = organisationVerifiablePresentation!!.encodeBytes()
+        val requestId = Random.nextBytes(20).toByteString()
+        val event = Event(
+            header_ = Header(version = Version.V1),
+            content = Content(
+                controller_identity_creation_approval_request = ControllerIdentityCreationApprovalRequest(
+                    header_ = RequestHeader(request_id = requestId),
+                    identity_address = organisationIdentifier!!.encodeBytes().toByteString(),
+                    identity_operation = encodedOperation.toByteString(),
+                    presentations = listOf(encodedPresentation.toByteString()),
+                    controller_address = controllerIdentifier!!.encodeBytes().toByteString(),
+                    invocation_address = controllerInvocation!!.encodeBytes().toByteString()
+
+                )
+            )
+        )
+        val encodedEvent = event.encode()
+        val custom = CustomBuilder().payload(encodedEvent).finish()
+        val status = account?.messageSend(groupAddress!!, custom)
+        println("send ControllerIdentityCreationApprovalRequest status:${status?.name()} - request_id:${requestId}")
+    }
+
     private suspend fun inboxOpen(account: Account): PublicKey? {
-        return suspendCoroutine { continuation ->
-            account.inboxOpen (expires = 0L) { status: SelfStatus, address: PublicKey ->
+        return suspendCancellableCoroutine { continuation ->
+            account.inboxOpen(expires = 0L) { status: SelfStatus, address: PublicKey ->
                 println("inbox open status:${status.name()} - address:${address.encodeHex()}")
                 if (status.success()) {
                     continuation.resumeWith(Result.success(address))
