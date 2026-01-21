@@ -10,11 +10,13 @@ import com.joinself.protocol.rpc.developer.AdminApplicationSetupRequest
 import com.joinself.protocol.rpc.developer.AdminApplicationSetupResponse
 import com.joinself.protocol.rpc.developer.Content
 import com.joinself.protocol.rpc.developer.ControllerIdentityCreationApprovalRequest
+import com.joinself.protocol.rpc.developer.ControllerIdentityCreationApprovalResponse
 import com.joinself.protocol.rpc.developer.ControllerPairwiseIdentityNegotiationRequest
 import com.joinself.protocol.rpc.developer.ControllerPairwiseIdentityNegotiationResponse
 import com.joinself.protocol.rpc.developer.Event
 import com.joinself.protocol.rpc.developer.Header
 import com.joinself.protocol.rpc.developer.IdentityDetailsConfirmationRequest
+import com.joinself.protocol.rpc.developer.IdentityDetailsConfirmationResponse
 import com.joinself.protocol.rpc.developer.RequestHeader
 import com.joinself.protocol.rpc.developer.Version
 import com.joinself.selfsdk.account.*
@@ -113,6 +115,12 @@ class AdminApp {
                             if (event.content?.controller_pairwise_identity_negotiation_response != null) {
                                 receivedControllerPairwiseResponse(event.content.controller_pairwise_identity_negotiation_response)
                             }
+                            if (event.content?.identity_details_confirmation_response != null) {
+                                confirmOrganisationDetailsResponse(event.content.identity_details_confirmation_response)
+                            }
+                            if (event.content?.controller_identity_creation_approval_response != null) {
+                                confirmControllerApprovalResponse(event.content.controller_identity_creation_approval_response)
+                            }
                         }
                     }
                     ContentType.DISCOVERY_RESPONSE -> {
@@ -198,6 +206,7 @@ class AdminApp {
 
     var adminApplicationPresentation: VerifiablePresentation? = null
     suspend fun handleAdminSetupResponse(response: AdminApplicationSetupResponse) {
+        println("received AdminApplicationSetupResponse")
         val adminIdentifier = PublicKey.decodeBytes(response.document_address.toByteArray())
         val decodedOperation = Operation.decodeBytes(adminIdentifier,response.operation.toByteArray())
         suspendCancellableCoroutine { continuation ->
@@ -247,12 +256,11 @@ class AdminApp {
         println("send ControllerPairwiseIdentityNegotiationRequest status:${status?.name()} - request_id:${requestId}")
     }
     fun receivedControllerPairwiseResponse(response: ControllerPairwiseIdentityNegotiationResponse) {
-        println("received controller pairwise response responseTo:${response.header_?.response_to} ${response.controller_address} - ${response.invocation_address}")
+        println("received ControllerPairwiseIdentityNegotiationResponse responseTo:${response.header_?.response_to} ${response.controller_address} - ${response.invocation_address}")
         controllerIdentifier = PublicKey.decodeBytes(response.controller_address.toByteArray())
         controllerInvocation = PublicKey.decodeBytes(response.invocation_address.toByteArray())
     }
-    var organisationVerifiablePresentation: VerifiablePresentation? = null
-    var organisationOperation: Operation? = null
+
     suspend fun confirmOrganisationDetailsRequest() {
         if (organisationIdentifier == null || controllerIdentifier == null || controllerInvocation == null) {
             return
@@ -272,10 +280,10 @@ class AdminApp {
             .holder(Address.key(organisationIdentifier!!))
             .credentialAdd(organisationVerifiableCredential)
             .finish()
-        organisationVerifiablePresentation = account!!.presentationIssue(organisationPresentation)
+        val organisationVerifiablePresentation = account!!.presentationIssue(organisationPresentation)
         val encodedPresentation = organisationVerifiablePresentation!!.encodeBytes()
 
-        organisationOperation = OperationBuilder()
+        val organisationOperation = OperationBuilder()
             .identifier(organisationIdentifier!!)
             .sequence(0)
             .timestamp(Timestamp.now())
@@ -314,12 +322,28 @@ class AdminApp {
         println("send IdentityDetailsConfirmationRequest status:${status?.name()} - request_id:${requestId}")
     }
 
+    var adminOrganisationPresentation: VerifiablePresentation? = null
+    var adminOrganisationOperation: Operation? = null
+    suspend fun confirmOrganisationDetailsResponse(response: IdentityDetailsConfirmationResponse) {
+        println("received IdentityDetailsConfirmationResponse")
+        val organisationIdentifier = PublicKey.decodeBytes(response.identity_address.toByteArray())
+
+        adminOrganisationPresentation = VerifiablePresentation.decodeBytes(response.presentations.first().toByteArray())
+        adminOrganisationOperation = Operation.decodeBytes(organisationIdentifier, response.identity_operation.toByteArray())
+    }
+
     suspend fun confirmControllerApprovalRequest() {
         if (organisationIdentifier == null || controllerIdentifier == null || controllerInvocation == null) {
+            println("controllerIdentifier is null")
             return
         }
-        val encodedOperation = organisationOperation!!.encodeBytes()
-        val encodedPresentation = organisationVerifiablePresentation!!.encodeBytes()
+        if (adminOrganisationPresentation == null || adminOrganisationOperation == null) {
+            println("operation is null")
+            return
+        }
+
+        val encodedOperation = adminOrganisationOperation!!.encodeBytes()
+        val encodedPresentation = adminOrganisationPresentation!!.encodeBytes()
         val requestId = Random.nextBytes(20).toByteString()
         val event = Event(
             header_ = Header(version = Version.V1),
@@ -339,6 +363,10 @@ class AdminApp {
         val custom = CustomBuilder().payload(encodedEvent).finish()
         val status = account?.messageSend(groupAddress!!, custom)
         println("send ControllerIdentityCreationApprovalRequest status:${status?.name()} - request_id:${requestId}")
+    }
+
+    suspend fun confirmControllerApprovalResponse(response: ControllerIdentityCreationApprovalResponse) {
+        println("received ControllerIdentityCreationApprovalResponse")
     }
 
     private suspend fun inboxOpen(account: Account): PublicKey? {
