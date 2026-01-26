@@ -22,10 +22,16 @@ import com.joinself.protocol.rpc.developer.Version
 import com.joinself.selfsdk.account.*
 import com.joinself.selfsdk.account.Target
 import com.joinself.selfsdk.credential.Address
+import com.joinself.selfsdk.credential.CredentialField
+import com.joinself.selfsdk.credential.CredentialType
 import com.joinself.selfsdk.credential.PresentationBuilder
+import com.joinself.selfsdk.credential.PresentationType
 import com.joinself.selfsdk.credential.VerifiablePresentation
+import com.joinself.selfsdk.credential.predicate.Predicate
+import com.joinself.selfsdk.credential.predicate.PredicateTree
 import com.joinself.selfsdk.error.SelfStatus
 import com.joinself.selfsdk.event.*
+import com.joinself.selfsdk.identity.Document
 import com.joinself.selfsdk.identity.Method
 import com.joinself.selfsdk.identity.Operation
 import com.joinself.selfsdk.identity.OperationBuilder
@@ -33,20 +39,27 @@ import com.joinself.selfsdk.identity.Role
 import com.joinself.selfsdk.identity.RoleSet
 import com.joinself.selfsdk.keypair.signing.PublicKey
 import com.joinself.selfsdk.message.ContentType
+import com.joinself.selfsdk.message.CredentialPresentationRequestBuilder
+import com.joinself.selfsdk.message.CredentialPresentationResponse
+import com.joinself.selfsdk.message.CredentialVerificationRequest
+import com.joinself.selfsdk.message.CredentialVerificationRequestBuilder
 import com.joinself.selfsdk.message.Custom
 import com.joinself.selfsdk.message.CustomBuilder
 import com.joinself.selfsdk.message.DiscoveryRequestBuilder
 import com.joinself.selfsdk.message.DiscoveryResponse
 import com.joinself.selfsdk.platform.Attestation
 import com.joinself.selfsdk.time.Timestamp
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
+import kotlin.coroutines.suspendCoroutine
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
@@ -59,14 +72,15 @@ class AdminApp {
     var inboxAddress: PublicKey? = null
     var responderAddress: PublicKey? = null
     var groupAddress: PublicKey? = null
+    var issuerAddress: PublicKey = PublicKey.decodeHex("004e4a0b98c5f6fe69847bdad91bc099992dfff3ac98339c7fcc78e277ff9c1213")
 
     val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val onConnect: Channel<Boolean> = Channel()
+    var onReceivedWelcomeCallback: ((welcome: Welcome) -> Unit)? = null
 
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun run() {
         println("Admin Sample")
-
-        val onConnect: Channel<Boolean> = Channel()
 
         val config = Config(
             storagePath = ":memory:",
@@ -128,6 +142,16 @@ class AdminApp {
                         val responseTo = discoveryResponse.responseTo().toHexString()
                         println("received response to discovery request from:${message.fromAddress().encodeHex()} - requestId:${responseTo} - messageId:${message.id().toHexString()}")
                     }
+                    ContentType.CREDENTIAL_PRESENTATION_RESPONSE -> {
+                        val credentialResponse = CredentialPresentationResponse.decode(content)
+                        credentialResponse.presentations().forEach { presentation ->
+                            println("presentation type:${presentation.presentationType().toList()}")
+                            presentation.credentials().forEach { credential ->
+                                println("${credential.credentialType().toList()}" +
+                                        "\n${credential.credentialSubjectClaims()}")
+                            }
+                        }
+                    }
                     else -> {
 
                     }
@@ -138,10 +162,15 @@ class AdminApp {
             },
             onWelcome = {account, welcome: Welcome ->
                 println("KMP welcome")
-                account.connectionAccept(asAddress = welcome.toAddress(), welcome =  welcome.welcome()) { status: SelfStatus, gAddress: PublicKey ->
-                    println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
-                    responderAddress = welcome.fromAddress()
-                    groupAddress = gAddress
+                if (onReceivedWelcomeCallback != null) {
+                    onReceivedWelcomeCallback!!.invoke(welcome)
+                    onReceivedWelcomeCallback = null
+                } else {
+                    account.connectionAccept(asAddress = welcome.toAddress(), welcome = welcome.welcome()) { status: SelfStatus, gAddress: PublicKey ->
+                        println("accepted connection encrypted group status:${status.name()} - from:${welcome.fromAddress().encodeHex()} - group:${gAddress.encodeHex()}")
+                        responderAddress = welcome.fromAddress()
+                        groupAddress = gAddress
+                    }
                 }
             },
             onDropped = {account, dropped: Dropped ->
@@ -155,7 +184,7 @@ class AdminApp {
         account = Account(config, callbacks)
         onConnect.receive()
 
-        inboxOpen(account!!)
+//        inboxOpen(account!!)
 
         // wait for command
         while (true) {
@@ -190,7 +219,7 @@ class AdminApp {
     var organisationIdentifier: PublicKey? = null
 
     suspend fun adminSetupRequest() {
-        if (inboxAddress == null) inboxAddress = inboxOpen(account!!)
+        inboxAddress = inboxOpen(account!!)
 
         val event = Event(
             header_ = Header(version = Version.V1),
@@ -218,6 +247,10 @@ class AdminApp {
 
         val decodedPresentation = VerifiablePresentation.decodeBytes(response.presentations.first().toByteArray())
         println("presentation type:${decodedPresentation.presentationType().toList()}")
+        decodedPresentation.credentials().forEach { credential ->
+            println("${credential.credentialType().toList()}" +
+                    "\n${credential.credentialSubjectClaims()}")
+        }
         account?.presentationStore(decodedPresentation)
         adminApplicationPresentation = decodedPresentation
 
@@ -367,6 +400,90 @@ class AdminApp {
 
     suspend fun confirmControllerApprovalResponse(response: ControllerIdentityCreationApprovalResponse) {
         println("received ControllerIdentityCreationApprovalResponse")
+        val organisationIdentifier = PublicKey.decodeBytes(response.identity_address.toByteArray())
+
+        val organisationPresentation = VerifiablePresentation.decodeBytes(response.presentations.first().toByteArray())
+        val controllerOperation = Operation.decodeBytes(organisationIdentifier, response.identity_operation.toByteArray())
+
+        suspendCancellableCoroutine { continuation ->
+            account?.identityExecute(controllerOperation) {status ->
+                println("identityExecute controllerOperation status:${status.name()} ${status.errorMessage()}")
+                continuation.resumeWith(Result.success(status))
+            }
+        }
+
+//        verifyOrganisation(organisationPresentation)
+        controllerKYCRequest()
+    }
+
+    suspend fun verifyOrganisation(presentation: VerifiablePresentation) {
+        val verificationRequest = CredentialVerificationRequestBuilder()
+            .credentialType(CredentialType.ORGANISATION)
+            .parameters("subject", Address.aure(organisationIdentifier!!).toString())
+            .parameters("authorizedPerson", Address.aure(controllerIdentifier!!).toString())
+            .proof(presentation)
+            .expires(Timestamp.now() + 3600)
+            .finish()
+
+        val issuerDocument = suspendCancellableCoroutine { continuation ->
+            account?.identityResolve(address = issuerAddress) { status: SelfStatus, document: Document? ->
+                continuation.resumeWith(Result.success(document))
+            }
+        }
+        if (issuerDocument == null) {
+            println("issuerDocument is null")
+            return
+        }
+        val issuerInboxAddress = issuerDocument.signingKeysWithRoles(RoleSet(Role.MESSAGING)).firstOrNull()
+        if (issuerInboxAddress == null) {
+            println("inboxAddress is null")
+            return
+        }
+
+        val group = connectWith(issuerInboxAddress)
+        if (group == null) {
+            println("group is null")
+            return
+        }
+
+        val status = account?.messageSend(toAddress = group, verificationRequest)
+        println("send verifyOrganisation credential request status:${status?.name()}")
+    }
+
+    suspend fun controllerKYCRequest() {
+        val livenessPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.LIVENESS_AND_FACIAL_COMPARISON)
+            .and(Predicate.notEmpty(CredentialField.SUBJECT_LIVENESS_AND_FACIAL_COMPARISON_SOURCE_IMAGE_HASH))
+
+        val passportPredicate = Predicate.contains(CredentialField.TYPE, CredentialType.PASSPORT)
+            .and(Predicate.notEmpty(CredentialField.SUBJECT_PASSPORT_GIVEN_NAMES))
+        val predicatesTree = PredicateTree.create(passportPredicate)
+
+        val credentialRequest = CredentialPresentationRequestBuilder()
+            .presentationType("OrganisationPresentation")
+            .predicates(predicatesTree)
+            .expires(Timestamp.now() + 3600)
+            .finish()
+
+        val sendStatus = account?.messageSend(groupAddress!!, credentialRequest)
+        println("send controller KYC presentation request status: ${sendStatus?.name()}")
+    }
+
+    private suspend fun connectWith(other: PublicKey): PublicKey? {
+        val deferred = CompletableDeferred<PublicKey>()
+        return withTimeoutOrNull(20_000) {
+            try {
+                onReceivedWelcomeCallback = { welcome ->
+                    account?.connectionAccept(asAddress = welcome.toAddress(), welcome = welcome.welcome()) { status: SelfStatus, groupAddress: PublicKey ->
+                        println("connectionAccept status:${status.name()} - toAddress:${welcome.fromAddress().encodeHex()}")
+                        deferred.complete(groupAddress)
+                    }
+                }
+
+                account?.connectionNegotiate(asAddress = inboxAddress!!, withAddress = other, expires = Timestamp.now() + 360)
+                deferred.await()
+            } finally {
+            }
+        }
     }
 
     private suspend fun inboxOpen(account: Account): PublicKey? {
