@@ -5,61 +5,25 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import com.joinself.protocol.rpc.developer.AdminApplicationSetupCompletion
-import com.joinself.protocol.rpc.developer.AdminApplicationSetupRequest
-import com.joinself.protocol.rpc.developer.AdminApplicationSetupResponse
+import com.joinself.protocol.rpc.developer.*
 import com.joinself.protocol.rpc.developer.Content
-import com.joinself.protocol.rpc.developer.ControllerIdentityCreationApprovalRequest
-import com.joinself.protocol.rpc.developer.ControllerIdentityCreationApprovalResponse
-import com.joinself.protocol.rpc.developer.ControllerPairwiseIdentityNegotiationRequest
-import com.joinself.protocol.rpc.developer.ControllerPairwiseIdentityNegotiationResponse
-import com.joinself.protocol.rpc.developer.Event
-import com.joinself.protocol.rpc.developer.Header
-import com.joinself.protocol.rpc.developer.IdentityDetailsConfirmationRequest
-import com.joinself.protocol.rpc.developer.IdentityDetailsConfirmationResponse
-import com.joinself.protocol.rpc.developer.RequestHeader
-import com.joinself.protocol.rpc.developer.Version
 import com.joinself.selfsdk.account.*
 import com.joinself.selfsdk.account.Target
-import com.joinself.selfsdk.credential.Address
-import com.joinself.selfsdk.credential.CredentialField
-import com.joinself.selfsdk.credential.CredentialType
-import com.joinself.selfsdk.credential.PresentationBuilder
-import com.joinself.selfsdk.credential.PresentationType
-import com.joinself.selfsdk.credential.VerifiablePresentation
+import com.joinself.selfsdk.credential.*
 import com.joinself.selfsdk.credential.predicate.Predicate
 import com.joinself.selfsdk.credential.predicate.PredicateTree
 import com.joinself.selfsdk.error.SelfStatus
 import com.joinself.selfsdk.event.*
-import com.joinself.selfsdk.identity.Document
-import com.joinself.selfsdk.identity.Method
-import com.joinself.selfsdk.identity.Operation
-import com.joinself.selfsdk.identity.OperationBuilder
-import com.joinself.selfsdk.identity.Role
-import com.joinself.selfsdk.identity.RoleSet
+import com.joinself.selfsdk.event.Reference
+import com.joinself.selfsdk.identity.*
 import com.joinself.selfsdk.keypair.signing.PublicKey
-import com.joinself.selfsdk.message.ContentType
-import com.joinself.selfsdk.message.CredentialPresentationRequestBuilder
-import com.joinself.selfsdk.message.CredentialPresentationResponse
-import com.joinself.selfsdk.message.CredentialVerificationRequest
-import com.joinself.selfsdk.message.CredentialVerificationRequestBuilder
-import com.joinself.selfsdk.message.Custom
-import com.joinself.selfsdk.message.CustomBuilder
-import com.joinself.selfsdk.message.DiscoveryRequestBuilder
-import com.joinself.selfsdk.message.DiscoveryResponse
+import com.joinself.selfsdk.message.*
 import com.joinself.selfsdk.platform.Attestation
 import com.joinself.selfsdk.time.Timestamp
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
-import kotlin.coroutines.suspendCoroutine
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
@@ -68,6 +32,8 @@ import kotlin.random.Random
  * run in terminal: ./gradlew :admin:run
  */
 class AdminApp {
+    var target = Target.preview()
+
     var account: Account? = null
     var inboxAddress: PublicKey? = null
     var responderAddress: PublicKey? = null
@@ -80,12 +46,14 @@ class AdminApp {
 
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun run() {
-        println("Admin Sample")
+        println("Admin App")
+        println("Target ${target.variant()}:${target.environment()}")
+        println("\n")
 
         val config = Config(
             storagePath = ":memory:",
             storageKey = ByteArray(size = 32),
-            target = Target.preview(),
+            target = target,
             logLevel =  LogLevel.INFO
         )
         val callbacks = Callbacks(
@@ -185,7 +153,15 @@ class AdminApp {
         onConnect.receive()
 
 //        inboxOpen(account!!)
-
+        // print commands
+        println("\n")
+        println("Please enter command number:" +
+                "\n 0 - create QR code" +
+                "\n 1 - admin application setup request" +
+                "\n 2 - controller pairwise request" +
+                "\n 3 - confirm organisation details request" +
+                "\n 4 - confirm controller approval request")
+        println("\n")
         // wait for command
         while (true) {
             val line = readln()
@@ -329,13 +305,7 @@ class AdminApp {
 
         val presentations = mutableListOf<ByteString>()
         presentations.add(encodedPresentation.toByteString())
-        val adminPresentation = account?.presentationLookupByPresentationType("AdminApplicationPresentation")?.firstOrNull()
-        if (adminPresentation != null) {
-            println("adminPresentation found")
-            presentations.add(adminPresentation.encodeBytes().toByteString())
-        } else if (adminApplicationPresentation != null) {
-            presentations.add(adminApplicationPresentation!!.encodeBytes().toByteString())
-        }
+        presentations.add(adminApplicationPresentation!!.encodeBytes().toByteString())
 
         val requestId = Random.nextBytes(20).toByteString()
         val event = Event(

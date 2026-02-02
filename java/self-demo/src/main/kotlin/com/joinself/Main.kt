@@ -54,7 +54,7 @@ class DemoApp {
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun run() {
         println("Self Demo")
-        println("Environment:${target.environment()} - Variant:${target.variant()}")
+        println("Target ${target.variant()}:${target.environment()}")
 
         val onConnect: Channel<Boolean> = Channel()
         val userHome = System.getProperty("user.home")
