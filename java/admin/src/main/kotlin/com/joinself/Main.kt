@@ -388,7 +388,6 @@ class AdminApp {
                     presentations = listOf(encodedPresentation.toByteString()),
                     controller_address = controllerIdentifier!!.encodeBytes().toByteString(),
                     invocation_address = controllerInvocation!!.encodeBytes().toByteString()
-
                 )
             )
         )

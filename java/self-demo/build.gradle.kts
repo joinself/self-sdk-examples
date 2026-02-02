@@ -23,7 +23,7 @@ kotlin {
 }
 
 application {
-    mainClass = "com.joinself.MainKt"
+    mainClass = "com.joinself.DemoApp"
 }
 
 tasks.named<JavaExec>("run") {
