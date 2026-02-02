@@ -1,0 +1,127 @@
+syntax = "proto3";
+package developer;
+option go_package = "github.com/joinself/self-next/common/protocol/rpc/developer";
+option java_package = "com.joinself.protocol.rpc.developer";
+
+enum Version {
+  V1 = 0;
+}
+
+enum ResponseStatus {
+  STATUS_UNKNOWN                  = 0;
+  STATUS_OK                       = 200; // RFC 9110, 15.3.1
+  STATUS_CREATED                  = 201; // RFC 9110, 15.3.2
+  STATUS_ACCEPTED                 = 202; // RFC 9110, 15.3.3
+  STATUS_NO_CONTENT               = 204; // RFC 9110, 15.3.5
+  STATUS_BAD_REQUEST              = 400; // RFC 9110, 15.5.1
+  STATUS_UNAUTHORIZED             = 401; // RFC 9110, 15.5.2
+  STATUS_PAYMENT_REQUIRED         = 402; // RFC 9110, 15.5.3
+  STATUS_FORBIDDEN                = 403; // RFC 9110, 15.5.4
+  STATUS_NOT_FOUND                = 404; // RFC 9110, 15.5.5
+  STATUS_METHOD_NOT_ALLOWED       = 405; // RFC 9110, 15.5.6
+  STATUS_NOT_ACCEPTABLE           = 406; // RFC 9110, 15.5.7
+  STATUS_REQUEST_TIMEOUT          = 408; // RFC 9110, 15.5.9
+  STATUS_CONFLICT                 = 409; // RFC 9110, 15.5.10
+  STATUS_GONE                     = 410; // RFC 9110, 15.5.11
+  STATUS_LENGTH_REQUIRED          = 411; // RFC 9110, 15.5.12
+  STATUS_PRECONDITION_FAILED      = 412; // RFC 9110, 15.5.13
+  STATUS_REQUEST_ENTITY_TOO_LARGE = 413; // RFC 9110, 15.5.14
+  STATUS_EXPECTATION_FAILED       = 417; // RFC 9110, 15.5.18
+  STATUS_INTERNAL_SERVER_ERROR    = 500; // RFC 9110, 15.6.1
+  STATUS_NOT_IMPLEMENTED          = 501; // RFC 9110, 15.6.2
+  STATUS_BAD_GATEWAY              = 502; // RFC 9110, 15.6.3
+  STATUS_SERVICE_UNAVAILABLE      = 503; // RFC 9110, 15.6.4
+  STATUS_GATEWAY_TIMEOUT          = 504; // RFC 9110, 15.6.5
+}
+
+message Header {
+  Version version = 1;
+}
+
+message RequestHeader {
+  bytes request_id = 1;
+}
+
+message ResponseHeader {
+  ResponseStatus status      = 1;
+  bytes          response_to = 2;
+  string         message     = 3;
+}
+
+message Event {
+  Header  header  = 1;
+  Content content = 2;
+}
+
+message Content {
+  oneof content {
+    AdminApplicationSetupRequest                  admin_application_setup_request                   = 1;
+    AdminApplicationSetupResponse                 admin_application_setup_response                  = 2;
+    AdminApplicationSetupCompletion               admin_application_setup_completion                = 3;
+    IdentityDetailsConfirmationRequest            identity_details_confirmation_request             = 4;
+    IdentityDetailsConfirmationResponse           identity_details_confirmation_response            = 5;
+    ControllerPairwiseIdentityNegotiationRequest  controller_pairwise_identity_negotiation_request  = 6;
+    ControllerPairwiseIdentityNegotiationResponse controller_pairwise_identity_negotiation_response = 7;
+    ControllerIdentityCreationApprovalRequest     controller_identity_creation_approval_request     = 8;
+    ControllerIdentityCreationApprovalResponse    controller_identity_creation_approval_response    = 9;
+  }
+}
+
+message AdminApplicationSetupRequest {
+  RequestHeader header        = 1;
+  bytes         inbox_address = 2;
+}
+
+message AdminApplicationSetupResponse {
+  ResponseHeader header           = 1;
+  bytes          document_address = 2;
+  bytes          operation        = 3;
+  bytes          identity_token   = 4;
+  repeated bytes presentations    = 5;
+}
+
+message AdminApplicationSetupCompletion {
+  bytes document_address = 1;
+}
+
+message IdentityDetailsConfirmationRequest {
+  RequestHeader  header             = 1;
+  bytes          identity_address   = 2;
+  bytes          identity_operation = 3;
+  repeated bytes presentations      = 4;  
+}
+
+message IdentityDetailsConfirmationResponse {
+  ResponseHeader header             = 1;
+  bytes          identity_address   = 2;
+  bytes          identity_operation = 3;
+  repeated bytes presentations      = 4;  
+}
+
+message ControllerPairwiseIdentityNegotiationRequest {
+  RequestHeader  header           = 1;
+  bytes          identity_address = 2;
+  repeated bytes presentations    = 3;
+}
+
+message ControllerPairwiseIdentityNegotiationResponse {
+  ResponseHeader header             = 1;
+  bytes          controller_address = 2;
+  bytes          invocation_address = 3;
+}
+
+message ControllerIdentityCreationApprovalRequest {
+  RequestHeader  header             = 1;
+  bytes          identity_address   = 2;
+  bytes          identity_operation = 3;
+  bytes          controller_address = 4;
+  bytes          invocation_address = 5;
+  repeated bytes presentations      = 6;
+}
+
+message ControllerIdentityCreationApprovalResponse {
+  ResponseHeader header             = 1;
+  bytes          identity_address   = 2;
+  bytes          identity_operation = 3;
+  repeated bytes presentations      = 4;
+}

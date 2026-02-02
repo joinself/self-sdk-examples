@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.jvm)
     id("application")
+    id("com.squareup.wire") version "5.5.0"
 }
 
 dependencies {
@@ -8,22 +9,23 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.serialization)
-}
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17)) // Set to the desired Java version
-    }
+    implementation("com.google.zxing:core:3.5.4")
+    implementation("com.squareup.wire:wire-runtime:5.5.0")
 }
 
 kotlin {
     jvmToolchain(17)
 }
-
+wire {
+    kotlin {
+        sourcePath {
+            srcDir("src/proto")
+        }
+    }
+}
 application {
-    mainClass = "com.joinself.DemoApp"
+    mainClass = "com.joinself.AdminApp"
 }
 
 tasks.named<JavaExec>("run") {
