@@ -22,3 +22,5 @@ jobs:
     uses: ./.github/workflows/docker-java-publish.yml
     secrets: inherit
     needs: build
+    permissions:
+      packages: write

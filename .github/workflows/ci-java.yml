@@ -22,3 +22,5 @@ jobs:
     uses: ./.github/workflows/java-publish.yml
     secrets: inherit
     needs: build
+    permissions:
+      contents: write

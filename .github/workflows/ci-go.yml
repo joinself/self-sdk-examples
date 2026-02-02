@@ -25,3 +25,5 @@ jobs:
     uses: ./.github/workflows/go-publish.yml
     secrets: inherit
     needs: [build-linux, build-mac]
+    permissions:
+      contents: write
