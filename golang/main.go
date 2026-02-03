@@ -113,14 +113,12 @@ func startSelf() {
 
 	log.Println("Self account initialized")
 
-	inboxList, err := selfAccount.InboxList()
+	inboxAddress, err = selfAccount.InboxOpen()
 	if err != nil {
-		log.Fatal("failed to get inbox list:", err)
+		log.Fatal("failed to open account inbox:", err)
 	}
 
-	inboxAddress = inboxList[0]
-
-	log.Println("server address:", inboxList[0])
+	log.Println("server address:", inboxAddress)
 
 	// Generate initial QR code after account is ready
 	log.Println("\nInitial connection QR code:")
@@ -173,17 +171,10 @@ func displayConnectionQR() {
 
 // generateConnectionQR creates a QR code for mobile app connections
 func generateConnectionQR() (string, time.Time, error) {
-	// Open inbox for receiving connection requests
-	currentInboxAddress, err := selfAccount.InboxOpen()
-	if err != nil {
-		log.Printf("generateConnectionQR: Failed to open inbox: %v", err)
-		return "", time.Time{}, fmt.Errorf("failed to open inbox: %v", err)
-	}
-
 	// Generate cryptographic key package for secure communication
 	expirationTime := time.Now().Add(30 * time.Minute)
 	keyPackage, err := selfAccount.ConnectionNegotiateOutOfBand(
-		currentInboxAddress,
+		inboxAddress,
 		expirationTime,
 	)
 	if err != nil {
@@ -253,11 +244,7 @@ func sendCredentialRequest(selfAccount *account.Account, msg *event.Message, cre
 				predicate.NewTree(
 					predicate.Contains(
 						credential.FieldType,
-						credential.CredentialTypeLiveness,
-					).And(
-						predicate.NotEmpty(
-							credential.FieldSubjectLivenessSourceImageHash,
-						),
+						credential.CredentialTypeLivenessAndFacialComparison,
 					),
 				),
 			).

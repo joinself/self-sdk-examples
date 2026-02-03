@@ -2,10 +2,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-pdf/fpdf v0.9.0 h1:PPvSaUuo1iMi9KkaAn90NuKi+P4gwMedWPHhj8YlJQw=
 github.com/go-pdf/fpdf v0.9.0/go.mod h1:oO8N111TkmKb9D7VvWGLvLJlaZUQVPM+6V42pp3iV4Y=
-github.com/joinself/self-go-sdk v0.59.0 h1:OaXpcAskVMTeb/TxOlJqW7KxWLYHPDMYBQ/zDxTxSgg=
-github.com/joinself/self-go-sdk v0.59.0/go.mod h1:ttChIied12ij204lRKhQVVgq091q1KWVNuzyQ+v8kyk=
-github.com/joinself/self-go-sdk v0.60.0-4 h1:7b3BdlUFGaDPrYKfTbSsY25J4q2NaTUYEwEqIvJE7sM=
-github.com/joinself/self-go-sdk v0.60.0-4/go.mod h1:tyq+EqY4oqDdZnD4hgWgWVNGJCDuCjwLozHS8Ic9GDU=
+github.com/joinself/self-go-sdk v0.60.0-15 h1:xSALBnUJYadd+AKEm1OMp3D0/0AY9viTceQmN9FP++8=
+github.com/joinself/self-go-sdk v0.60.0-15/go.mod h1:TkqSx1iGazOB+1dUbChvHffJpyM589nZk8F2KJEUZfo=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
