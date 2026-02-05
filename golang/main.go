@@ -16,6 +16,7 @@ import (
 	"github.com/joinself/self-go-sdk/credential"
 	"github.com/joinself/self-go-sdk/credential/predicate"
 	"github.com/joinself/self-go-sdk/event"
+	"github.com/joinself/self-go-sdk/identity"
 	"github.com/joinself/self-go-sdk/keypair/signing"
 	"github.com/joinself/self-go-sdk/message"
 	"github.com/joinself/self-go-sdk/object"
@@ -122,6 +123,9 @@ func startSelf() {
 
 	log.Println("server address:", inboxList[0])
 
+	// Generate or display the application address
+	generateDocument()
+
 	// Generate initial QR code after account is ready
 	log.Println("\nInitial connection QR code:")
 	displayConnectionQR()
@@ -155,6 +159,67 @@ func startSelf() {
 	// Keep the server running
 	log.Println("Server running... Press Ctrl+C to exit")
 	select {}
+}
+
+// generateDocument creates or displays the application address (identity document)
+func generateDocument() {
+	// Check if we already have an identity
+	identityList, err := selfAccount.IdentityList()
+	if err != nil {
+		log.Fatalf("Failed to get identity list: %v", err)
+	}
+
+	if len(identityList) > 0 {
+		log.Printf("Application address: %s", identityList[0])
+		return
+	}
+
+	// Create new signing keys for the identity document
+	identifierAddress, err := selfAccount.KeychainSigningCreate()
+	if err != nil {
+		log.Fatalf("Failed to create identifier key: %v", err)
+	}
+
+	invocationAddress, err := selfAccount.KeychainSigningCreate()
+	if err != nil {
+		log.Fatalf("Failed to create invocation key: %v", err)
+	}
+
+	assertionAddress, err := selfAccount.KeychainSigningCreate()
+	if err != nil {
+		log.Fatalf("Failed to create assertion key: %v", err)
+	}
+
+	authenticationAddress, err := selfAccount.KeychainSigningCreate()
+	if err != nil {
+		log.Fatalf("Failed to create authentication key: %v", err)
+	}
+
+	messagingAddress := inboxAddress
+
+	// Build the identity operation
+	operation := identity.NewOperation().
+		Identifier(identifierAddress).
+		Sequence(0).
+		Timestamp(time.Now()).
+		GrantEmbedded(assertionAddress, identity.RoleInvocation).
+		GrantEmbedded(invocationAddress, identity.RoleAssertion).
+		GrantEmbedded(authenticationAddress, identity.RoleAuthentication).
+		GrantEmbedded(messagingAddress, identity.RoleMessaging).
+		SignWith(identifierAddress).
+		SignWith(invocationAddress).
+		SignWith(assertionAddress).
+		SignWith(authenticationAddress).
+		SignWith(messagingAddress).
+		Finish()
+
+	// Execute the identity operation
+	err = selfAccount.IdentityExecute(operation)
+	if err != nil {
+		log.Fatalf("Failed to execute identity operation: %v", err)
+	}
+
+	log.Printf("Application address: %s", identifierAddress)
 }
 
 // displayConnectionQR generates and displays a QR code in the terminal
@@ -253,10 +318,10 @@ func sendCredentialRequest(selfAccount *account.Account, msg *event.Message, cre
 				predicate.NewTree(
 					predicate.Contains(
 						credential.FieldType,
-						credential.CredentialTypeLiveness,
+						credential.CredentialTypeLivenessAndFacialComparison,
 					).And(
 						predicate.NotEmpty(
-							credential.FieldSubjectLivenessSourceImageHash,
+							credential.FieldSubjectLivenessAndFacialComparisonSourceImageHash,
 						),
 					),
 				),
@@ -419,7 +484,7 @@ func handleCredentialResponse(msg *event.Message) {
 					continue
 				}
 				if k != "id" && k != "sourceImageHash" && k != "targetImageHash" {
-					content = content + k + " = " + v.(string)
+					content = content + fmt.Sprintf("%s = %v\n", k, v)
 					continue
 				}
 			}

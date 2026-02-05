@@ -1,8 +1,8 @@
 module github.com/joinself/self-sdk-examples/golang
 
-go 1.24.2
+go 1.25
 
 require (
 	github.com/go-pdf/fpdf v0.9.0
-	github.com/joinself/self-go-sdk v0.60.0-4
+	github.com/joinself/self-go-sdk v0.60.0-15
 )
