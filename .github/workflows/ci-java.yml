@@ -28,7 +28,7 @@ jobs:
       image: eclipse-temurin:17.0.11_9-jdk-jammy
     timeout-minutes: 15
     steps:
-      - uses: joinself/github-actions-public/setup-job@main
+      - uses: joinself/actions-public/setup-job@main
       - uses: actions/checkout@v6
       - name: Build
         run: |
@@ -55,7 +55,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: joinself/github-actions-public/setup-job@main
+      - uses: joinself/actions-public/setup-job@main
       - uses: actions/download-artifact@v7
       - name: Publish
         env:
