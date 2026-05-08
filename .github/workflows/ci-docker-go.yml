@@ -14,14 +14,28 @@ on:
       - 'golang/**'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}
+
 jobs:
   build:
-    uses: ./.github/workflows/docker-go-build.yml
-    secrets: inherit
-  publish:
-    if: ${{ github.ref == 'refs/heads/main' }}
-    uses: ./.github/workflows/docker-go-publish.yml
-    secrets: inherit
-    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
+      contents: read
       packages: write
+    steps:
+      - uses: joinself/actions-public/setup-job@main
+      - uses: actions/checkout@v6
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        env:
+          DOCKER_BUILD_SUMMARY: false
+        with:
+          context: golang
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/joinself/self-sdk-demo:go

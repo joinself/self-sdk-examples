@@ -13,14 +13,54 @@ on:
       - 'java/**'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
-    uses: ./.github/workflows/java-build.yml
-    secrets: inherit
+    runs-on: ubuntu-latest
+    container:
+      image: eclipse-temurin:17.0.11_9-jdk-jammy
+    timeout-minutes: 15
+    steps:
+      - uses: joinself/github-actions-public/setup-job@main
+      - uses: actions/checkout@v6
+      - name: Build
+        run: |
+          apt-get update
+          apt-get install -y unzip
+          cd ${GITHUB_WORKSPACE}/java
+          ./gradlew :self-demo:distZip
+          cd ${GITHUB_WORKSPACE}/java/self-demo/build/distributions
+          unzip self-demo.zip
+          cd ${GITHUB_WORKSPACE}/java/self-demo/build/distributions/self-demo
+          tar -czf self-sdk-demo_java.tar.gz *
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build-artifacts
+          path: java/self-demo/build/distributions/self-demo/self-sdk-demo_java.tar.gz
+
   publish:
     if: ${{ github.ref == 'refs/heads/main' }}
-    uses: ./.github/workflows/java-publish.yml
-    secrets: inherit
     needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-publish
     permissions:
       contents: write
+    timeout-minutes: 15
+    steps:
+      - uses: joinself/github-actions-public/setup-job@main
+      - uses: actions/download-artifact@v7
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd build-artifacts
+          sha256sum self-sdk-demo_java.tar.gz | awk '{print $1}' > self-sdk-demo_java.tar.gz.sha256
+          gh release upload "latest" *.tar.gz *.sha256 --clobber
