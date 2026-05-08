@@ -64,6 +64,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd build-artifacts
           sha256sum self-sdk-demo_java.tar.gz | awk '{print $1}' > self-sdk-demo_java.tar.gz.sha256
           gh release upload "latest" *.tar.gz *.sha256 --clobber
