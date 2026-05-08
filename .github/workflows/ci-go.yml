@@ -82,6 +82,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: joinself/actions-public/setup-job@main
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
           name: build-linux-artifacts
