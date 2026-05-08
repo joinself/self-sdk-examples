@@ -5,12 +5,13 @@ on:
     branches:
       - main
     paths:
+      - '.github/workflows/ci-docker-go.yml'
       - 'golang/**'
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/docker-go-*'
+      - '.github/workflows/ci-docker-go.yml'
       - 'golang/**'
   workflow_dispatch:
 
